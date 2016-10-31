@@ -127,7 +127,7 @@ public final class ImportData {
         }
         System.out.print(count + " entities of type " + type + " left " + map.size() + " \n");
         
-        String status = BackDoor.persistNewDataBundle(gson.toJson(bundle));
+        String status = BackDoor.restoreDataBundle(bundle);
         
         // wait a few seconds to allow data to persist completedly
         try {

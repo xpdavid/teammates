@@ -124,7 +124,7 @@ public class BackDoorTest extends BaseTestCase {
     public void testAccounts() {
         
         testCreateAccount();
-        testGetAccountAsJson();
+        testGetAccount();
         testDeleteAccount();
     }
     
@@ -136,11 +136,10 @@ public class BackDoorTest extends BaseTestCase {
         verifyPresentInDatastore(newAccount);
     }
     
-    public void testGetAccountAsJson() {
+    public void testGetAccount() {
         AccountAttributes testAccount = dataBundle.accounts.get("instructor1OfCourse1");
         verifyPresentInDatastore(testAccount);
-        String actualString = BackDoor.getAccountAsJson(testAccount.googleId);
-        AccountAttributes actualAccount = gson.fromJson(actualString, AccountAttributes.class);
+        AccountAttributes actualAccount = BackDoor.getAccount(testAccount.googleId);
         actualAccount.createdAt = testAccount.createdAt;
         assertEquals(gson.toJson(testAccount), gson.toJson(actualAccount));
     }
@@ -342,28 +341,27 @@ public class BackDoorTest extends BaseTestCase {
     }
     
     private void verifyAbsentInDatastore(AccountAttributes account) {
-        assertEquals("null", BackDoor.getAccountAsJson(account.googleId));
+        assertNull(BackDoor.getAccount(account.googleId));
     }
     
     private void verifyAbsentInDatastore(CourseAttributes course) {
-        assertEquals("null", BackDoor.getCourseAsJson(course.getId()));
+        assertNull(BackDoor.getCourse(course.getId()));
     }
     
     private void verifyAbsentInDatastore(InstructorAttributes expectedInstructor) {
-        assertEquals("null", BackDoor.getInstructorAsJsonByEmail(expectedInstructor.email, expectedInstructor.courseId));
+        assertNull(BackDoor.getInstructorByEmail(expectedInstructor.email, expectedInstructor.courseId));
     }
 
     private void verifyAbsentInDatastore(StudentAttributes student) {
-        assertEquals("null",
-                BackDoor.getStudentAsJson(student.course, student.email));
+        assertNull(BackDoor.getStudent(student.course, student.email));
     }
 
     private void verifyAbsentInDatastore(FeedbackQuestionAttributes fq) {
-        assertEquals("null", BackDoor.getFeedbackQuestionForIdAsJson(fq.getId()));
+        assertNull(BackDoor.getFeedbackQuestion(fq.getId()));
     }
     
     private void verifyAbsentInDatastore(FeedbackResponseAttributes fr) {
-        assertEquals("null", BackDoor.getFeedbackResponseAsJson(fr.feedbackQuestionId, fr.giver, fr.recipient));
+        assertNull(BackDoor.getFeedbackResponse(fr.feedbackQuestionId, fr.giver, fr.recipient));
     }
 
     private void verifyPresentInDatastore(String dataBundleJsonString) {
@@ -393,44 +391,37 @@ public class BackDoorTest extends BaseTestCase {
     }
 
     private void verifyPresentInDatastore(StudentAttributes expectedStudent) {
-        String studentJsonString = "null";
-        while ("null".equals(studentJsonString)) {
-            studentJsonString = BackDoor.getStudentAsJson(expectedStudent.course, expectedStudent.email);
+        StudentAttributes actualStudent = null;
+        while (actualStudent == null) {
+            actualStudent = BackDoor.getStudent(expectedStudent.course, expectedStudent.email);
         }
-        StudentAttributes actualStudent = gson.fromJson(studentJsonString,
-                StudentAttributes.class);
         equalizeIrrelevantData(expectedStudent, actualStudent);
         expectedStudent.lastName = StringHelper.splitName(expectedStudent.name)[1];
         assertEquals(gson.toJson(expectedStudent), gson.toJson(actualStudent));
     }
 
     private void verifyPresentInDatastore(CourseAttributes expectedCourse) {
-        String courseJsonString = "null";
-        while ("null".equals(courseJsonString)) {
-            courseJsonString = BackDoor.getCourseAsJson(expectedCourse.getId());
+        CourseAttributes actualCourse = null;
+        while (actualCourse == null) {
+            actualCourse = BackDoor.getCourse(expectedCourse.getId());
         }
-        CourseAttributes actualCourse = gson.fromJson(courseJsonString,
-                CourseAttributes.class);
         // Ignore time field as it is stamped at the time of creation in testing
         actualCourse.createdAt = expectedCourse.createdAt;
         assertEquals(gson.toJson(expectedCourse), gson.toJson(actualCourse));
     }
 
     private void verifyPresentInDatastore(InstructorAttributes expectedInstructor) {
-        String instructorJsonString = "null";
-        while ("null".equals(instructorJsonString)) {
-            instructorJsonString = BackDoor.getInstructorAsJsonByEmail(expectedInstructor.email,
-                                                                       expectedInstructor.courseId);
+        InstructorAttributes actualInstructor = null;
+        while (actualInstructor == null) {
+            actualInstructor = BackDoor.getInstructorByEmail(expectedInstructor.email, expectedInstructor.courseId);
         }
-        InstructorAttributes actualInstructor = gson.fromJson(instructorJsonString, InstructorAttributes.class);
         
         equalizeIrrelevantData(expectedInstructor, actualInstructor);
         assertTrue(expectedInstructor.isEqualToAnotherInstructor(actualInstructor));
     }
     
     private void verifyPresentInDatastore(AccountAttributes expectedAccount) {
-        String accountJsonString = BackDoor.getAccountAsJson(expectedAccount.googleId);
-        AccountAttributes actualAccount = gson.fromJson(accountJsonString, AccountAttributes.class);
+        AccountAttributes actualAccount = BackDoor.getAccount(expectedAccount.googleId);
         // Ignore time field as it is stamped at the time of creation in testing
         actualAccount.createdAt = expectedAccount.createdAt;
         
@@ -443,10 +434,9 @@ public class BackDoorTest extends BaseTestCase {
     }
 
     private void verifyPresentInDatastore(FeedbackQuestionAttributes expectedQuestion) {
-        String questionJsonString = BackDoor.getFeedbackQuestionAsJson(expectedQuestion.feedbackSessionName,
-                                                                       expectedQuestion.courseId,
-                                                                       expectedQuestion.questionNumber);
-        FeedbackQuestionAttributes actualQuestion = gson.fromJson(questionJsonString, FeedbackQuestionAttributes.class);
+        FeedbackQuestionAttributes actualQuestion =
+                BackDoor.getFeedbackQuestion(expectedQuestion.courseId, expectedQuestion.feedbackSessionName,
+                                             expectedQuestion.questionNumber);
         
         // Match the id of the expected Feedback Question because it is not known in advance
         equalizeId(expectedQuestion, actualQuestion);
@@ -454,10 +444,9 @@ public class BackDoorTest extends BaseTestCase {
     }
 
     private void verifyPresentInDatastore(FeedbackResponseAttributes expectedResponse) {
-        String responseJsonString = BackDoor.getFeedbackResponseAsJson(expectedResponse.feedbackQuestionId,
-                                                                       expectedResponse.giver,
-                                                                       expectedResponse.recipient);
-        FeedbackResponseAttributes actualResponse = gson.fromJson(responseJsonString, FeedbackResponseAttributes.class);
+        FeedbackResponseAttributes actualResponse =
+                BackDoor.getFeedbackResponse(expectedResponse.feedbackQuestionId, expectedResponse.giver,
+                                             expectedResponse.recipient);
 
         assertEquals(gson.toJson(expectedResponse), gson.toJson(actualResponse));
     }
