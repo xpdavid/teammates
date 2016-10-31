@@ -117,7 +117,6 @@ public class BackDoorTest extends BaseTestCase {
         
         // ----------deleting Feedback Session entities-------------------------
         // TODO: do proper deletion test
-        BackDoor.deleteFeedbackSessions(dataBundle);
 
     }
     
@@ -126,7 +125,6 @@ public class BackDoorTest extends BaseTestCase {
         
         testCreateAccount();
         testGetAccountAsJson();
-        testEditAccount();
         testDeleteAccount();
     }
     
@@ -145,15 +143,6 @@ public class BackDoorTest extends BaseTestCase {
         AccountAttributes actualAccount = gson.fromJson(actualString, AccountAttributes.class);
         actualAccount.createdAt = testAccount.createdAt;
         assertEquals(gson.toJson(testAccount), gson.toJson(actualAccount));
-    }
-    
-    public void testEditAccount() {
-        AccountAttributes testAccount = dataBundle.accounts.get("instructor1OfCourse1");
-        verifyPresentInDatastore(testAccount);
-        testAccount.name = "New name";
-        testAccount.institute = "TEAMMATES Test Institute 7";
-        BackDoor.editAccount(testAccount);
-        verifyPresentInDatastore(testAccount);
     }
     
     public void testDeleteAccount() {
@@ -202,10 +191,6 @@ public class BackDoorTest extends BaseTestCase {
         // already tested by testPersistenceAndDeletion
     }
 
-    public void testEditInstructor() {
-        // method not implemented
-    }
-
     @Test
     public void testCreateCourse() {
         // only minimal testing because this is a wrapper method for
@@ -232,10 +217,6 @@ public class BackDoorTest extends BaseTestCase {
         // already tested by testPersistenceAndDeletion
     }
     
-    public void testEditCourse() {
-        // not implemented
-    }
-
     public void testDeleteCourse() {
         // already tested by testPersistenceAndDeletion
     }
