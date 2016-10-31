@@ -29,12 +29,10 @@ public class BackDoorTest extends BaseTestCase {
 
     private static Gson gson = Utils.getTeammatesGson();
     private static DataBundle dataBundle = getTypicalDataBundle();
-    private static String jsonString = gson.toJson(dataBundle);
 
     @BeforeClass
-    public static void setUp() {
+    public void classSetup() {
         printTestClassHeader();
-        dataBundle = getTypicalDataBundle();
         int retryLimit = 5;
         String status = Const.StatusCodes.BACKDOOR_STATUS_FAILURE;
         while (status.startsWith(Const.StatusCodes.BACKDOOR_STATUS_FAILURE) && retryLimit > 0) {
@@ -42,13 +40,9 @@ public class BackDoorTest extends BaseTestCase {
             retryLimit--;
         }
         assertEquals(Const.StatusCodes.BACKDOOR_STATUS_SUCCESS, status);
-    }
-
-    @Priority(-2)
-    @Test
-    public void testPersistence() {
-        // typical bundle should be restored in the @BeforeClass method above
-        verifyPresentInDatastore(jsonString);
+        
+        // verifies that typical bundle is restored by the above operation
+        verifyPresentInDatastore(dataBundle);
     }
 
     @Test
@@ -364,10 +358,8 @@ public class BackDoorTest extends BaseTestCase {
         assertNull(BackDoor.getFeedbackResponse(fr.feedbackQuestionId, fr.giver, fr.recipient));
     }
 
-    private void verifyPresentInDatastore(String dataBundleJsonString) {
-        Gson gson = Utils.getTeammatesGson();
+    private void verifyPresentInDatastore(DataBundle data) {
 
-        DataBundle data = gson.fromJson(dataBundleJsonString, DataBundle.class);
         Map<String, AccountAttributes> accounts = data.accounts;
         for (AccountAttributes expectedAccount : accounts.values()) {
             verifyPresentInDatastore(expectedAccount);
