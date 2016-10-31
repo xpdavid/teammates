@@ -13,7 +13,7 @@ import teammates.common.datatransfer.InstructorAttributes;
 import teammates.common.datatransfer.StudentAttributes;
 import teammates.common.util.Const;
 import teammates.common.util.Sanitizer;
-import teammates.logic.backdoor.BackDoorLogic;
+import teammates.logic.api.Logic;
 import teammates.test.driver.AssertHelper;
 import teammates.ui.controller.InstructorStudentCommentEditAction;
 import teammates.ui.controller.RedirectResult;
@@ -21,7 +21,7 @@ import teammates.ui.controller.RedirectResult;
 public class InstructorStudentCommentEditActionTest extends BaseActionTest {
 
     private final DataBundle dataBundle = getTypicalDataBundle();
-    private final BackDoorLogic backDoorLogic = new BackDoorLogic();
+    private final Logic logic = new Logic();
 
     @BeforeClass
     public static void classSetUp() throws Exception {
@@ -71,8 +71,7 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         ______TS("Typical case, edit comment successful from student records page");
         
         List<CommentAttributes> comments =
-                backDoorLogic.getCommentsForReceiver(
-                                      instructor.courseId, CommentParticipantType.PERSON, student.email);
+                logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.PERSON, student.email);
         Iterator<CommentAttributes> iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -115,8 +114,7 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Typical case, edit comment successful from comments page");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId, CommentParticipantType.PERSON, student.email);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.PERSON, student.email);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -159,8 +157,7 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Typical case, edit comment successful recipient type not null");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId, CommentParticipantType.PERSON, student.email);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.PERSON, student.email);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -204,8 +201,7 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment successful with empty recipients");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId, CommentParticipantType.PERSON, student.email);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.PERSON, student.email);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -250,9 +246,8 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment successful, giver not current instructor");
         
-        comments =
-                backDoorLogic.getCommentsForReceiver(
-                                      anotherInstructor.courseId, CommentParticipantType.PERSON, anotherStudent.email);
+        comments = logic.getCommentsForReceiver(anotherInstructor.courseId, CommentParticipantType.PERSON,
+                                                anotherStudent.email);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -295,10 +290,8 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment successful, giver not current instructor with course as recipient");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId,
-                                         CommentParticipantType.COURSE,
-                                         instructor.courseId);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.COURSE,
+                                                instructor.courseId);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -342,10 +335,8 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment successful, giver not current instructor with section as recipient");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId,
-                                         CommentParticipantType.SECTION,
-                                         student.section);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.SECTION,
+                                                student.section);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -389,10 +380,8 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment successful, giver not current instructor with team as recipient");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId,
-                                         CommentParticipantType.TEAM,
-                                         Sanitizer.sanitizeForHtml(student.team));
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.TEAM,
+                                                Sanitizer.sanitizeForHtml(student.team));
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();
@@ -458,8 +447,7 @@ public class InstructorStudentCommentEditActionTest extends BaseActionTest {
         
         ______TS("Edit comment visibility successful show all comment details to recipient's team");
         
-        comments = backDoorLogic.getCommentsForReceiver(
-                                         instructor.courseId, CommentParticipantType.PERSON, student.email);
+        comments = logic.getCommentsForReceiver(instructor.courseId, CommentParticipantType.PERSON, student.email);
         iterator = comments.iterator();
         while (iterator.hasNext()) {
             CommentAttributes commentAttributes = iterator.next();

@@ -117,7 +117,6 @@ public class BackDoorLogic extends Logic {
         accountsDb.createAccounts(studentAccounts, false);
         studentsDb.createStudentsWithoutSearchability(students.values());
         
-
         Map<String, FeedbackSessionAttributes> sessions = dataBundle.feedbackSessions;
         for (FeedbackSessionAttributes session : sessions.values()) {
             cleanSessionData(session);
@@ -138,7 +137,7 @@ public class BackDoorLogic extends Logic {
         }
         frDb.createFeedbackResponses(responses.values());
 
-        Set<String> sessionIds = new HashSet<>();
+        Set<String> sessionIds = new HashSet<String>();
         
         for (FeedbackResponseAttributes response : responses.values()) {
             
@@ -163,8 +162,6 @@ public class BackDoorLogic extends Logic {
         // accountsDb is used as it is already used in the file
         accountsDb.commitOutstandingChanges();
 
-        
-        
         return Const.StatusCodes.BACKDOOR_STATUS_SUCCESS;
     }
 
@@ -274,8 +271,7 @@ public class BackDoorLogic extends Logic {
     }
     
     public String getAllStudentsAsJson(String courseId) {
-        List<StudentAttributes> studentList = studentsLogic
-                .getStudentsForCourse(courseId);
+        List<StudentAttributes> studentList = studentsLogic.getStudentsForCourse(courseId);
         return Utils.getTeammatesGson().toJson(studentList);
     }
     
@@ -291,8 +287,7 @@ public class BackDoorLogic extends Logic {
     }
     
     public String getFeedbackQuestionForIdAsJson(String questionId) {
-        FeedbackQuestionAttributes fq =
-                feedbackQuestionsLogic.getFeedbackQuestion(questionId);
+        FeedbackQuestionAttributes fq = feedbackQuestionsLogic.getFeedbackQuestion(questionId);
         return Utils.getTeammatesGson().toJson(fq);
     }
 
@@ -316,15 +311,13 @@ public class BackDoorLogic extends Logic {
     
     public void editAccountAsJson(String newValues)
             throws InvalidParametersException, EntityDoesNotExistException {
-        AccountAttributes account = Utils.getTeammatesGson().fromJson(newValues,
-                AccountAttributes.class);
+        AccountAttributes account = Utils.getTeammatesGson().fromJson(newValues, AccountAttributes.class);
         updateAccount(account);
     }
     
     public void editStudentAsJson(String originalEmail, String newValues)
             throws InvalidParametersException, EntityDoesNotExistException {
-        StudentAttributes student = Utils.getTeammatesGson().fromJson(newValues,
-                StudentAttributes.class);
+        StudentAttributes student = Utils.getTeammatesGson().fromJson(newValues, StudentAttributes.class);
         student.section = student.section == null ? "None" : student.section;
         updateStudentWithoutDocument(originalEmail, student);
     }
@@ -421,8 +414,8 @@ public class BackDoorLogic extends Logic {
 
     public void removeDataBundle(DataBundle dataBundle) {
                 
-        //TODO: questions and responses will be deleted automatically.
-        //  We don't attempt to delete them again, to save time.
+        // Questions and responses will be deleted automatically.
+        // We don't attempt to delete them again, to save time.
         deleteCourses(dataBundle.courses.values());
         
         for (AccountAttributes account : dataBundle.accounts.values()) {
