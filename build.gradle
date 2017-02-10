@@ -337,6 +337,30 @@ tasks.withType(FindBugs) {
     }
 }
 
+task runCheckstyleJavadocOnChangedFiles(type: Checkstyle) {
+    ignoreFailures = true
+    showViolations = true
+    source "build/changedFiles"
+    include "*.java"
+    classpath = files()
+    configFile = file("static-analysis/teammates-checkstyle-javadoc.xml")
+}
+
+task copyChangedFiles() << { 
+    // copy changed files from command line args
+    def files = changedFiles.split('\n')
+    files.each {fileName ->
+        if (!fileName.isEmpty() && file(fileName).exists()) {
+            copy {
+                from fileName
+                into "build/changedFiles"
+            }
+            println "Changed file: " + fileName + " copied"
+        }
+    }
+    
+}
+
 task installEslint(type: Exec) {
     commandLine "npm", "install", "eslint@3.11.1"
 }
