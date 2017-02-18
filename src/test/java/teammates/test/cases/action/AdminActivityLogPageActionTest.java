@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.testng.annotations.Test;
 
@@ -98,6 +99,7 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
 
     private void testFilters() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
         
         // from
         int[][] expected = new int[][]{{0, 1, 3, 4, 5}, {0, 1, 2}};
@@ -174,6 +176,7 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
 
     private void testFiltersCombination() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
         Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
         
@@ -236,14 +239,14 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     private void removeAndRestoreLogMessage() {
         localLogService.clear();
         
+        Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
+        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TWO_DAYS_AGO_INDEX), twoDaysAgo.getTime());
+        Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
+        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_YESTERDAY_INDEX), yesterday.getTime());
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
         insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TODAY_INDEX), today.getTime());
         
-        Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
-        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_YESTERDAY_INDEX), yesterday.getTime());
     
-        Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
-        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TWO_DAYS_AGO_INDEX), twoDaysAgo.getTime());
     }
     
     private void insertLogMessagesAtTime(List<String> msgList, long timeMillis) {
