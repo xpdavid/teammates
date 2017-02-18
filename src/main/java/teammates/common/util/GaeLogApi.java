@@ -22,7 +22,7 @@ public class GaeLogApi {
         for (RequestLogs record : records) {
             //fetch application log
             List<AppLogLine> appLogLines = record.getAppLogLines();
-            logs.addAll(appLogLines);
+            logs.addAll(0, appLogLines); // to maintain the order
         }
         return logs;
     }

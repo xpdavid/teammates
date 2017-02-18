@@ -73,13 +73,14 @@ public class AdminActivityLogPageAction extends Action {
         // This will keep showing all logs despite any action or change in the page unless
         // the page is reloaded with "?all=false" or simply reloaded with this parameter omitted.
         boolean ifShowAll = getRequestParamAsBoolean("all");
-        
+        data.setIfShowAll(ifShowAll);
         
         // This determines whether the logs related to testing data should be shown. Use "testdata=true" in URL
         // to show all testing logs. This will keep showing all logs from testing data despite any action
         // or change in the page unless the page is reloaded with "?testdata=false"
         // or simply reloaded with this parameter omitted.
         boolean ifShowTestData = getRequestParamAsBoolean("testdata");
+        data.setIfShowTestData(ifShowTestData);
         
         String filterQuery = getRequestParamValue("filterQuery");
         if (filterQuery == null) {
@@ -105,7 +106,7 @@ public class AdminActivityLogPageAction extends Action {
         
         String courseIdFromSearchPage = getRequestParamValue("courseId");
         generateStatusMessage(versionToQuery, data, logs, courseIdFromSearchPage);
-        data.init(ifShowAll, ifShowTestData, logs);
+        data.init(logs);
         
         if (searchTimeOffset.isEmpty()) {
             return createShowPageResult(Const.ViewURIs.ADMIN_ACTIVITY_LOG, data);
