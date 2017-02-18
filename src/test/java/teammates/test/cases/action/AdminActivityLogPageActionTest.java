@@ -51,31 +51,49 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     public void testExecuteAndPostProcess() {
         gaeSimulation.loginAsAdmin("admin");
         
+        testInvalidQuery();
         testShowTestingDataAndExcludedUri();
         testFilters();
         testFiltersCombination();
+        testLogMessageInDifferentVersions();
     }
 
-    private void testFiltersCombination() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
-        Date today = TimeHelper.getDateOffsetToCurrentTime(0);
-        Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
-        
-        int[][] expected = new int[][]{{0, 3, 5, 7, 8, 9}};
-        String query = "info:keyword1";
-        verifyActionResult(expected, "filterQuery", query, "all", "true");
-        
-        expected = new int[][]{{0, 1, 3, 7, 8, 9}, {0, 1, 4}, {3}};
-        query = String.format("person:Name1 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
-        verifyActionResult(expected, "filterQuery", query, "all", "true");
-        
-        expected = new int[][]{{0, 1, 2}};
-        query = "role:Admin";
+    private void testInvalidQuery() {
+        int[][] expected = new int[][]{{0, 1, 3, 4, 5}};
+        String query = "unknown";
+        verifyActionResult(expected, "filterQuery", query);
+        query = "";
+        verifyActionResult(expected, "filterQuery", query);
+        query = "info";
+        verifyActionResult(expected, "filterQuery", query);
+        query = "info:";
+        verifyActionResult(expected, "filterQuery", query);
+        query = "request:servlet3 unknown_connector role:Student";
+        verifyActionResult(expected, "filterQuery", query);
+        query = "unknown:servlet3 | role:Student";
+        verifyActionResult(expected, "filterQuery", query);
+               
+        expected = new int[][]{{0, 1, 2, 3, 4, 5, 6}};
+        query = "information:unkown";
         verifyActionResult(expected, "filterQuery", query, "testdata", "true");
+    }
+
+    private void testShowTestingDataAndExcludedUri() {
+        ______TS("Test default configuration: no test data, no excluded uri");
+        int[][] expected = new int[][]{{0, 1, 3, 4, 5}};
+        verifyActionResult(expected);
         
-        expected = new int[][]{{2, 4, 5, 6, 7}, {1, 3, 4}, {0, 1, 2}};
-        query = String.format("time:50 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
-        verifyActionResult(expected, "filterQuery", query, "testdata", "true", "all", "true");
+        ______TS("Test configuration: show test data, no excluded uri");
+        expected = new int[][]{{0, 1, 2, 3, 4, 5, 6}};
+        verifyActionResult(expected, "testdata", "true");
+        
+        ______TS("Test configuration: no test data, show excluded uri");
+        expected = new int[][]{{0, 1, 3, 4, 5, 7, 8, 9}};
+        verifyActionResult(expected, "all", "true");
+        
+        ______TS("Test configuration: show test data, show excluded uri");
+        expected = new int[][]{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
+        verifyActionResult(expected, "testdata", "true", "all", "true");
     }
 
     private void testFilters() {
@@ -154,29 +172,41 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         verifyActionResult(expected, "testdata", "true", "filterQuery", query);
     }
 
-    private void testShowTestingDataAndExcludedUri() {
-        ______TS("Test default configuration: no test data, no excluded uri");
-        int[][] expected = new int[][]{{0, 1, 3, 4, 5}};
-        verifyActionResult(expected);
+    private void testFiltersCombination() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
+        Date today = TimeHelper.getDateOffsetToCurrentTime(0);
+        Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
         
-        ______TS("Test configuration: show test data, no excluded uri");
-        expected = new int[][]{{0, 1, 2, 3, 4, 5, 6}};
-        verifyActionResult(expected, "testdata", "true");
+        int[][] expected = new int[][]{{0, 3, 5, 7, 8, 9}};
+        String query = "info:keyword1";
+        verifyActionResult(expected, "filterQuery", query, "all", "true");
         
-        ______TS("Test configuration: no test data, show excluded uri");
-        expected = new int[][]{{0, 1, 3, 4, 5, 7, 8, 9}};
-        verifyActionResult(expected, "all", "true");
+        expected = new int[][]{{0, 1, 3, 7, 8, 9}, {0, 1, 4}, {3}};
+        query = String.format("person:Name1 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
+        verifyActionResult(expected, "filterQuery", query, "all", "true");
         
-        ______TS("Test configuration: show test data, show excluded uri");
-        expected = new int[][]{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
-        verifyActionResult(expected, "testdata", "true", "all", "true");
+        expected = new int[][]{{0, 1, 2}};
+        query = "role:Admin";
+        verifyActionResult(expected, "filterQuery", query, "testdata", "true");
+        
+        expected = new int[][]{{2, 4, 5, 6, 7}, {1, 3, 4}, {0, 1, 2}};
+        query = String.format("time:50 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
+        verifyActionResult(expected, "filterQuery", query, "testdata", "true", "all", "true");
     }
 
-    @Override
-    protected AdminActivityLogPageAction getAction(String... params) {
-        return (AdminActivityLogPageAction) gaeSimulation.getActionObject(getActionUri(), params);
+    private void testLogMessageInDifferentVersions() {
+        // version query is controlled by GAE itself
+        // so there is no need to write comprehensive test case for it
+        
+        int[][] expected = new int[][]{{}};
+        String query = "version:2";
+        verifyActionResult(expected, "filterQuery", query);
+        
+        expected = new int[][]{{0, 1, 3, 4, 5}};
+        query = "version:2, 1";
+        verifyActionResult(expected, "filterQuery", query);
     }
-    
+
     private void verifyActionResult(int[][] expectedLogs, String... params) {
         AdminActivityLogPageAction action = getAction(params);
         ShowPageResult result = getShowPageResult(action);
@@ -248,6 +278,11 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    protected AdminActivityLogPageAction getAction(String... params) {
+        return (AdminActivityLogPageAction) gaeSimulation.getActionObject(getActionUri(), params);
     }
     
 }

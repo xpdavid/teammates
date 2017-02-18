@@ -182,6 +182,11 @@ public class AdminActivityLogPageData extends PageData {
             return logEntry;
         }
         
+        if (shouldExcludeLogEntry(logEntry)) {
+            logEntry.setToShow(false);
+            return logEntry;
+        }
+        
         if (q == null) {
             if (this.queryMessage == null) {
                 this.queryMessage = "Error parsing the query. QueryParameters not created.";
@@ -235,11 +240,6 @@ public class AdminActivityLogPageData extends PageData {
             logEntry.highlightKeyStringInMessageInfoHtml();
         }
         if (q.isIdInQuery && !arrayContains(q.idValues, logEntry.getId())) {
-            logEntry.setToShow(false);
-            return logEntry;
-        }
-        
-        if (shouldExcludeLogEntry(logEntry)) {
             logEntry.setToShow(false);
             return logEntry;
         }
