@@ -331,6 +331,11 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         
     }
     
+    private void testExceededLogs() {
+        // TODO Auto-generated method stub
+        
+    }
+
     private void verifyContinueSearch(String[] params, int[][] expected, int totalLogs,
             int filteredLogs, Date earliestDateInUtc) {
         AdminActivityLogPageAction action = getAction(params);
