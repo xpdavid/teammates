@@ -36,6 +36,8 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     
     private LocalLogService localLogService;
     private List<List<String>> logMessages;
+    
+    private SimpleDateFormat formatterAdminTime;
 
     @Override
     protected String getActionUri() {
@@ -45,9 +47,16 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     @Override
     protected void prepareTestData() {
         super.prepareTestData();
+        initVariable();
+        removeAndRestoreLogMessage();
+    }
+
+    private void initVariable() {
         localLogService = LocalLogServiceTestConfig.getLocalLogService();
         logMessages = loadLogMessages();
-        removeAndRestoreLogMessage();
+        
+        formatterAdminTime = new SimpleDateFormat("dd/MM/yy");
+        formatterAdminTime.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
     }
     
     @Override
@@ -66,9 +75,12 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         testLoadingLocalTimeAjax();
         
         testContinueSearch();
+        
+        testExceededLogs();
     }
 
     private void testInvalidQuery() {
+        // execute default search when filterQuery is invalid
         int[][] expected = new int[][]{{0, 1, 3, 4, 5}};
         String query = "unknown";
         verifyActionResult(expected, "filterQuery", query);
@@ -82,54 +94,54 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         verifyActionResult(expected, "filterQuery", query);
         query = "unknown:servlet3 | role:Student";
         verifyActionResult(expected, "filterQuery", query);
-               
+        
+        // invalid filterQuery with showing testing data
         expected = new int[][]{{0, 1, 2, 3, 4, 5, 6}};
         query = "information:unkown";
         verifyActionResult(expected, "filterQuery", query, "testdata", "true");
     }
 
     private void testShowTestingDataAndExcludedUri() {
-        // no test data, no excluded uri
+        // no test data, no excluded URI, default search
         int[][] expected = new int[][]{{0, 1, 3, 4, 5}};
         verifyActionResult(expected);
         
-        // show test data, no excluded uri
+        // show test data, no excluded URI
         expected = new int[][]{{0, 1, 2, 3, 4, 5, 6}};
         verifyActionResult(expected, "testdata", "true");
         
-        // show excluded uri
+        // not test data, show excluded URI
         expected = new int[][]{{0, 1, 3, 4, 5, 7, 8, 9}};
         verifyActionResult(expected, "all", "true");
         
-        // show excluded uri
+        // show everything
         expected = new int[][]{{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}};
         verifyActionResult(expected, "testdata", "true", "all", "true");
     }
 
     private void testFilters() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
-        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
-        
         // from
         int[][] expected = new int[][]{{0, 1, 3, 4, 5}, {0, 1, 2}};
         Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
-        String query = String.format(" from:%s", sdf.format(yesterday));
+        String query = String.format(" from:%s", formatterAdminTime.format(yesterday));
         verifyActionResult(expected, "filterQuery", query);
         
         // to
         expected = new int[][]{{}, {}, {0, 1}};
         Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
-        query = String.format("to :%s", sdf.format(twoDaysAgo));
+        query = String.format("to :%s", formatterAdminTime.format(twoDaysAgo));
         verifyActionResult(expected, "filterQuery", query);
         
         // from-to
         expected = new int[][]{{}, {0, 1, 2}, {0, 1}};
-        query = String.format("from: %s  and  to:%s", sdf.format(twoDaysAgo), sdf.format(yesterday));
+        query = String.format("from: %s  and  to:%s",
+                              formatterAdminTime.format(twoDaysAgo), formatterAdminTime.format(yesterday));
         verifyActionResult(expected, "filterQuery", query);
         
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
         expected = new int[][]{{0, 1, 3, 4, 5}, {0, 1, 2}, {0, 1}};
-        query = String.format("from : %s | to: %s ", sdf.format(twoDaysAgo), sdf.format(today));
+        query = String.format("from : %s | to: %s ",
+                              formatterAdminTime.format(twoDaysAgo), formatterAdminTime.format(today));
         verifyActionResult(expected, "filterQuery", query);
         
         // person: name
@@ -138,13 +150,13 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         verifyActionResult(expected, "filterQuery", query);
         
         // person: googleId
-        query = String.format("  person:id1@google.com   | to:%s  ", sdf.format(yesterday));
+        query = String.format("  person:id1@google.com   | to:%s  ", formatterAdminTime.format(yesterday));
         expected = new int[][]{{}, {0, 1}};
         verifyActionResult(expected, "filterQuery", query);
         
         // person: email
         query = String.format("person:  email2@email.com | from:%s | to:%s",
-                              sdf.format(twoDaysAgo), sdf.format(yesterday));
+                              formatterAdminTime.format(twoDaysAgo), formatterAdminTime.format(yesterday));
         expected = new int[][]{{}, {2}, {0, 1}};
         verifyActionResult(expected, "filterQuery", query);
         
@@ -173,7 +185,7 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         expected = new int[][]{{0, 3, 5}};
         verifyActionResult(expected, "filterQuery", query);
         
-        query = String.format("info:keyword2   |   from:%s", sdf.format(yesterday));
+        query = String.format("info:keyword2   |   from:%s", formatterAdminTime.format(yesterday));
         expected = new int[][]{{0, 1, 4}, {0, 1, 2}};
         verifyActionResult(expected, "filterQuery", query);
         
@@ -184,25 +196,29 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     }
 
     private void testFiltersCombination() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
-        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
         Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
         
+        // filterQuery with showing all URI
         int[][] expected = new int[][]{{0, 3, 5, 7, 8, 9}};
         String query = "info:keyword1";
         verifyActionResult(expected, "filterQuery", query, "all", "true");
         
+        // another filterQuery with showing all URI
         expected = new int[][]{{0, 1, 3, 7, 8, 9}, {0, 1, 4}, {3}};
-        query = String.format("person:Name1 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
+        query = String.format("person:Name1 | from:%s and to:%s",
+                              formatterAdminTime.format(twoDaysAgo), formatterAdminTime.format(today));
         verifyActionResult(expected, "filterQuery", query, "all", "true");
         
+        // filterQuery with showing test data
         expected = new int[][]{{0, 1, 2}};
         query = "role:Admin";
         verifyActionResult(expected, "filterQuery", query, "testdata", "true");
         
+        // filterQuery with showing everything
         expected = new int[][]{{2, 4, 5, 6, 7}, {1, 3, 4}, {0, 1, 2}};
-        query = String.format("time:50 | from:%s and to:%s", sdf.format(twoDaysAgo), sdf.format(today));
+        query = String.format("time:50 | from:%s and to:%s",
+                              formatterAdminTime.format(twoDaysAgo), formatterAdminTime.format(today));
         verifyActionResult(expected, "filterQuery", query, "testdata", "true", "all", "true");
     }
 
@@ -220,34 +236,30 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     }
 
     private void testStatusMessage() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
-        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
         Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
         
+        // test statusMessage for default search
         AdminActivityLogPageAction action = getAction();
         String statusMessage = getShowPageResult(action).getStatusMessage();
         verifyStatusMessage(statusMessage, 12, 5, yesterday);
         
+        // test statusMessage with filterQuery
         String query = "person:Name1";
         action = getAction("filterQuery", query);
         statusMessage = getShowPageResult(action).getStatusMessage();
         verifyStatusMessage(statusMessage, 12, 3, yesterday);
-    
-        query = "to:" + sdf.format(yesterday);
+        
+        // test statusMessage with `to`
+        query = "to:" + formatterAdminTime.format(yesterday);
         action = getAction("filterQuery", query);
-        Calendar toDate = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
-        toDate.add(Calendar.DATE, -2);
-        toDate.set(Calendar.HOUR_OF_DAY, 23);
-        toDate = TimeHelper.convertToUserTimeZone(toDate, -Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+        Calendar toDate = adminTimeZoneToUtc(getEndOfTheDayOffsetNowInAdminTimeZone(-2));
         statusMessage = getShowPageResult(action).getStatusMessage();
         verifyStatusMessage(statusMessage, 6, 3, toDate.getTime());
         
-        query = "from:" + sdf.format(yesterday);
+        // test statusMessage with `from`
+        query = "from:" + formatterAdminTime.format(yesterday);
         action = getAction("filterQuery", query);
-        Calendar fromDate = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
-        fromDate.add(Calendar.DATE, -1);
-        fromDate.set(Calendar.HOUR_OF_DAY, 0);
-        fromDate = TimeHelper.convertToUserTimeZone(fromDate, -Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+        Calendar fromDate = adminTimeZoneToUtc(getBeginOfTheDayOffsetNowInAdminTimeZone(-1));
         statusMessage = getShowPageResult(action).getStatusMessage();
         verifyStatusMessage(statusMessage, 18, 8, fromDate.getTime());
     }
@@ -256,6 +268,7 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         Calendar now = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         
+        // Unknown
         String failureMsg = "Local Time Unavailable";
         verifyLoadingLocalTimeAjaxResult(failureMsg, "Unregistered", "Unknown", now.getTimeInMillis());
         verifyLoadingLocalTimeAjaxResult(failureMsg, "Instructor", "instructorWithoutCourses", now.getTimeInMillis());
@@ -263,33 +276,30 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         verifyLoadingLocalTimeAjaxResult(failureMsg, "Unregistered:unregisteredCourse", "Unregistered",
                                          now.getTimeInMillis());
         
-        // Admin
+        // Role: Admin
         verifyLoadingLocalTimeAjaxResult(sdf.format(now.getTime()), "Admin", "admin",
                                          now.getTimeInMillis());
         verifyLoadingLocalTimeAjaxResult(sdf.format(now.getTime()), "Student(M)", "admin",
                                          now.getTimeInMillis());
       
-        // Instructor
+        // Role: Instructor
         verifyLoadingLocalTimeAjaxResult(sdf.format(TimeHelper.convertToUserTimeZone(now, -6).getTime()),
                                          "Instructor", "idOfInstructor1OfCourse1", now.getTimeInMillis());
         
-        // Student
+        // Role: Student
         verifyLoadingLocalTimeAjaxResult(sdf.format(TimeHelper.convertToUserTimeZone(now, -8).getTime()),
                                          "Student", "student1InArchivedCourse", now.getTimeInMillis());
     
-        // Unregistered:idOfTypicalCourse1
+        // Role: Unregistered:idOfTypicalCourse1
         verifyLoadingLocalTimeAjaxResult(sdf.format(TimeHelper.convertToUserTimeZone(now, -6).getTime()),
                                          "Unregistered:idOfTypicalCourse1", "Unregistered", now.getTimeInMillis());
     }
     
     private void testContinueSearch() {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yy");
-        sdf.setTimeZone(TimeZone.getTimeZone(Const.SystemParams.ADMIN_TIME_ZONE));
-        
         Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
         Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
         
-        // default
+        // default search continue
         int[][] expected = new int[][]{{}, {0, 1, 2}};
         String[] params = new String[] {"searchTimeOffset", String.valueOf(yesterday.getTime())};
         verifyContinueSearch(params, expected, 6, 3, twoDaysAgo);
@@ -306,24 +316,17 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         expected = new int[][]{{0, 1, 3, 4, 5}, {0, 1, 2}};
         params = new String[] {
                 "searchTimeOffset", String.valueOf(yesterday.getTime()),
-                "filterQuery", String.format("from:%s", sdf.format(yesterday))};
-        Calendar yesterdayBegin = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
-        yesterdayBegin.add(Calendar.DATE, -1);
-        yesterdayBegin.set(Calendar.HOUR_OF_DAY, 0);
-        yesterdayBegin = TimeHelper.convertToUserTimeZone(yesterdayBegin, -Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+                "filterQuery", String.format("from:%s", formatterAdminTime.format(yesterday))};
+        Calendar yesterdayBegin = adminTimeZoneToUtc(getBeginOfTheDayOffsetNowInAdminTimeZone(-1));
         verifyContinueSearch(params, expected, 18, 8, yesterdayBegin.getTime());
     
-        // `to` present
-        Calendar toDate = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+        // `to` present, search with 1 day interval
         expected = new int[][]{{}, {}, {0, 1}};
-        toDate.set(Calendar.HOUR_OF_DAY, 23);
-        toDate.set(Calendar.MINUTE, 59);
-        toDate.add(Calendar.DATE, -2);
-        toDate = TimeHelper.convertToUserTimeZone(toDate, -Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+        Calendar toDate = adminTimeZoneToUtc(getEndOfTheDayOffsetNowInAdminTimeZone(-2));
         params = new String[] {
                 "searchTimeOffset", String.valueOf(toDate.getTimeInMillis()),
-                "filterQuery", String.format("to:%s", sdf.format(yesterday))};
-        toDate.add(Calendar.DATE, -1);
+                "filterQuery", String.format("to:%s", formatterAdminTime.format(yesterday))};
+        toDate = adminTimeZoneToUtc(getEndOfTheDayOffsetNowInAdminTimeZone(-3));
         verifyContinueSearch(params, expected, 4, 2, toDate.getTime());
         
     }
@@ -345,6 +348,16 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         verifyLogs(expectedLogs, actualLogs);
     }
     
+    /**
+     * Verifies actualLogs contains expectedLogs.
+     * 
+     * <p>expectedLogs is a 2D array, the outer indices correspond to {@link #LOG_MESSAGE_TODAY_INDEX}
+     * {@link #LOG_MESSAGE_YESTDAY_INDEX} and {@link #LOG_MESSAGE_TWO_DAYS_AGO_INDEX}, the inner indices for
+     * every {@code LOG_MESSAGE_*_INDEX} correspond to the orders in {@link #TYPICAL_LOG_MESSAGE} file.
+     * 
+     * @param expectedLogs Expected logs
+     * @param actualLogs Actual logs
+     */
     private void verifyLogs(int[][] expectedLogs, List<ActivityLogEntry> actualLogs) {
         List<String> expectedMsgs = generateExpectedMsgFrom(expectedLogs);
         
@@ -398,8 +411,6 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_YESTERDAY_INDEX), yesterday.getTime());
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
         insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TODAY_INDEX), today.getTime());
-        
-    
     }
     
     private void insertLogMessagesAtTime(List<String> msgList, long timeMillis) {
@@ -439,6 +450,27 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     @Override
     protected AdminActivityLogPageAction getAction(String... params) {
         return (AdminActivityLogPageAction) gaeSimulation.getActionObject(getActionUri(), params);
+    }
+    
+    private Calendar getBeginOfTheDayOffsetNowInAdminTimeZone(int dayOffset) {
+        Calendar calendar = TimeHelper.now(Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.add(Calendar.DATE, dayOffset);
+        return calendar;
+    }
+    
+    private Calendar getEndOfTheDayOffsetNowInAdminTimeZone(int dayOffset) {
+        Calendar calendar = getBeginOfTheDayOffsetNowInAdminTimeZone(dayOffset);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        return calendar;
+    }
+    
+    private Calendar adminTimeZoneToUtc(Calendar calendar) {
+        return TimeHelper.convertToUserTimeZone(calendar, -Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE);
     }
     
 }
