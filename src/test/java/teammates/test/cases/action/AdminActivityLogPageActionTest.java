@@ -25,14 +25,19 @@ import teammates.ui.controller.AdminActivityLogPageAction;
 import teammates.ui.controller.AjaxResult;
 import teammates.ui.controller.ShowPageResult;
 import teammates.ui.pagedata.AdminActivityLogPageData;
+import teammates.ui.pagedata.PageData;
 
 public class AdminActivityLogPageActionTest extends BaseActionTest {
     
     private static final String TYPICAL_LOG_MESSAGE = "/typicalLogMessage.json";
     
-    private static final int LOG_MESSAGE_TODAY_INDEX = 0;
-    private static final int LOG_MESSAGE_YESTERDAY_INDEX = 1;
-    private static final int LOG_MESSAGE_TWO_DAYS_AGO_INDEX = 2;
+    private static final int LOG_MESSAGE_INDEX_TODAY = 0;
+    private static final int LOG_MESSAGE_INDEX_YESTERDAY = 1;
+    private static final int LOG_MESSAGE_INDEX_TWO_DAYS_AGO = 2;
+    
+    private static final int LOG_MESSAGE_INDEX_MANY_LOGS = 3;
+    
+    private static final int LOG_MESSAGE_INTERVAL_MANY_LOGS = 130;
     
     private LocalLogService localLogService;
     private List<List<String>> logMessages;
@@ -48,7 +53,6 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     protected void prepareTestData() {
         super.prepareTestData();
         initVariable();
-        removeAndRestoreLogMessage();
     }
 
     private void initVariable() {
@@ -62,6 +66,7 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     @Override
     @Test
     public void testExecuteAndPostProcess() {
+        removeAndRestoreLogMessage();
         gaeSimulation.loginAsAdmin("admin");
         
         testInvalidQuery();
@@ -75,8 +80,67 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         testLoadingLocalTimeAjax();
         
         testContinueSearch();
+    }
+
+    @Test
+    public void testLargeNumberOfLogs() {
+        removeAndRestoreManyLogs();
+        gaeSimulation.loginAsAdmin("admin");
         
-        testExceededLogs();
+        testManyLogs();
+    }
+    
+    private void testManyLogs() {
+        Date today = TimeHelper.getDateOffsetToCurrentTime(0);
+        
+        // default search will stop at #logs around 50
+        AdminActivityLogPageAction action = getAction();
+        ShowPageResult result = getShowPageResult(action);
+        Date earliestDateInUtc = new Date(today.getTime() - 54 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000);
+        verifyHugeLogs(55, 0, 54, result.data, result.getStatusMessage(), earliestDateInUtc);
+        
+        // continue search will get next #logs around 50
+        long nextSearch = today.getTime() - 56 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000;
+        action = getAction("searchTimeOffset", String.valueOf(nextSearch));
+        AjaxResult resultAjax = getAjaxResult(action);
+        earliestDateInUtc = new Date(today.getTime() - 110 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000);
+        verifyHugeLogs(56, 55, 110, resultAjax.data, resultAjax.getStatusMessage(), earliestDateInUtc);
+        
+        // continue search will get logs until no logs
+        nextSearch = today.getTime() - 112 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000;
+        action = getAction("searchTimeOffset", String.valueOf(nextSearch));
+        resultAjax = getAjaxResult(action);
+        earliestDateInUtc = new Date(nextSearch - 24 * 60 * 60 * 1000);
+        verifyHugeLogs(39, 111, 149, resultAjax.data, resultAjax.getStatusMessage(), earliestDateInUtc);
+    
+        // deafult search with filter stop at #logs around 50
+        action = getAction("filterQuery", "request:dummy1");
+        result = getShowPageResult(action);
+        earliestDateInUtc = new Date(today.getTime() - 54 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000);
+        verifyHugeLogs(55, 0, 54, result.data, result.getStatusMessage(), earliestDateInUtc);
+        
+        // continue search with filter will get logs until no logs
+        nextSearch = today.getTime() - 56 * LOG_MESSAGE_INTERVAL_MANY_LOGS * 1000;
+        action = getAction("filterQuery", "request:dummy1", "searchTimeOffset", String.valueOf(nextSearch));
+        resultAjax = getAjaxResult(action);
+        earliestDateInUtc = new Date(nextSearch - 24 * 60 * 60 * 1000);
+        verifyHugeLogs(95, 55, 60, resultAjax.data, resultAjax.getStatusMessage(), earliestDateInUtc);
+    }
+    
+    private void verifyHugeLogs(int totalLogs, int first, int last,
+                                PageData pageData, String statusMessage, Date earliestDateInUtc) {
+        List<ActivityLogEntry> actualLogs = ((AdminActivityLogPageData) pageData).getLogs();
+        int numLogs = last - first + 1;
+        
+        verifyLogsIdInRange(actualLogs, first, last);
+        verifyStatusMessage(statusMessage, totalLogs, numLogs, earliestDateInUtc);
+    }
+    
+    private void verifyLogsIdInRange(List<ActivityLogEntry> actualLogs, int first, int last) {
+        assertEquals(last - first + 1, actualLogs.size());
+        for (int i = 0; i < actualLogs.size(); i++) {
+            assertEquals(String.format("id4%02d", first + i), actualLogs.get(i).getId());
+        }
     }
 
     private void testInvalidQuery() {
@@ -331,11 +395,6 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         
     }
     
-    private void testExceededLogs() {
-        // TODO Auto-generated method stub
-        
-    }
-
     private void verifyContinueSearch(String[] params, int[][] expected, int totalLogs,
             int filteredLogs, Date earliestDateInUtc) {
         AdminActivityLogPageAction action = getAction(params);
@@ -356,8 +415,8 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
     /**
      * Verifies actualLogs contains expectedLogs.
      * 
-     * <p>expectedLogs is a 2D array, the outer indices correspond to {@link #LOG_MESSAGE_TODAY_INDEX}
-     * {@link #LOG_MESSAGE_YESTDAY_INDEX} and {@link #LOG_MESSAGE_TWO_DAYS_AGO_INDEX}, the inner indices for
+     * <p>expectedLogs is a 2D array, the outer indices correspond to {@link #LOG_MESSAGE_INDEX_TODAY}
+     * {@link #LOG_MESSAGE_YESTDAY_INDEX} and {@link #LOG_MESSAGE_INDEX_TWO_DAYS_AGO}, the inner indices for
      * every {@code LOG_MESSAGE_*_INDEX} correspond to the orders in {@link #TYPICAL_LOG_MESSAGE} file.
      * 
      * @param expectedLogs Expected logs
@@ -391,10 +450,10 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         
         assertTrue(message.contains("Total Logs gone through in last search: " + totalLogs));
         assertTrue(message.contains("Total Relevant Logs found in last search: " + filteredLogs));
-        // bug might be introduced when the time is 00:00 AM.
-        assertTrue(message.contains("The earliest log entry checked on <b>" + sdf.format(earliestDateInUtc.getTime())));
         assertTrue(message.contains("Logs are from following version(s): 1"));
         assertTrue(message.contains("All available version(s): 1"));
+        // bug might be introduced when the time is 00:00 AM.
+        assertTrue(message.contains("The earliest log entry checked on <b>" + sdf.format(earliestDateInUtc.getTime())));
     }
 
     private void verifyLoadingLocalTimeAjaxResult(String expected, String role, String googleId, long timeInMillis) {
@@ -411,24 +470,35 @@ public class AdminActivityLogPageActionTest extends BaseActionTest {
         localLogService.clear();
         
         Date twoDaysAgo = TimeHelper.getDateOffsetToCurrentTime(-2);
-        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TWO_DAYS_AGO_INDEX), twoDaysAgo.getTime());
+        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_INDEX_TWO_DAYS_AGO), twoDaysAgo.getTime());
         Date yesterday = TimeHelper.getDateOffsetToCurrentTime(-1);
-        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_YESTERDAY_INDEX), yesterday.getTime());
+        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_INDEX_YESTERDAY), yesterday.getTime());
         Date today = TimeHelper.getDateOffsetToCurrentTime(0);
-        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_TODAY_INDEX), today.getTime());
+        insertLogMessagesAtTime(logMessages.get(LOG_MESSAGE_INDEX_TODAY), today.getTime());
+    }
+    
+    private void removeAndRestoreManyLogs() {
+        localLogService.clear();
+        
+        Date today = TimeHelper.getDateOffsetToCurrentTime(0);
+        insertLogMessageAtTimeWithInterval(logMessages.get(LOG_MESSAGE_INDEX_MANY_LOGS),
+                                           today.getTime(), LOG_MESSAGE_INTERVAL_MANY_LOGS);
     }
     
     private void insertLogMessagesAtTime(List<String> msgList, long timeMillis) {
-        createDummyRequestInfoAtTime(timeMillis);
-        
+        insertLogMessageAtTimeWithInterval(msgList, timeMillis, 1);
+    }
+    
+    private void insertLogMessageAtTimeWithInterval(List<String> msgList, long timeMillis, int intervalInSecond) {
         int levelInfo = 1;
-        long offset = 0;
         // bug might be introduced when the time is 00:00 AM.
         // but this situation is really rare and can be solved by re-running the test case
-        for (String msg : msgList) {
-            localLogService.addAppLogLine(String.valueOf(timeMillis),
-                                          timeMillis * 1000 - offset, levelInfo, msg);
-            offset--;
+        long logTimeInMillis = timeMillis - msgList.size() * intervalInSecond * 1000;
+        for (int i = msgList.size() - 1; i >= 0; i--) {
+            createDummyRequestInfoAtTime(logTimeInMillis);
+            localLogService.addAppLogLine(String.valueOf(logTimeInMillis),
+                                          logTimeInMillis * 1000, levelInfo, msgList.get(i));
+            logTimeInMillis += intervalInSecond * 1000;
         }
     }
     
