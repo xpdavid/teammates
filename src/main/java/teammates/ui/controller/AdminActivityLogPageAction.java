@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.TimeZone;
 
 import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
@@ -160,8 +159,8 @@ public class AdminActivityLogPageAction extends Action {
         }
         
         double adminTimeZone = Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE;
-        String timeInAdminTimeZone = computeLocalTime(adminTimeZone, String.valueOf(earliestSearchTime));
-        String timeInUserTimeZone = computeLocalTime(targetTimeZone, String.valueOf(earliestSearchTime));
+        String timeInAdminTimeZone = computeLocalTime(adminTimeZone, earliestSearchTime);
+        String timeInUserTimeZone = computeLocalTime(targetTimeZone, earliestSearchTime);
 
         status.append("The earliest log entry checked on <b>" + timeInAdminTimeZone + "</b> in Admin Time Zone ("
                       + adminTimeZone + ") and ");
@@ -228,6 +227,7 @@ public class AdminActivityLogPageAction extends Action {
             totalLogsSearched += searchResult.size();
             query.moveTimePeriodBackward(SEARCH_TIME_INCREMENT);
         }
+        data.setFromDate(query.getStartTime() + SEARCH_TIME_INCREMENT);
         nextEndTimeToSearch = query.getEndTime();
         return appLogs;
     }
@@ -360,9 +360,18 @@ public class AdminActivityLogPageAction extends Action {
             return "Local Time Unavailable";
         }
         
-        Calendar appCal = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        double timeZoneOffset = timeZone - Const.SystemParams.ADMIN_TIME_ZONE_DOUBLE;
+        Calendar appCal = Calendar.getInstance();
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         appCal.setTimeInMillis(Long.parseLong(logTimeInAdminTimeZone));
+        appCal = TimeHelper.convertToUserTimeZone(appCal, timeZoneOffset);
+        return sdf.format(appCal.getTime());
+    }
+    
+    private String computeLocalTime(double timeZone, long logTimeInUtc) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        Calendar appCal = Calendar.getInstance();
+        appCal.setTimeInMillis(logTimeInUtc);
         appCal = TimeHelper.convertToUserTimeZone(appCal, timeZone);
         return sdf.format(appCal.getTime());
     }
