@@ -83,11 +83,14 @@ public class Logic {
     protected static ProfilesLogic profilesLogic = ProfilesLogic.inst();
 
     /**
-     * Creates a new Account based on given values. If a profile is not given,
-     * a default empty profile is created for the user<br>
-     * Preconditions: <br>
-     * * All parameters are non-null.
+     * Creates a new Account based on given values.
      * 
+     * <p>If a profile is not given, a default empty profile is created for the user
+     * 
+     * <p>Preconditions:
+     * <ul>
+     * <li>All parameters are non-null.</li>
+     * </ul>
      */
     public void createAccount(String googleId, String name, boolean isInstructor, String email, String institute,
                               StudentProfileAttributes studentProfileParam) throws InvalidParametersException {
