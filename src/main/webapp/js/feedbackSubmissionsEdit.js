@@ -54,7 +54,8 @@ $(document).ready(function() {
             return false;
         }
 
-        reenableFieldsForSubmission();
+        reenableFieldsForSubmission(); // only enabled inputs will appear in the post data
+        disableSubmissionButton(); // to prevent user from clicking submission button again
     });
 
     formatRecipientLists();
@@ -765,6 +766,11 @@ function formatRecipientLists() {
 
 function reenableFieldsForSubmission() {
     $(':disabled').prop('disabled', false);
+}
+
+function disableSubmissionButton() {
+    var $submissionButton = $('#response_submit_button');
+    addLoadingIndicator($submissionButton, '');
 }
 
 function validateNumScaleAnswer(qnIdx, responseIdx) {
