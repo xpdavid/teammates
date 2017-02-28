@@ -232,6 +232,24 @@ QUnit.test('checkEvaluationForm()', function(assert) {
     assert.expect(0);
 });
 
+QUnit.test('addLoadingIndicator()', function(assert) {
+    var $button = $('#loading-indicator');
+    addLoadingIndicator($button, 'Loading');
+
+    assert.equal($button.text(), 'Loading', 'Button text changes to loading');
+    assert.equal($button.find('img').attr('src'), '/images/ajax-loader.gif', 'Loading gif appended');
+    assert.ok($button.is(':disabled'), 'Button disabled');
+});
+
+QUnit.test('removeLoadingIndicator()', function(assert) {
+    var $button = $('#loading-indicator');
+    removeLoadingIndicator($button, 'Complete');
+
+    assert.equal($button.text(), 'Complete', 'Button text changes to complete');
+    assert.equal($button.find('img').length, 0, 'Loading gif removed');
+    assert.notOk($button.is(':disabled'), 'Button enabled');
+});
+
 QUnit.test('sanitizeGoogleId(googleId)', function(assert) {
     assert.equal(sanitizeGoogleId('test  @Gmail.COM  '), 'test', 'test - valid');
     assert.equal(sanitizeGoogleId('  user@hotmail.com  '), 'user@hotmail.com',
