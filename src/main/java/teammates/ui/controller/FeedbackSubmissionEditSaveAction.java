@@ -8,15 +8,15 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import teammates.common.datatransfer.FeedbackParticipantType;
-import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
-import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
-import teammates.common.datatransfer.questions.FeedbackQuestionType;
-import teammates.common.datatransfer.attributes.FeedbackResponseAttributes;
-import teammates.common.datatransfer.questions.FeedbackResponseDetails;
-import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
+import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
+import teammates.common.datatransfer.attributes.FeedbackResponseAttributes;
+import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
+import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackQuestionType;
+import teammates.common.datatransfer.questions.FeedbackResponseDetails;
 import teammates.common.exception.EmailSendingException;
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.EntityDoesNotExistException;
@@ -30,6 +30,7 @@ import teammates.common.util.StatusMessage;
 import teammates.common.util.StatusMessageColor;
 import teammates.logic.api.EmailGenerator;
 import teammates.ui.pagedata.FeedbackSubmissionEditPageData;
+import teammates.ui.pagedata.FeedbackSubmissionEditSaveAjaxPageData;
 
 import com.google.appengine.api.datastore.Text;
 
@@ -65,7 +66,7 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
             isError = true;
             statusToUser.add(new StatusMessage(Const.StatusMessages.FEEDBACK_SUBMISSIONS_NOT_OPEN,
                                                StatusMessageColor.WARNING));
-            return createSpecificRedirectResult();
+            return createSpecificJsonResult();
         }
 
         String userTeamForCourse = getUserTeamForCourse();
@@ -210,7 +211,7 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
                            + TeammatesException.toStringWithStackTrace(e));
             }
         }
-        return createSpecificRedirectResult();
+        return createSpecificJsonResult();
     }
 
     /**
@@ -376,5 +377,20 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
 
     protected abstract boolean isSessionOpenForSpecificUser(FeedbackSessionAttributes session);
 
-    protected abstract RedirectResult createSpecificRedirectResult();
+    protected abstract String createSpecificRedirectUrl();
+
+    protected AjaxResult createSpecificJsonResult() {
+        FeedbackSubmissionEditSaveAjaxPageData pageData =
+                new FeedbackSubmissionEditSaveAjaxPageData(account, statusToUser, isError);
+
+        pageData.setRedirectTo(createSpecificRedirectUrl());
+
+        if (isError) {
+            // JavaScript will print the status message
+            return createAjaxResult(pageData);
+        } else {
+            // create redirect JSON data and the status message should be shown in the redirect page
+            return createAjaxResultWithoutClearingStatusMessage(pageData);
+        }
+    }
 }

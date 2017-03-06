@@ -1,7 +1,7 @@
 package teammates.ui.controller;
 
-import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
+import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
@@ -65,26 +65,15 @@ public class StudentFeedbackSubmissionEditSaveAction extends FeedbackSubmissionE
     }
 
     @Override
-    protected RedirectResult createSpecificRedirectResult() {
-        if (!isRegisteredStudent()) {
+    protected String createSpecificRedirectUrl() {
+        if (isRegisteredStudent()) {
+            // Return to student home page if there is no error and user is registered
+            return Const.ActionURIs.STUDENT_HOME_PAGE;
+        } else {
             // Always remains at student feedback submission edit page if user is unregistered
             // Link given to unregistered student already contains course id & session name
-            return createRedirectResult(Const.ActionURIs.STUDENT_FEEDBACK_SUBMISSION_EDIT_PAGE);
+            return Const.ActionURIs.STUDENT_FEEDBACK_SUBMISSION_EDIT_PAGE;
         }
-        if (isError) {
-            // Return to student feedback submission edit page if there is an error and user is registered
-            RedirectResult result = createRedirectResult(Const.ActionURIs.STUDENT_FEEDBACK_SUBMISSION_EDIT_PAGE);
-
-            // Provide course id and session name for the redirected page
-            result.responseParams.put(Const.ParamsNames.COURSE_ID, student.course);
-            result.responseParams.put(Const.ParamsNames.FEEDBACK_SESSION_NAME,
-                                      getRequestParamValue(Const.ParamsNames.FEEDBACK_SESSION_NAME));
-
-            return result;
-        }
-
-        // Return to student home page if there is no error and user is registered
-        return createRedirectResult(Const.ActionURIs.STUDENT_HOME_PAGE);
     }
 
     protected StudentAttributes getStudent() {
