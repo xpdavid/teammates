@@ -1,9 +1,9 @@
 package teammates.ui.controller;
 
 import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
-import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
@@ -14,6 +14,7 @@ import teammates.common.util.Const;
 import teammates.common.util.SanitizationHelper;
 import teammates.common.util.StatusMessage;
 import teammates.common.util.StatusMessageColor;
+import teammates.common.util.Url;
 
 public class InstructorEditStudentFeedbackSaveAction extends FeedbackSubmissionEditSaveAction {
 
@@ -141,13 +142,14 @@ public class InstructorEditStudentFeedbackSaveAction extends FeedbackSubmissionE
     }
 
     @Override
-    protected RedirectResult createSpecificRedirectResult() {
-        RedirectResult result = createRedirectResult(Const.ActionURIs.INSTRUCTOR_EDIT_STUDENT_FEEDBACK_PAGE);
+    protected String createSpecificRedirectUrl() {
+        String redirectUrl = Const.ActionURIs.INSTRUCTOR_EDIT_STUDENT_FEEDBACK_PAGE;
 
-        result.responseParams.put(Const.ParamsNames.COURSE_ID, moderatedStudent.course);
-        result.responseParams.put(Const.ParamsNames.FEEDBACK_SESSION_NAME, feedbackSessionName);
-        result.responseParams.put(Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON, moderatedStudent.email);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.COURSE_ID, moderatedStudent.course);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.FEEDBACK_SESSION_NAME, feedbackSessionName);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON,
+                                        moderatedStudent.email);
 
-        return result;
+        return redirectUrl;
     }
 }
