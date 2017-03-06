@@ -380,17 +380,11 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
     protected abstract String createSpecificRedirectUrl();
 
     protected AjaxResult createSpecificJsonResult() {
-        FeedbackSubmissionEditSaveAjaxPageData pageData =
-                new FeedbackSubmissionEditSaveAjaxPageData(account, statusToUser, isError);
+        FeedbackSubmissionEditSaveAjaxPageData pageData = new FeedbackSubmissionEditSaveAjaxPageData(account);
 
         pageData.setRedirectTo(createSpecificRedirectUrl());
 
-        if (isError) {
-            // JavaScript will print the status message
-            return createAjaxResult(pageData);
-        } else {
-            // create redirect JSON data and the status message should be shown in the redirect page
-            return createAjaxResultWithoutClearingStatusMessage(pageData);
-        }
+        // create redirect JSON data and the status message should be shown in the redirect page
+        return createAjaxResultWithoutClearingStatusMessage(pageData);
     }
 }

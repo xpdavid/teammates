@@ -59,20 +59,18 @@ $(document).ready(function() {
 
         reenableFieldsForSubmission(); // only enabled inputs will appear in the post data
 
+        // disable button to prevent user from clicking submission button again
         var $submissionButton = $('#response_submit_button');
-        var $submissionForm = $(this);
+        addLoadingIndicator($submissionButton, '');
 
+        var $submissionForm = $(this);
         $.ajax({
             url: $submissionForm.attr('action'),
-            type : "POST",
-            dataType : 'json',
-            data : $submissionForm.serialize(),
-            beforeSend: function() {
-                // disable button to prevent user from clicking submission button again
-                addLoadingIndicator($submissionButton, '');
-            },
-            success : function(result) {
-                // do something
+            type: 'POST',
+            dataType: 'json',
+            data: $submissionForm.serialize(),
+            success: function(data) {
+                window.location.href = data.redirectTo;
             },
             error: function() {
                 $submissionButton.removeClass('btn-primary').addClass('btn-danger');
