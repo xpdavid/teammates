@@ -83,8 +83,8 @@ public class InstructorFeedbackSubmissionEditSaveAction extends FeedbackSubmissi
     }
 
     @Override
-    protected RedirectResult createSpecificRedirectResult() {
-        return createRedirectResult(Const.ActionURIs.INSTRUCTOR_HOME_PAGE);
+    protected String createSpecificRedirectUrl() {
+        return Const.ActionURIs.INSTRUCTOR_HOME_PAGE;
     }
 
     @Override
