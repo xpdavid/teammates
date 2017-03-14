@@ -1,5 +1,13 @@
 <?xml version="1.0"?>
 <macker>
+    <ruleset name="UI should not touch storage">
+        <access-rule>
+            <deny>
+                <from class="teammates.ui.*" />
+                <to class="teammates.storage.*" />
+            </deny>
+        </access-rule>
+    </ruleset>
     <ruleset name="Logic should not access entity directly">
         <access-rule>
             <deny>
