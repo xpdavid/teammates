@@ -1,5 +1,17 @@
 <?xml version="1.0"?>
 <macker>
+    <ruleset name="Logic should not access entity directly">
+        <access-rule>
+            <deny>
+                <from class="teammates.logic.core.*" />
+                <to class="teammates.storage.entity.*" />
+                <allow>
+                    <!-- Should fix this in the future -->
+                    <to class="teammates.storage.entity.FeedbackResponse" />
+                </allow>
+            </deny>
+        </access-rule>
+    </ruleset>
     <ruleset name="Each logic can only access its corresponding DB">
         <foreach var="logicModule" class="teammates.logic.core.(*)Logic">
             <pattern name="DbModule" class="teammates.storage.api.${logicModule}Db" />
