@@ -313,6 +313,10 @@ checkstyle {
     configFile = file("static-analysis/teammates-checkstyle.xml")
 }
 
+tasks.withType(Checkstyle) { 
+    checkstyleClasspath += files('static-analysis/checkstyle-lib/config/checkstyle-lib.jar')
+}
+
 pmd {
     toolVersion = pmdVersion
     consoleOutput = true
