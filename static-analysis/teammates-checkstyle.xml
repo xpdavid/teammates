@@ -156,6 +156,7 @@
       <property name="scope" value="public"/>
     </module>
     <module name="CommentsIndentation"/>
+    <module name="com.puppycrawl.tools.checkstyle.checks.naming.BooleanNameCheck" />
   </module>
   <module name="SuppressionFilter">
     <property name="file" value="${basedir}/static-analysis/teammates-checkstyle-suppressions.xml"/>
