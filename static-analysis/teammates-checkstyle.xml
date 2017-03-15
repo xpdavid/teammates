@@ -153,7 +153,9 @@
     <module name="JavadocVariable">
       <property name="scope" value="public"/>
     </module>
-    <module name="com.puppycrawl.tools.checkstyle.checks.naming.BooleanNameCheck" />
+    <module name="com.puppycrawl.tools.checkstyle.checks.naming.BooleanNameCheck">
+      <property name="allowedPrefixes" value="is,has,can,should,allow"/>
+    </module>
   </module>
   <module name="SuppressionFilter">
     <property name="file" value="${basedir}/static-analysis/teammates-checkstyle-suppressions.xml"/>
