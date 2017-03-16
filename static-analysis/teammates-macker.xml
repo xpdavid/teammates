@@ -62,6 +62,23 @@
             </deny>
         </access-rule>
     </ruleset>
+    <ruleset name="(Automated)Action Test case should not depends on logic and storage">
+        <pattern name="actionTest">
+            <include class="teammates.test.cases.action.*" />
+            <include class="teammates.test.cases.automated.*" />
+        </pattern>
+        <pattern name="appLogic">
+            <include class="teammates.logic.*" />
+            <include class="teammates.storage.*" />
+        </pattern>
+        <access-rule>
+            <messsage>Action Test should only use GaeSimulation to interact</messsage>
+            <deny>
+                <from pattern="actionTest" ></from>
+                <to pattern="appLogic" />
+            </deny>
+        </access-rule>
+    </ruleset>
     <ruleset name="Only UI tests can access page object classes">
         <access-rule>
             <deny>
