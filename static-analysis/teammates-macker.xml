@@ -94,4 +94,19 @@
             </deny>
         </access-rule>
     </ruleset>
+    <ruleset name="Test driver can only be accessed from test package">
+        <access-rule>
+            <deny>
+                <from class="teammates.**" />
+                <to class="teammates.test.driver.*" />
+                <allow>
+                    <from class="teammates.test.**" />
+                </allow>
+                <allow>
+                    <!-- Is this allowed? -->
+                    <from class="teammates.client.**" />
+                </allow>
+            </deny>
+        </access-rule>
+    </ruleset>
 </macker>
