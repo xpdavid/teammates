@@ -72,7 +72,6 @@
             <include class="teammates.storage.*" />
         </pattern>
         <access-rule>
-            <messsage>Action Test should only use GaeSimulation to interact</messsage>
             <deny>
                 <from pattern="actionTest" ></from>
                 <to pattern="appLogic" />
