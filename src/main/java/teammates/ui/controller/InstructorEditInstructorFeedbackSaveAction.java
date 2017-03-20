@@ -1,9 +1,9 @@
 package teammates.ui.controller;
 
 import teammates.common.datatransfer.FeedbackParticipantType;
+import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
-import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
@@ -12,6 +12,7 @@ import teammates.common.util.Assumption;
 import teammates.common.util.Const;
 import teammates.common.util.StatusMessage;
 import teammates.common.util.StatusMessageColor;
+import teammates.common.util.Url;
 
 /**
  * The {@code InstructorEditInstructorFeedbackSaveAction} class handles incoming requests to
@@ -193,18 +194,15 @@ public class InstructorEditInstructorFeedbackSaveAction extends FeedbackSubmissi
         return true;
     }
 
-    /**
-     * Creates the page to redirect.
-     * @return RedirectResult object
-     */
     @Override
-    protected RedirectResult createSpecificRedirectResult() {
-        RedirectResult result = createRedirectResult(Const.ActionURIs.INSTRUCTOR_EDIT_INSTRUCTOR_FEEDBACK_PAGE);
+    protected String createSpecificRedirectUrl() {
+        String redirectUrl = Const.ActionURIs.INSTRUCTOR_EDIT_INSTRUCTOR_FEEDBACK_PAGE;
 
-        result.responseParams.put(Const.ParamsNames.COURSE_ID, moderatedInstructor.courseId);
-        result.responseParams.put(Const.ParamsNames.FEEDBACK_SESSION_NAME, feedbackSessionName);
-        result.responseParams.put(Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON, moderatedInstructor.email);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.COURSE_ID, moderatedInstructor.courseId);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.FEEDBACK_SESSION_NAME, feedbackSessionName);
+        redirectUrl = Url.addParamToUrl(redirectUrl, Const.ParamsNames.FEEDBACK_SESSION_MODERATED_PERSON,
+                                        moderatedInstructor.email);
 
-        return result;
+        return redirectUrl;
     }
 }

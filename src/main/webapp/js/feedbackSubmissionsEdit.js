@@ -3,6 +3,9 @@
 var FEEDBACK_RESPONSE_RECIPIENT = 'responserecipient';
 var FEEDBACK_RESPONSE_TEXT = 'responsetext';
 var FEEDBACK_MISSING_RECIPIENT = 'You did not specify a recipient for your response in question(s)';
+
+var FEEDBACK_SUBMISSION_FAIL = 'Submit failed. Click here to retry';
+
 var WARNING_STATUS_MESSAGE = '.alert-warning.statusMessage';
 
 // text displayed to user
@@ -61,6 +64,23 @@ $(document).ready(function() {
         // disable button to prevent user from clicking submission button again
         var $submissionButton = $('#response_submit_button');
         addLoadingIndicator($submissionButton, '');
+
+        var $submissionForm = $(this);
+        $.ajax({
+            url: $submissionForm.attr('action'),
+            type: 'POST',
+            dataType: 'json',
+            data: $submissionForm.serialize(),
+            success: function(data) {
+                window.location.href = data.redirectTo;
+            },
+            error: function() {
+                $submissionButton.removeClass('btn-primary').addClass('btn-danger');
+                removeLoadingIndicator($submissionButton, FEEDBACK_SUBMISSION_FAIL);
+            }
+        });
+
+        return false;
     });
 
     formatRecipientLists();
