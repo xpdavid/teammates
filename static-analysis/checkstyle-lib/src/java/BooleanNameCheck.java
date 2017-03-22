@@ -1,4 +1,4 @@
-package com.puppycrawl.tools.checkstyle.checks.naming;
+package teammates.naming;
 
 import java.util.Arrays;
 
@@ -8,8 +8,10 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class BooleanNameCheck extends AbstractCheck {
 
-    public static final String MSG = "Boolean variable name should start with %s";
+    public static final String MSG_NAMING = "Boolean variable name should start with %s";
 
+    public static final String MSG_NEGATION = "Avoid boolean variables that represent the negation of a thing. %s";
+    
     public static final String[] DEFAULT_PREFIXES = new String[] {"is", "has", "can", "should"};
 
     private String[] allowedPrefixes;
@@ -49,12 +51,16 @@ public class BooleanNameCheck extends AbstractCheck {
         String variableName = getVariableName(ast);
         for (String allowedPrefix : allowedPrefixes) {
             if (variableName.startsWith(allowedPrefix)) {
+                if (isNameNegationOfThing(variableName, allowedPrefix)) {
+                    log(ast.getLineNo(), ast.getColumnNo(),
+                            String.format(MSG_NEGATION, variableName), ast.getText());
+                }
                 return;
             }
         }
 
         log(ast.getLineNo(), ast.getColumnNo(),
-                String.format(MSG, Arrays.toString(allowedPrefixes)), ast.getText());
+                String.format(MSG_NAMING, Arrays.toString(allowedPrefixes)), ast.getText());
     }
 
     private boolean isBooleanVariableDefinition(DetailAST ast) {
@@ -64,6 +70,10 @@ public class BooleanNameCheck extends AbstractCheck {
 
     private String getVariableName(DetailAST ast) {
         return ast.findFirstToken(TokenTypes.IDENT).getText();
+    }
+    
+    private boolean isNameNegationOfThing(String variableName, String prefix) {
+        return variableName.replace(prefix, "").toLowerCase().startsWith("not");
     }
 
 }
