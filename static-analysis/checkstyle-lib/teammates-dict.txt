@@ -57,3 +57,11 @@ millis
 javamail
 lastname
 teamname
+datepicker
+textbox
+textarea
+placeholder
+placeholders
+datastore
+gmail
+inbox

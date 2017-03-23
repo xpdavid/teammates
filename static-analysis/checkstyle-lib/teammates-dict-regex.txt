@@ -1,0 +1,10 @@
+course\d*
+student\d*
+instructor\d*
+question\d*
+bundle\d*
+questions\d*
+details\d*
+account\d*
+session\d*
+section\d*
