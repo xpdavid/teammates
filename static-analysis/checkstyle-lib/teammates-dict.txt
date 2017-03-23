@@ -31,7 +31,11 @@ msq
 desanitize
 jquery
 css
-qybut
+qunit
+d3
+uri
+gson
+tinymce
 config
 shortname
 teammateslog
@@ -49,3 +53,7 @@ visibledate
 visibletime
 publishdate
 publishtime
+millis
+javamail
+lastname
+teamname

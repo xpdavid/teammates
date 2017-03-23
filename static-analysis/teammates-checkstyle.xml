@@ -159,6 +159,7 @@
     <module name="teammates.naming.SpellingCheck">
       <property name="dictFile" value="${basedir}/static-analysis/checkstyle-lib/dict.txt"/>
       <property name="additionalDictFile" value="${basedir}/static-analysis/checkstyle-lib/teammates-dict.txt"/>
+      <property name="regexFile" value="${basedir}/static-analysis/checkstyle-lib/teammates-dict-regex.txt"/>
     </module>
   </module>
   <module name="SuppressionFilter">

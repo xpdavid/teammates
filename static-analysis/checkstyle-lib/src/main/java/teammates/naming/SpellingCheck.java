@@ -2,7 +2,9 @@ package teammates.naming;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -16,15 +18,19 @@ public class SpellingCheck extends AbstractCheck implements ExternalResourceHold
 
     public static final String CAMEL_CASE_SPLITER_REGEX = "(?<!(^|[A-Z]))(?=[A-Z])|(?<!^)(?=[A-Z][a-z])";
 
-    public static final String MSG = "%s is not a word according to the built-in dictionary";
+    public static final String MSG = "%s is not a word according to provided dictionary";
 
     public final Set<String> wordDict = new HashSet<String>();
 
     public final Set<String> additionalWordDict = new HashSet<String>();
 
+    public final List<String> regexDict = new ArrayList<String>();
+
     private String dictFile;
 
     private String additionalDictFile;
+
+    private String regexFile;
 
     public void setDictFile(String file) throws CheckstyleException {
         if (file == null) {
@@ -46,10 +52,21 @@ public class SpellingCheck extends AbstractCheck implements ExternalResourceHold
         additionalDictFile = file;
     }
 
+    public void setRegexFile(String file) throws CheckstyleException {
+        if (file == null) {
+            throw new CheckstyleException(
+                    "property 'regexFile' is missing or invalid in module "
+                            + getConfiguration().getName());
+        }
+
+        regexFile = file;
+    }
+
     @Override
     public void beginTree(DetailAST rootAST) {
         readWordDict();
         readAdditionalDict();
+        readRegexDict();
     }
 
     private void readWordDict() {
@@ -76,6 +93,26 @@ public class SpellingCheck extends AbstractCheck implements ExternalResourceHold
             Scanner sc = new Scanner(input);
             while (sc.hasNextLine()) {
                 wordDict.add(sc.nextLine());
+            }
+            sc.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void readRegexDict() {
+        if (regexFile == null) {
+            return;
+        }
+        try {
+            File input = new File(regexFile);
+            Scanner sc = new Scanner(input);
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                if (!line.isEmpty()) {
+                    regexDict.add(line.trim());
+                }
             }
             sc.close();
         } catch (IOException e) {
@@ -116,7 +153,17 @@ public class SpellingCheck extends AbstractCheck implements ExternalResourceHold
     }
 
     private boolean isNameValid(String name) {
-        return wordDict.contains(name) || additionalWordDict.contains(name);
+        return wordDict.contains(name) || additionalWordDict.contains(name)
+                || isMatchRegexDict(name);
+    }
+
+    private boolean isMatchRegexDict(String name) {
+        for (String pattern : regexDict) {
+            if(name.matches(pattern)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getName(DetailAST ast) {
@@ -128,6 +175,9 @@ public class SpellingCheck extends AbstractCheck implements ExternalResourceHold
         Set<String> set = new HashSet<String>();
         if (additionalDictFile != null) {
             set.add(additionalDictFile);
+        }
+        if (regexFile != null) {
+            set.add(regexFile);
         }
         set.add(dictFile);
         return set;
