@@ -155,7 +155,11 @@
     <module name="JavadocVariable">
       <property name="scope" value="public"/>
     </module>
-    <module name="teammates.naming.BooleanNameCheck"/>
+    <!-- <module name="teammates.naming.BooleanNameCheck"/> -->
+    <module name="teammates.naming.SpellingCheck">
+      <property name="dictFile" value="${basedir}/static-analysis/checkstyle-lib/dict.txt"/>
+      <property name="additionalDictFile" value="${basedir}/static-analysis/checkstyle-lib/teammates-dict.txt"/>
+    </module>
   </module>
   <module name="SuppressionFilter">
     <property name="file" value="${basedir}/static-analysis/teammates-checkstyle-suppressions.xml"/>

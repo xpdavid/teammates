@@ -7,16 +7,17 @@ repositories {
     mavenCentral()
 }
 
-jar {
-    destinationDir rootProject.file('config')
-}
-
 sourceSets {
     main {
         java {
-            srcDirs = ['src/java']
+            srcDir "src/main/java"
+            include "**/*.java"
         }
     }
+}
+
+jar {
+    destinationDir rootProject.file('config')
 }
 
 dependencies {
