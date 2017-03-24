@@ -348,7 +348,7 @@ findbugsTest.finalizedBy printFindbugsTestResults
 def printFindbugsXml(File xml) {
     def bugCollection = new XmlSlurper().parse(xml)
     def report = ""
-    println bugCollection['BugInstance'].eachWithIndex { bug, index ->
+    bugCollection['BugInstance'].eachWithIndex { bug, index ->
         report += "${index + 1}. [${bug.@type}] {${bug.@category}} see more at http://findbugs.sourceforge.net/bugDescriptions.html#${bug.@type}\n"
         bug['Class'].each { classNode ->
             def sourceLine = classNode['SourceLine']
@@ -367,7 +367,24 @@ def printFindbugsXml(File xml) {
         }
         report += "\n"
     }
-    if (report.length() > 1) {
+    
+    def bugSummary = bugCollection['FindBugsSummary'];
+    bugSummary['PackageStats'].each { stats -> 
+        report += "* ${stats.@package} - Total Bugs: ${stats.@total_bugs}"
+        if (!stats.@priority_1.isEmpty()) {
+            report += " Priority1: ${stats.@priority_1}"
+        }
+        if (!stats.@priority_2.isEmpty()) {
+            report += " Priority2: ${stats.@priority_2}"
+        }
+        if (!stats.@priority_3.isEmpty()) {
+            report += " Priority3: ${stats.@priority_3}"
+        }
+        report += "\n"
+    }
+    report += "\nSummary: Total ${bugSummary.@total_bugs} Bugs\n"
+    
+    if (bugSummary.@total_bugs.toInteger()) {
         logger.error "[FINDBUGS]\n${report}"
         throw new GradleException('findbugs violations found!')
     }
