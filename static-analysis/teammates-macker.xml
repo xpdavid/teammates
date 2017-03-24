@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <macker>
-    <ruleset name="UI should not touch storage">
+    <ruleset name="packageDiagram: UI should not touch storage">
         <access-rule>
             <deny>
                 <from class="teammates.ui.*" />
@@ -8,19 +8,52 @@
             </deny>
         </access-rule>
     </ruleset>
-    <ruleset name="Logic should not access entity directly">
+    <ruleset name="packageDiagram: Logic should not touch UI">
         <access-rule>
             <deny>
-                <from class="teammates.logic.core.*" />
-                <to class="teammates.storage.entity.*" />
-                <allow>
-                    <!-- Should fix this in the future -->
-                    <to class="teammates.storage.entity.FeedbackResponse" />
-                </allow>
+                <from class="teammates.logic.*" />
+                <to class="teammates.ui.*" />
             </deny>
         </access-rule>
     </ruleset>
-    <ruleset name="Each logic can only access its corresponding DB">
+    <ruleset name="packageDiagram: Storage should not touch Logic">
+        <access-rule>
+            <deny>
+                <from class="teammates.storage.*" />
+                <to class="teammates.logic.*" />
+            </deny>
+        </access-rule>
+    </ruleset>
+    <ruleset name="packageDiagram: Storage should not touch UI">
+        <access-rule>
+            <deny>
+                <from class="teammates.storage.*" />
+                <to class="teammates.ui.*" />
+            </deny>
+        </access-rule>
+    </ruleset>
+    <ruleset name="packageDiagram: client::remoteapi can be only access by client::scripts">
+        <access-rule>
+            <deny>
+                <to class="teammates.client.remoteapi.*" />
+                <allow>
+                    <from class="teammates.client.scripts.*" />
+                </allow>          
+            </deny>
+        </access-rule>
+    </ruleset>
+    <ruleset name="packageDiagram: client::util should only be used inside client">
+        <access-rule>
+            <deny>
+                <to class="teammates.client.util.*" />
+                <allow>
+                    <from class="teammates.client.*" />
+                </allow>          
+            </deny>
+        </access-rule>
+    </ruleset>
+    
+    <ruleset name="LogicComponent: Each logic can only access its corresponding DB (e.g. AccountsLogic -> AccountsDb)">
         <foreach var="logicModule" class="teammates.logic.core.(*)Logic">
             <pattern name="DbModule" class="teammates.storage.api.${logicModule}Db" />
             
@@ -36,7 +69,51 @@
             </access-rule>
         </foreach>
     </ruleset>
-    <ruleset name="Test cases should not be dependent on each other">
+    <ruleset name="packageDiagram: BackDoorServlet should only access BackDoorLogic, not logic:core">
+        <access-rule>
+            <deny>
+                <from class="teammates.logic.backdoor.BackDoorServlet" />
+                <to class="teammates.logic.core.*" />      
+            </deny>
+        </access-rule>
+    </ruleset>
+    
+    <ruleset name="StorageComponent: storage::entity should only be accessed by storage::api and common:datatransfer">
+       <access-rule>
+            <deny>
+                <to class="teammates.storage.entity.*" />
+            </deny>
+            <allow>
+                <from>
+                    <include class="teammates.test.**" />
+                    <include class="teammates.client.**" />
+                    <include class="teammates.storage.entity.*" />
+                    <include class="teammates.storage.api.*" />
+                    <include class="teammates.common.datatransfer.**" />
+                </from>
+            </allow>
+            <allow>
+                <!-- Should update this later -->
+                <to class="teammates.storage.entity.FeedbackResponse" />
+            </allow>
+        </access-rule>
+    </ruleset>
+    <ruleset name="StorageComponent: storage::search should only be accessed by storage::api">
+        <access-rule>
+            <deny>
+                <to class="teammates.storage.search.*" />
+                <allow>
+                    <from>
+                        <include class="teammates.test.**" />
+                        <include class="teammates.storage.api.*" />
+                        <include class="teammates.storage.search.*" />
+                    </from>
+                </allow>    
+            </deny>
+        </access-rule>
+    </ruleset>
+    
+    <ruleset name="TestDriverComponent: Test cases should not be dependent on each other">
         <var name="testCasesPackage" value="teammates.test.cases" />
         <access-rule>
             <deny>
@@ -62,23 +139,7 @@
             </deny>
         </access-rule>
     </ruleset>
-    <ruleset name="(Automated)Action Test case should not depends on logic and storage">
-        <pattern name="actionTest">
-            <include class="teammates.test.cases.action.*" />
-            <include class="teammates.test.cases.automated.*" />
-        </pattern>
-        <pattern name="appLogic">
-            <include class="teammates.logic.*" />
-            <include class="teammates.storage.*" />
-        </pattern>
-        <access-rule>
-            <deny>
-                <from pattern="actionTest" ></from>
-                <to pattern="appLogic" />
-            </deny>
-        </access-rule>
-    </ruleset>
-    <ruleset name="Only UI tests can access page object classes">
+    <ruleset name="TestDriverComponent: Only UI tests can access page object classes">
         <access-rule>
             <deny>
                 <from class="teammates.test.**" />
@@ -94,7 +155,7 @@
             </deny>
         </access-rule>
     </ruleset>
-    <ruleset name="Test driver can only be accessed from test package">
+    <ruleset name="TestDriverComponent: Test driver can only be accessed from test package">
         <access-rule>
             <deny>
                 <from class="teammates.**" />
@@ -109,4 +170,26 @@
             </deny>
         </access-rule>
     </ruleset>
+    <ruleset name="TestDriverComponent: util and browsertest cannot access GaeSimulation">
+        <access-rule>
+            <deny>
+                <from>
+                    <include class="teammates.test.cases.util.*" />
+                    <include class="teammates.test.cases.browsertests.*" />
+                </from>
+                <to class="teammates.test.driver.GaeSimulation" />
+            </deny>
+        </access-rule>
+    </ruleset>
+<!--     <ruleset name="TestDriverComponent: action test cases should only interact with back-end through BackDoor API">
+        <access-rule>
+            <deny>
+                <from class="teammates.test.cases.action.*" />
+                <to class="teammates.logic.**" />
+                <allow>
+                    <to class="teammates.logic.backdoor.BackDoorLogic" />
+                </allow>
+            </deny>
+        </access-rule>
+    </ruleset> --> 
 </macker>
