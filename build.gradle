@@ -322,15 +322,52 @@ pmd {
 
 findbugs {
     toolVersion = findbugsVersion
-    visitors = [
-        "FindDeadLocalStores"
-    ]
+    ignoreFailures = true
 }
 
 tasks.withType(FindBugs) {
     reports {
-        xml.enabled = false
-        html.enabled = true
+        xml.enabled = true
+        html.enabled = false
+    }
+}
+
+task printFindbugsMainResults << {
+    printFindbugsXml findbugsMain.reports.xml.destination
+}
+
+findbugsMain.finalizedBy printFindbugsMainResults
+
+task printFindbugsTestResults << {
+    printFindbugsXml findbugsTest.reports.xml.destination
+}
+
+findbugsTest.finalizedBy printFindbugsTestResults
+
+def printFindbugsXml(File xml) {
+    def bugCollection = new XmlSlurper().parse(xml)
+    def report = ""
+    println bugCollection['BugInstance'].eachWithIndex { bug, index ->
+        report += "${index + 1}. [${bug.@type}] see more at http://findbugs.sourceforge.net/bugDescriptions.html#${bug.@type}\n"
+        bug['Class'].each { classNode ->
+            def sourceLine = classNode['SourceLine']
+            report += "\t Class ${sourceLine.@sourcefile} at ${sourceLine.@classname}[${sourceLine.@start}:${sourceLine.@end}]\n"
+        }
+        bug['Method'].each { methodNode ->
+            def sourceLine = methodNode['SourceLine']
+            report += "\t Method ${methodNode.@name} at ${sourceLine.@sourcefile}[${sourceLine.@start}:${sourceLine.@end}]\n"
+        }
+        bug['Field'].each { fieldNode ->
+            def sourceLine = fieldNode['SourceLine']
+            report += "\t Field ${fieldNode.@name} of type ${fieldNode.@signature} at ${sourceLine.@sourcefile}\n"
+        }
+        bug['LocalVariable'].each { localVariableNode ->
+            report += "\t LocalVariable ${localVariableNode.@name} as role ${localVariableNode.@role}\n"
+        }
+    }
+    if (report.length() > 1) {
+        logger.error "[FINDBUGS]\n${report}"
+        throw new GradleException('findbugs violations found!')
     }
 }
 
