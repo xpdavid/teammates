@@ -323,6 +323,7 @@ pmd {
 findbugs {
     toolVersion = findbugsVersion
     ignoreFailures = true
+    excludeFilter = file("static-analysis/teammates-findbugs-filter.xml")
 }
 
 tasks.withType(FindBugs) {
@@ -348,7 +349,7 @@ def printFindbugsXml(File xml) {
     def bugCollection = new XmlSlurper().parse(xml)
     def report = ""
     println bugCollection['BugInstance'].eachWithIndex { bug, index ->
-        report += "${index + 1}. [${bug.@type}] see more at http://findbugs.sourceforge.net/bugDescriptions.html#${bug.@type}\n"
+        report += "${index + 1}. [${bug.@type}] {${bug.@category}} see more at http://findbugs.sourceforge.net/bugDescriptions.html#${bug.@type}\n"
         bug['Class'].each { classNode ->
             def sourceLine = classNode['SourceLine']
             report += "\t Class ${sourceLine.@sourcefile} at ${sourceLine.@classname}[${sourceLine.@start}:${sourceLine.@end}]\n"
@@ -364,6 +365,7 @@ def printFindbugsXml(File xml) {
         bug['LocalVariable'].each { localVariableNode ->
             report += "\t LocalVariable ${localVariableNode.@name} as role ${localVariableNode.@role}\n"
         }
+        report += "\n"
     }
     if (report.length() > 1) {
         logger.error "[FINDBUGS]\n${report}"
