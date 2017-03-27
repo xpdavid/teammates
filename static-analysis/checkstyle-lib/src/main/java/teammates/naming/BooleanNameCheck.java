@@ -8,10 +8,10 @@ import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
 public class BooleanNameCheck extends AbstractCheck {
 
-    public static final String MSG_NAMING = "Boolean variable name should start with %s";
+    public static final String MSG_NAMING = "Boolean variable %s name should start with %s";
 
     public static final String MSG_NEGATION = "Avoid boolean variables that represent the negation of a thing. %s";
-    
+
     public static final String[] DEFAULT_PREFIXES = new String[] {"is", "has", "can", "should"};
 
     private String[] allowedPrefixes;
@@ -60,7 +60,7 @@ public class BooleanNameCheck extends AbstractCheck {
         }
 
         log(ast.getLineNo(), ast.getColumnNo(),
-                String.format(MSG_NAMING, Arrays.toString(allowedPrefixes)), ast.getText());
+                String.format(MSG_NAMING, variableName, Arrays.toString(allowedPrefixes)), ast.getText());
     }
 
     private boolean isBooleanVariableDefinition(DetailAST ast) {
@@ -71,7 +71,7 @@ public class BooleanNameCheck extends AbstractCheck {
     private String getVariableName(DetailAST ast) {
         return ast.findFirstToken(TokenTypes.IDENT).getText();
     }
-    
+
     private boolean isNameNegationOfThing(String variableName, String prefix) {
         return variableName.replace(prefix, "").toLowerCase().startsWith("not");
     }
