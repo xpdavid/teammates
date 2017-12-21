@@ -791,6 +791,10 @@ public class FeedbackSessionResultsBundle {
             String name = emailNameTable.get(response.recipient);
             FeedbackQuestionAttributes question = questions.get(response.feedbackQuestionId);
             FeedbackParticipantType participantType = question.recipientType;
+            if (participantType == FeedbackParticipantType.SELF) {
+                // recipient type for self-feedback is the same as the giver type
+                participantType = question.giverType;
+            }
 
             if (!isRecipientVisible(response)) {
                 String anonEmail = getAnonEmail(participantType, name);
@@ -836,10 +840,9 @@ public class FeedbackSessionResultsBundle {
             isVisible = visibilityTable.get(responseId)[Const.VISIBILITY_TABLE_RECIPIENT];
             participantType = question.recipientType;
         }
-        boolean isTypeSelf = participantType == FeedbackParticipantType.SELF;
         boolean isTypeNone = participantType == FeedbackParticipantType.NONE;
 
-        return isVisible || isTypeSelf || isTypeNone;
+        return isVisible || isTypeNone;
     }
 
     /**
