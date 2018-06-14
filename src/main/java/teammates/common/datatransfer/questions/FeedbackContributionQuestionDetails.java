@@ -176,7 +176,7 @@ public class FeedbackContributionQuestionDetails extends FeedbackQuestionDetails
 
         String currentUserTeam = bundle.emailTeamNameTable.get(studentEmail);
 
-        List<FeedbackResponseAttributes> actualResponses = getActualResponses(question, bundle);
+        List<FeedbackResponseAttributes> actualResponses = responses;
 
         //List of teams with at least one response
         List<String> teamNames = getTeamsWithAtLeastOneResponse(actualResponses, bundle);
