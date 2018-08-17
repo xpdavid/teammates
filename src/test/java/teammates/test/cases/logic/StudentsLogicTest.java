@@ -9,8 +9,6 @@ import java.util.List;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
-import com.google.appengine.api.datastore.Text;
-
 import teammates.common.datatransfer.CourseDetailsBundle;
 import teammates.common.datatransfer.CourseEnrollmentResult;
 import teammates.common.datatransfer.StudentAttributesFactory;
@@ -636,7 +634,7 @@ public class StudentsLogicTest extends BaseLogicTest {
      * Returns the error message of EnrollException thrown when trying to call
      * {@link StudentsLogic#createStudents(String, String)} method with
      * {@code invalidEnrollLines}. This method assumes that an EnrollException is thrown, else this method fails with
-     * {@link #signalFailureToDetectException()}.
+     * {@link #signalFailureToDetectException(String...)}.
      *
      * @param invalidEnrollLines is assumed to be invalid
      */
@@ -674,7 +672,7 @@ public class StudentsLogicTest extends BaseLogicTest {
 
         FeedbackSessionAttributes fsAttr = FeedbackSessionAttributes
                 .builder("newFeedbackSessionName", courseIdForEnrollTest, instructorEmail)
-                .withInstructions(new Text("default instructions"))
+                .withInstructions("default instructions")
                 .withCreatedTime(Instant.now())
                 .withStartTime(TimeHelperExtension.getInstantHoursOffsetFromNow(2))
                 .withEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(5))

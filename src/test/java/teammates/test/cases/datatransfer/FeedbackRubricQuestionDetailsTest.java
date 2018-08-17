@@ -6,8 +6,6 @@ import java.util.List;
 
 import org.testng.annotations.Test;
 
-import com.google.appengine.api.datastore.Text;
-
 import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
 import teammates.common.datatransfer.questions.FeedbackQuestionType;
@@ -264,7 +262,7 @@ public class FeedbackRubricQuestionDetailsTest extends BaseTestCase {
     public void testGetRubricWeights_rubricWeightsForEachCellEmpty_legacyDataWillBeConvertedToNewFormat()
             throws Exception {
         // Create a dummy question to test the method.
-        String questionMetaDataString = "{\"rubricSubQuestions\":[\"This student has done a good job.\","
+        String questionMetaData = "{\"rubricSubQuestions\":[\"This student has done a good job.\","
                 + "\"This student has tried his/her best.\"],"
                 + "\"questionText\":\"Please choose the best choice for the following sub-questions.\","
                 + "\"hasAssignedWeights\": true,"
@@ -272,8 +270,6 @@ public class FeedbackRubricQuestionDetailsTest extends BaseTestCase {
                 + "\"numOfRubricChoices\":2,\"numOfRubricSubQuestions\":2,\"questionType\":\"RUBRIC\","
                 + "\"rubricChoices\":[\"Yes\",\"No\"],\"rubricDescriptions\":[[\"\",\"\"],"
                 + "[\"Most of the time\",\"Less than half the time\"]]}";
-
-        Text questionMetaData = new Text(questionMetaDataString);
 
         List<FeedbackParticipantType> participants = new ArrayList<>();
         participants.add(FeedbackParticipantType.OWN_TEAM_MEMBERS);

@@ -35,10 +35,14 @@ public class OfyHelper implements ServletContextListener {
         ObjectifyService.register(FeedbackSession.class);
         ObjectifyService.register(Instructor.class);
         ObjectifyService.register(StudentProfile.class);
+        // add translator to support Instant
+        ObjectifyService.factory().getTranslators().add(new InstantTranslatorFactory());
     }
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
+        // init objectify service using default app credential
+        ObjectifyService.init();
         // Invoked by GAE at application startup.
         registerEntityClasses();
     }

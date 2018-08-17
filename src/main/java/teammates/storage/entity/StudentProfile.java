@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Date;
 
 import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
@@ -40,7 +39,7 @@ public class StudentProfile extends BaseEntity {
     private String gender;
 
     /* must be html sanitized before saving */
-    private Text moreInfo;
+    private String moreInfo;
 
     private BlobKey pictureKey;
 
@@ -73,7 +72,7 @@ public class StudentProfile extends BaseEntity {
      *            Miscellaneous information, including external profile
      */
     public StudentProfile(String googleId, String shortName, String email, String institute,
-                          String nationality, String gender, Text moreInfo, BlobKey pictureKey) {
+                          String nationality, String gender, String moreInfo, BlobKey pictureKey) {
         this.setGoogleId(googleId);
         this.setShortName(shortName);
         this.setEmail(email);
@@ -92,7 +91,7 @@ public class StudentProfile extends BaseEntity {
         this.setInstitute("");
         this.setNationality("");
         this.setGender("other");
-        this.setMoreInfo(new Text(""));
+        this.setMoreInfo("");
         this.setPictureKey(new BlobKey(""));
         this.setModifiedDate(Instant.now());
     }
@@ -146,11 +145,11 @@ public class StudentProfile extends BaseEntity {
         this.gender = gender;
     }
 
-    public Text getMoreInfo() {
+    public String getMoreInfo() {
         return this.moreInfo;
     }
 
-    public void setMoreInfo(Text moreInfo) {
+    public void setMoreInfo(String moreInfo) {
         this.moreInfo = moreInfo;
     }
 

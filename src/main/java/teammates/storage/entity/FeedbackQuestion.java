@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
@@ -46,9 +45,9 @@ public class FeedbackQuestion extends BaseEntity {
     private String creatorEmail;
 
     // TODO: rename to questionMetaData, will require database conversion
-    private Text questionText;
+    private String questionText;
 
-    private Text questionDescription;
+    private String questionDescription;
 
     private int questionNumber;
 
@@ -79,7 +78,7 @@ public class FeedbackQuestion extends BaseEntity {
 
     public FeedbackQuestion(
             String feedbackSessionName, String courseId, String creatorEmail,
-            Text questionText, Text questionDescription, int questionNumber, FeedbackQuestionType questionType,
+            String questionText, String questionDescription, int questionNumber, FeedbackQuestionType questionType,
             FeedbackParticipantType giverType,
             FeedbackParticipantType recipientType,
             int numberOfEntitiesToGiveFeedbackTo,
@@ -152,19 +151,19 @@ public class FeedbackQuestion extends BaseEntity {
         this.creatorEmail = creatorEmail;
     }
 
-    public Text getQuestionMetaData() {
+    public String getQuestionMetaData() {
         return questionText;
     }
 
-    public void setQuestionText(Text questionText) {
+    public void setQuestionText(String questionText) {
         this.questionText = questionText;
     }
 
-    public Text getQuestionDescription() {
+    public String getQuestionDescription() {
         return questionDescription;
     }
 
-    public void setQuestionDescription(Text questionDescription) {
+    public void setQuestionDescription(String questionDescription) {
         this.questionDescription = questionDescription;
     }
 
