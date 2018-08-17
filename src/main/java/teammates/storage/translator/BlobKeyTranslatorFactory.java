@@ -6,7 +6,6 @@ import com.google.cloud.datastore.Value;
 import com.google.cloud.datastore.ValueType;
 import com.googlecode.objectify.impl.translate.SimpleTranslatorFactory;
 
-
 /**
  * Translates between `com.google.appengine.api.blobstore.BlobKey` in entity class and `String` in Google Cloud Datastore.
  */
