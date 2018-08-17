@@ -476,7 +476,9 @@ public class FeedbackSessionsDb extends EntitiesDb<FeedbackSession, FeedbackSess
     public void deleteFeedbackSessionsForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        ofy().delete().keys(load().filter("courseId in", courseIds).keys()).now();
+        courseIds.forEach(courseId -> {
+            ofy().delete().keys(load().filter("courseId =", courseId).keys()).now();
+        });
     }
 
     private List<FeedbackSession> getFeedbackSessionEntitiesForCourse(String courseId) {

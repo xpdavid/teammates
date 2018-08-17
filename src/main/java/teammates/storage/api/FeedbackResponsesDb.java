@@ -440,11 +440,9 @@ public class FeedbackResponsesDb extends EntitiesDb<FeedbackResponse, FeedbackRe
     public void deleteFeedbackResponsesForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        ofy().delete().keys(getFeedbackResponsesForCoursesQuery(courseIds).keys()).now();
-    }
-
-    private Query<FeedbackResponse> getFeedbackResponsesForCoursesQuery(List<String> courseIds) {
-        return load().filter("courseId in", courseIds);
+        courseIds.forEach(courseId -> {
+            ofy().delete().keys(load().filter("courseId =", courseId).keys()).now();
+        });
     }
 
     /**

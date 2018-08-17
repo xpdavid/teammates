@@ -5,6 +5,7 @@ import javax.servlet.ServletContextListener;
 
 import com.googlecode.objectify.ObjectifyService;
 
+import teammates.storage.translator.BlobKeyTranslatorFactory;
 import teammates.storage.entity.Account;
 import teammates.storage.entity.AdminEmail;
 import teammates.storage.entity.Course;
@@ -35,8 +36,8 @@ public class OfyHelper implements ServletContextListener {
         ObjectifyService.register(FeedbackSession.class);
         ObjectifyService.register(Instructor.class);
         ObjectifyService.register(StudentProfile.class);
-        // add translator to support Instant
-        ObjectifyService.factory().getTranslators().add(new InstantTranslatorFactory());
+        // add translator to support BlobKey
+        ObjectifyService.factory().getTranslators().add(new BlobKeyTranslatorFactory());
     }
 
     @Override

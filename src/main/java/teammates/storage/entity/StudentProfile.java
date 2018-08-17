@@ -9,9 +9,11 @@ import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
 import com.googlecode.objectify.annotation.Parent;
+import com.googlecode.objectify.annotation.Translate;
 import com.googlecode.objectify.annotation.Unindex;
 
 import teammates.common.util.TimeHelper;
+import teammates.storage.translator.BlobKeyTranslatorFactory;
 
 /**
  * Represents profile details for student entities associated with an
@@ -41,6 +43,7 @@ public class StudentProfile extends BaseEntity {
     /* must be html sanitized before saving */
     private String moreInfo;
 
+    @Translate(value = BlobKeyTranslatorFactory.class)
     private BlobKey pictureKey;
 
     @Index

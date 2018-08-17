@@ -469,7 +469,9 @@ public class StudentsDb extends EntitiesDb<CourseStudent, StudentAttributes> {
     public void deleteStudentsForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        ofy().delete().keys(getCourseStudentsForCoursesQuery(courseIds).keys());
+        courseIds.forEach(courseId -> {
+            ofy().delete().keys(load().filter("courseId =", courseId).keys());
+        });
     }
 
     /**
@@ -520,10 +522,6 @@ public class StudentsDb extends EntitiesDb<CourseStudent, StudentAttributes> {
 
     public List<CourseStudent> getCourseStudentEntitiesForCourse(String courseId) {
         return getCourseStudentsForCourseQuery(courseId).list();
-    }
-
-    private Query<CourseStudent> getCourseStudentsForCoursesQuery(List<String> courseIds) {
-        return load().filter("courseId in", courseIds);
     }
 
     private Query<CourseStudent> getCourseStudentsForGoogleIdQuery(String googleId) {

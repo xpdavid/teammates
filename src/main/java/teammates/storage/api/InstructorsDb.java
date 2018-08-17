@@ -279,7 +279,9 @@ public class InstructorsDb extends EntitiesDb<Instructor, InstructorAttributes> 
     public void deleteInstructorsForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        deleteInstructors(getInstructorEntitiesForCourses(courseIds));
+        courseIds.forEach(courseId -> {
+            deleteInstructors(getInstructorEntitiesForCourse(courseId));
+        });
     }
 
     /**
@@ -323,10 +325,6 @@ public class InstructorsDb extends EntitiesDb<Instructor, InstructorAttributes> 
 
     private Instructor getInstructorEntityById(String courseId, String email) {
         return load().id(email + '%' + courseId).now();
-    }
-
-    private List<Instructor> getInstructorEntitiesForCourses(List<String> courseIds) {
-        return load().filter("courseId in", courseIds).list();
     }
 
     private Instructor getInstructorEntityForRegistrationKey(String key) {

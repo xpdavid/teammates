@@ -160,17 +160,17 @@ public class FeedbackResponseCommentsDb extends EntitiesDb<FeedbackResponseComme
     public void deleteFeedbackResponseCommentsForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        ofy().delete().keys(getFeedbackResponseCommentsForCoursesQuery(courseIds).keys()).now();
+        courseIds.forEach(courseId -> {
+            ofy().delete().keys(
+                    load().filter("courseId =", courseId).keys()
+            ).now();
+        });
     }
 
     public void deleteFeedbackResponseCommentsForCourse(String courseId) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseId);
 
         deleteFeedbackResponseCommentsForCourses(Arrays.asList(courseId));
-    }
-
-    private Query<FeedbackResponseComment> getFeedbackResponseCommentsForCoursesQuery(List<String> courseIds) {
-        return load().filter("courseId in", courseIds);
     }
 
     /**
