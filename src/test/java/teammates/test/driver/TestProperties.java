@@ -26,6 +26,9 @@ public final class TestProperties {
     /** The value of "test.app.url" in test.properties file. */
     public static final String TEAMMATES_URL;
 
+    /** The value of "test.app.projectid" in test.properties file. */
+    public static final String TEAMMATES_PROJECT_ID;
+
     /** The version number of the application under test. */
     public static final String TEAMMATES_VERSION;
 
@@ -103,6 +106,8 @@ public final class TestProperties {
             }
 
             TEAMMATES_URL = Url.trimTrailingSlash(prop.getProperty("test.app.url"));
+
+            TEAMMATES_PROJECT_ID = prop.getProperty("test.app.projectid");
 
             TEAMMATES_VERSION = extractVersionNumber(FileHelper.readFile("src/main/webapp/WEB-INF/appengine-web.xml"));
 

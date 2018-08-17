@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
@@ -38,7 +37,7 @@ public class AdminEmail extends BaseEntity {
     private Date createDate;
 
     @Unindex
-    private Text content;
+    private String content;
 
     private boolean isInTrashBin;
 
@@ -55,7 +54,7 @@ public class AdminEmail extends BaseEntity {
      *          html email content
      */
     public AdminEmail(List<String> addressReceiver, List<String> groupReceiver, String subject,
-                      Text content, Instant sendDate) {
+                      String content, Instant sendDate) {
         this.emailId = null;
         this.addressReceiver = addressReceiver == null ? new ArrayList<String>() : addressReceiver;
         this.groupReceiver = groupReceiver == null ? new ArrayList<String>() : groupReceiver;
@@ -78,7 +77,7 @@ public class AdminEmail extends BaseEntity {
         this.subject = subject;
     }
 
-    public void setContent(Text content) {
+    public void setContent(String content) {
         this.content = content;
     }
 
@@ -110,7 +109,7 @@ public class AdminEmail extends BaseEntity {
         return TimeHelper.convertDateToInstant(this.sendDate);
     }
 
-    public Text getContent() {
+    public String getContent() {
         return this.content;
     }
 

@@ -168,7 +168,9 @@ public class FeedbackQuestionsDb extends EntitiesDb<FeedbackQuestion, FeedbackQu
     public void deleteFeedbackQuestionsForCourses(List<String> courseIds) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, courseIds);
 
-        ofy().delete().keys(load().filter("courseId in", courseIds).keys()).now();
+        courseIds.forEach(courseId -> {
+            ofy().delete().keys(load().filter("courseId =", courseId).keys()).now();
+        });
     }
 
     // Gets a question entity if its Key (feedbackQuestionId) is known.

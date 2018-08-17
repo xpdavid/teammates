@@ -450,6 +450,7 @@
                             <from>
                                 <include class="${storage}.api.**" />
                                 <include class="${storage}.entity.**" />
+                                <include class="${storage}.translator.**" />
                                 <include class="${testCases}.BaseTestCaseWithObjectifyAccess" />
                                 <include class="${client}.remoteapi.**" />
                                 <include class="${client}.scripts.**" />

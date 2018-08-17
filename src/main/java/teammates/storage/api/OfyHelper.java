@@ -15,6 +15,7 @@ import teammates.storage.entity.FeedbackResponseComment;
 import teammates.storage.entity.FeedbackSession;
 import teammates.storage.entity.Instructor;
 import teammates.storage.entity.StudentProfile;
+import teammates.storage.translator.BlobKeyTranslatorFactory;
 
 /**
  * Setup in web.xml to register Objectify at application startup.
@@ -35,10 +36,14 @@ public class OfyHelper implements ServletContextListener {
         ObjectifyService.register(FeedbackSession.class);
         ObjectifyService.register(Instructor.class);
         ObjectifyService.register(StudentProfile.class);
+        // add translator to support BlobKey
+        ObjectifyService.factory().getTranslators().add(new BlobKeyTranslatorFactory());
     }
 
     @Override
     public void contextInitialized(ServletContextEvent event) {
+        // init objectify service using default app credential
+        ObjectifyService.init();
         // Invoked by GAE at application startup.
         registerEntityClasses();
     }

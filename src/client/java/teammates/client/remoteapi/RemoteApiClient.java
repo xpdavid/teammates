@@ -4,7 +4,9 @@ import java.io.IOException;
 
 import com.google.appengine.tools.remoteapi.RemoteApiInstaller;
 import com.google.appengine.tools.remoteapi.RemoteApiOptions;
+import com.google.cloud.datastore.DatastoreOptions;
 import com.googlecode.objectify.Objectify;
+import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
 import com.googlecode.objectify.util.Closeable;
 
@@ -19,7 +21,7 @@ import teammates.test.driver.TestProperties;
 public abstract class RemoteApiClient {
 
     protected Objectify ofy() {
-        return com.googlecode.objectify.ObjectifyService.ofy();
+        return ObjectifyService.ofy();
     }
 
     protected void doOperationRemotely() throws IOException {
@@ -46,6 +48,13 @@ public abstract class RemoteApiClient {
         RemoteApiInstaller installer = new RemoteApiInstaller();
         installer.install(options);
 
+        // init objectify service
+        ObjectifyService.init(new ObjectifyFactory(
+                DatastoreOptions.newBuilder()
+                        .setProjectId(TestProperties.TEAMMATES_PROJECT_ID)
+                        .build()
+                        .getService()
+        ));
         OfyHelper.registerEntityClasses();
         Closeable objectifySession = ObjectifyService.begin();
 

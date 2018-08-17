@@ -8,8 +8,6 @@ import java.time.Instant;
 
 import org.testng.annotations.Test;
 
-import com.google.appengine.api.datastore.Text;
-
 import teammates.common.util.Const;
 import teammates.common.util.FieldValidator;
 import teammates.common.util.SanitizationHelper;
@@ -609,17 +607,15 @@ public class FieldValidatorTest extends BaseTestCase {
 
     @Test
     public void testGetInvalidityInfoForEmailContent_invalid_returnEmptyString() {
-        Text emptyEmailContent = new Text("");
         assertEquals("Valid Email Content should return empty string",
                      EMAIL_CONTENT_ERROR_MESSAGE,
-                     validator.getInvalidityInfoForEmailContent(emptyEmailContent));
+                     validator.getInvalidityInfoForEmailContent(""));
     }
 
     @Test
     public void testGetInvalidityInfoForEmailContent_valid_returnEmptyString() {
-        Text validEmailContent = new Text("Hello! I'm a Email Content.");
         assertEquals("Valid Email Content should return empty string", "",
-                     validator.getInvalidityInfoForEmailContent(validEmailContent));
+                     validator.getInvalidityInfoForEmailContent("Hello! I'm a Email Content."));
     }
 
     @Test

@@ -54,7 +54,7 @@ repositories {
     jcenter()
 }
 
-def objectify = "com.googlecode.objectify:objectify:5.1.22"
+def objectify = "com.googlecode.objectify:objectify:6.0.1"
 def testng = "org.testng:testng:6.9.4"
 
 dependencies {

@@ -172,7 +172,7 @@ public class FeedbackResponseCommentSearchDocument extends SearchDocument {
                                 + comment.commentGiver + delim
                                 + commentGiverName + delim
                                 + relatedPeopleBuilder.toString() + delim
-                                + comment.commentText.getValue();
+                                + comment.commentText;
 
         // for data-migration use
         boolean isVisibilityFollowingFeedbackQuestion = comment.isVisibilityFollowingFeedbackQuestion;

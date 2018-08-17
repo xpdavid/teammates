@@ -3,7 +3,6 @@ package teammates.storage.entity;
 import java.time.Instant;
 import java.util.Date;
 
-import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Ignore;
@@ -51,7 +50,7 @@ public class FeedbackResponse extends BaseEntity {
 
     private String receiverSection;
 
-    private Text answer; //TODO: rename to responseMetaData, will require database conversion
+    private String answer; //TODO: rename to responseMetaData, will require database conversion
 
     private Date createdAt;
 
@@ -64,7 +63,7 @@ public class FeedbackResponse extends BaseEntity {
 
     public FeedbackResponse(String feedbackSessionName, String courseId,
             String feedbackQuestionId, FeedbackQuestionType feedbackQuestionType,
-            String giverEmail, String giverSection, String recipient, String recipientSection, Text answer) {
+            String giverEmail, String giverSection, String recipient, String recipientSection, String answer) {
         this.feedbackSessionName = feedbackSessionName;
         this.courseId = courseId;
         this.feedbackQuestionId = feedbackQuestionId;
@@ -148,11 +147,11 @@ public class FeedbackResponse extends BaseEntity {
         this.receiverSection = recipientSection;
     }
 
-    public Text getResponseMetaData() {
+    public String getResponseMetaData() {
         return answer;
     }
 
-    public void setAnswer(Text answer) {
+    public void setAnswer(String answer) {
         this.answer = answer;
     }
 

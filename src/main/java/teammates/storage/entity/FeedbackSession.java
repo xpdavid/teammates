@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.appengine.api.datastore.Text;
 import com.googlecode.objectify.Key;
 import com.googlecode.objectify.Ref;
 import com.googlecode.objectify.annotation.Entity;
@@ -51,7 +50,7 @@ public class FeedbackSession extends BaseEntity {
     private Set<String> respondingStudentList = new HashSet<>();
 
     @Unindex
-    private Text instructions;
+    private String instructions;
 
     @Unindex
     private Date createdTime;
@@ -115,7 +114,7 @@ public class FeedbackSession extends BaseEntity {
     }
 
     public FeedbackSession(String feedbackSessionName, String courseId, String creatorEmail,
-            Text instructions, Instant createdTime, Instant deletedTime, Instant startTime, Instant endTime,
+            String instructions, Instant createdTime, Instant deletedTime, Instant startTime, Instant endTime,
             Instant sessionVisibleFromTime, Instant resultsVisibleFromTime, String timeZone, long gracePeriod,
             boolean sentOpenEmail,
             boolean sentClosingEmail, boolean sentClosedEmail, boolean sentPublishedEmail,
@@ -127,7 +126,7 @@ public class FeedbackSession extends BaseEntity {
     }
 
     public FeedbackSession(String feedbackSessionName, String courseId, String creatorEmail,
-            Text instructions, Instant createdTime, Instant deletedTime, Instant startTime, Instant endTime,
+            String instructions, Instant createdTime, Instant deletedTime, Instant startTime, Instant endTime,
             Instant sessionVisibleFromTime, Instant resultsVisibleFromTime, String timeZone, long gracePeriod,
             boolean sentOpenEmail, boolean sentClosingEmail,
             boolean sentClosedEmail, boolean sentPublishedEmail,
@@ -254,11 +253,11 @@ public class FeedbackSession extends BaseEntity {
         this.creatorEmail = creatorId;
     }
 
-    public Text getInstructions() {
+    public String getInstructions() {
         return instructions;
     }
 
-    public void setInstructions(Text instructions) {
+    public void setInstructions(String instructions) {
         this.instructions = instructions;
     }
 
