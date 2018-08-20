@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 import teammates.common.datatransfer.attributes.AccountAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
-import teammates.common.datatransfer.attributes.StudentProfileAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.exception.JoinCourseException;
@@ -42,11 +41,18 @@ public class AccountsLogicTest extends BaseLogicTest {
         List<AccountAttributes> instructorAccounts = logic.getInstructorAccounts();
         int size = instructorAccounts.size();
 
-        logic.createAccount("test.account", "Test Account", true, "test@account.com", "Foo University");
+        accountsLogic.createAccount(
+                AccountAttributes.builder()
+                        .withGoogleId("test.account")
+                        .withName("Test Account")
+                        .withIsInstructor(true)
+                        .withEmail("test@account.com")
+                        .withInstitute("Foo University")
+                        .build());
         instructorAccounts = logic.getInstructorAccounts();
         assertEquals(instructorAccounts.size(), size + 1);
 
-        logic.deleteAccount("test.account");
+        accountsLogic.deleteAccountCascade("test.account");
         instructorAccounts = logic.getInstructorAccounts();
         assertEquals(instructorAccounts.size(), size);
     }
@@ -55,13 +61,6 @@ public class AccountsLogicTest extends BaseLogicTest {
     public void testCreateAccount() throws Exception {
 
         ______TS("typical success case");
-        StudentProfileAttributes spa = StudentProfileAttributes.builder("id").build();
-        spa.shortName = "test acc na";
-        spa.email = "test@personal.com";
-        spa.gender = Const.GenderTypes.MALE;
-        spa.nationality = "American";
-        spa.institute = "institute";
-        spa.moreInfo = "this is more info";
 
         AccountAttributes accountToCreate = AccountAttributes.builder()
                 .withGoogleId("id")
@@ -69,7 +68,6 @@ public class AccountsLogicTest extends BaseLogicTest {
                 .withEmail("test@email.com")
                 .withInstitute("dev")
                 .withIsInstructor(true)
-                .withStudentProfileAttributes(spa)
                 .build();
 
         accountsLogic.createAccount(accountToCreate);
@@ -85,7 +83,6 @@ public class AccountsLogicTest extends BaseLogicTest {
                 .withEmail("test@email.com")
                 .withInstitute("dev")
                 .withIsInstructor(true)
-                .withStudentProfileAttributes(spa)
                 .build();
         try {
             accountsLogic.createAccount(accountToCreate);
@@ -124,33 +121,18 @@ public class AccountsLogicTest extends BaseLogicTest {
 
         ______TS("test updateAccount");
 
-        StudentProfileAttributes spa = StudentProfileAttributes.builder("idOfInstructor1OfCourse1").build();
-        spa.institute = "dev";
-        spa.shortName = "nam";
-
         AccountAttributes expectedAccount = AccountAttributes.builder()
                 .withGoogleId("idOfInstructor1OfCourse1")
                 .withName("name")
                 .withEmail("test2@email.com")
                 .withInstitute("dev")
                 .withIsInstructor(true)
-                .withStudentProfileAttributes(spa)
                 .build();
 
-        // updates the profile
-        accountsLogic.updateAccount(expectedAccount, true);
-        AccountAttributes actualAccount = accountsLogic.getAccount(expectedAccount.googleId, true);
-        expectedAccount.studentProfile.modifiedDate = actualAccount.studentProfile.modifiedDate;
+        accountsLogic.updateAccount(expectedAccount);
+        AccountAttributes actualAccount = accountsLogic.getAccount(expectedAccount.googleId);
         expectedAccount.createdAt = actualAccount.createdAt;
         assertEquals(expectedAccount.toString(), actualAccount.toString());
-
-        // does not update the profile
-        expectedAccount.studentProfile.shortName = "newNam";
-        accountsLogic.updateAccount(expectedAccount);
-        actualAccount = accountsLogic.getAccount(expectedAccount.googleId, true);
-
-        // no change in the name
-        assertEquals("nam", actualAccount.studentProfile.shortName);
 
         expectedAccount = AccountAttributes.builder()
                 .withGoogleId("id-does-not-exist")
@@ -158,7 +140,6 @@ public class AccountsLogicTest extends BaseLogicTest {
                 .withEmail("test2@email.com")
                 .withInstitute("dev")
                 .withIsInstructor(true)
-                .withStudentProfileAttributes(spa)
                 .build();
         try {
             accountsLogic.updateAccount(expectedAccount);
@@ -252,17 +233,12 @@ public class AccountsLogicTest extends BaseLogicTest {
 
         ______TS("success: without encryption and account already exists");
 
-        StudentProfileAttributes spa = StudentProfileAttributes.builder(correctStudentId)
-                .withInstitute("TEAMMATES Test Institute 1")
-                .build();
-
         AccountAttributes accountData = AccountAttributes.builder()
                 .withGoogleId(correctStudentId)
                 .withName("nameABC")
                 .withEmail("real@gmail.com")
                 .withInstitute("TEAMMATES Test Institute 1")
                 .withIsInstructor(true)
-                .withStudentProfileAttributes(spa)
                 .build();
 
         accountsLogic.createAccount(accountData);
@@ -303,7 +279,7 @@ public class AccountsLogicTest extends BaseLogicTest {
 
         ______TS("success: with encryption and new account to be created");
 
-        logic.deleteAccount(correctStudentId);
+        accountsLogic.deleteAccountCascade(correctStudentId);
 
         originalEmail = "email2@gmail.com";
         studentData = StudentAttributes
