@@ -251,12 +251,6 @@ public class BackDoorLogic extends Logic {
         return JsonUtils.toJson(responseList);
     }
 
-    public void editAccountAsJson(String newValues)
-            throws InvalidParametersException, EntityDoesNotExistException {
-        AccountAttributes account = JsonUtils.fromJson(newValues, AccountAttributes.class);
-        updateAccount(account);
-    }
-
     public void editCourseAsJson(String newValues)
             throws InvalidParametersException, EntityDoesNotExistException {
         CourseAttributes course = JsonUtils.fromJson(newValues, CourseAttributes.class);
