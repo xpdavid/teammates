@@ -314,7 +314,7 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
                         + "by: " + frc.commentGiver + " at "
                         + frc.createdAt + "<br>"
                         + "comment text: " + frc.commentText;
-            } catch (InvalidParametersException e) {
+            } catch (InvalidParametersException | EntityAlreadyExistsException e) {
                 setStatusForException(e);
             }
         }
@@ -342,9 +342,10 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
             throws EntityDoesNotExistException {
         for (FeedbackResponseCommentAttributes feedbackResponseComment : commentsToUpdate) {
             try {
-                FeedbackResponseCommentAttributes updatedComment =
-                        logic.updateFeedbackResponseComment(feedbackResponseComment);
-                logic.putDocument(updatedComment);
+                logic.updateFeedbackResponseComment(
+                        FeedbackResponseCommentAttributes.updateOptionsBuilder(feedbackResponseComment.getId())
+                                .withCommentText(feedbackResponseComment.commentText)
+                                .build());
                 statusToAdmin += this.getClass().getName() + ":<br>"
                         + "Editing feedback response comment: " + feedbackResponseComment.getId() + "<br>"
                         + "in course/feedback session: " + feedbackResponseComment.courseId + "/"
