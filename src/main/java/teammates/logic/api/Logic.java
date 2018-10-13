@@ -591,16 +591,18 @@ public class Logic {
     }
 
     /**
-     * Updates the details of a course.
+     * Updates a course.
      *
-     * @see CoursesLogic#updateCourse(String, String, String)
+     * <p>If the {@code timezone} of the course is changed, cascade the change to its corresponding feedback sessions.
+     *
+     * <br/>Preconditions: <br/>
+     * * All parameters are non-null.
      */
-    public void updateCourse(String courseId, String courseName, String courseTimeZone)
+    public void updateCourseCascade(CourseAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
-        Assumption.assertNotNull(courseId);
-        Assumption.assertNotNull(courseName);
-        Assumption.assertNotNull(courseTimeZone);
-        coursesLogic.updateCourse(courseId, courseName, courseTimeZone);
+        Assumption.assertNotNull(updateOptions);
+
+        coursesLogic.updateCourseCascade(updateOptions);
     }
 
     /**

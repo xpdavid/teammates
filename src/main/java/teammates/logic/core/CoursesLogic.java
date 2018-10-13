@@ -634,23 +634,18 @@ public final class CoursesLogic {
     }
 
     /**
-     * Updates the course details.
-     * @param courseId Id of the course to update
-     * @param courseName new name of the course
-     * @param courseTimeZone new time zone of the course
+     * Updates a course.
+     *
+     * <p>If the {@code timezone} of the course is changed, cascade the change to its corresponding feedback sessions.
      */
-    public void updateCourse(String courseId, String courseName, String courseTimeZone)
+    public void updateCourseCascade(CourseAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes newCourse = validateAndCreateCourseAttributes(courseId, courseName, courseTimeZone);
-        CourseAttributes oldCourse = coursesDb.getCourse(newCourse.getId());
+        CourseAttributes oldCourse = coursesDb.getCourse(updateOptions.getCourseId());
+        CourseAttributes updatedCourse = coursesDb.updateCourse(updateOptions);
 
-        if (oldCourse == null) {
-            throw new EntityDoesNotExistException("Trying to update a course that does not exist.");
-        }
-
-        coursesDb.updateCourse(newCourse);
-        if (!newCourse.getTimeZone().equals(oldCourse.getTimeZone())) {
-            feedbackSessionsLogic.updateFeedbackSessionsTimeZoneForCourse(newCourse.getId(), newCourse.getTimeZone());
+        if (!updatedCourse.getTimeZone().equals(oldCourse.getTimeZone())) {
+            feedbackSessionsLogic
+                    .updateFeedbackSessionsTimeZoneForCourse(updatedCourse.getId(), updatedCourse.getTimeZone());
         }
     }
 
@@ -688,11 +683,13 @@ public final class CoursesLogic {
      */
     public Instant moveCourseToRecycleBin(String courseId)
             throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes course = coursesDb.getCourse(courseId);
-        course.setDeletedAt();
-        coursesDb.updateCourse(course);
+        CourseAttributes updatedCourse = coursesDb.updateCourse(
+                CourseAttributes.updateOptionsBuilder(courseId)
+                        .withDeletedAt(Instant.now())
+                        .build()
+        );
 
-        return course.deletedAt;
+        return updatedCourse.deletedAt;
     }
 
     /**
@@ -700,9 +697,11 @@ public final class CoursesLogic {
      */
     public void restoreCourseFromRecycleBin(String courseId)
             throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes course = coursesDb.getCourse(courseId);
-        course.resetDeletedAt();
-        coursesDb.updateCourse(course);
+        coursesDb.updateCourse(
+                CourseAttributes.updateOptionsBuilder(courseId)
+                        .withDeletedAt(null)
+                        .build()
+        );
     }
 
     /**

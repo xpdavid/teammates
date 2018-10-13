@@ -1,10 +1,14 @@
 package teammates.ui.controller;
 
+import java.time.ZoneId;
+
+import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.Assumption;
 import teammates.common.util.Const;
+import teammates.common.util.FieldValidator;
 import teammates.common.util.StatusMessage;
 import teammates.common.util.StatusMessageColor;
 
@@ -25,7 +29,17 @@ public class InstructorCourseEditSaveAction extends Action {
                                     Const.ParamsNames.INSTRUCTOR_PERMISSION_MODIFY_COURSE);
 
         try {
-            logic.updateCourse(courseId, courseName, courseTimeZone);
+            FieldValidator validator = new FieldValidator();
+            String timeZoneErrorMessage = validator.getInvalidityInfoForTimeZone(courseTimeZone);
+            if (!timeZoneErrorMessage.isEmpty()) {
+                throw new InvalidParametersException(timeZoneErrorMessage);
+            }
+            logic.updateCourseCascade(
+                    CourseAttributes.updateOptionsBuilder(courseId)
+                            .withName(courseName)
+                            .withTimezone(ZoneId.of(courseTimeZone))
+                            .build()
+            );
 
             statusToUser.add(new StatusMessage(Const.StatusMessages.COURSE_EDITED, StatusMessageColor.SUCCESS));
             statusToAdmin = "Updated Course <span class=\"bold\">[" + courseId + "]</span> details:<br>"

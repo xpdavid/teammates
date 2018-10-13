@@ -900,7 +900,7 @@ public class CoursesLogicTest extends BaseLogicTest {
         ______TS("null parameter");
 
         AssertionError ae = assertThrows(AssertionError.class, () -> coursesLogic.moveCourseToRecycleBin(null));
-        assertEquals(Const.StatusCodes.DBLEVEL_NULL_INPUT, ae.getMessage());
+        assertEquals(Const.StatusCodes.UPDATE_OPTIONS_NULL_INPUT, ae.getMessage());
     }
 
     private void testRestoreCourseFromRecycleBin() throws InvalidParametersException, EntityDoesNotExistException {
@@ -934,7 +934,7 @@ public class CoursesLogicTest extends BaseLogicTest {
         ______TS("null parameter");
 
         AssertionError ae = assertThrows(AssertionError.class, () -> coursesLogic.restoreCourseFromRecycleBin(null));
-        assertEquals(Const.StatusCodes.DBLEVEL_NULL_INPUT, ae.getMessage());
+        assertEquals(Const.StatusCodes.UPDATE_OPTIONS_NULL_INPUT, ae.getMessage());
     }
 
     private void testRestoreAllCoursesFromRecycleBin() throws InvalidParametersException, EntityDoesNotExistException {
@@ -1057,7 +1057,12 @@ public class CoursesLogicTest extends BaseLogicTest {
         ______TS("Typical case");
         String newName = "New Course Name";
         String validTimeZone = "Asia/Singapore";
-        coursesLogic.updateCourse(c.getId(), newName, validTimeZone);
+        coursesLogic.updateCourseCascade(
+                CourseAttributes.updateOptionsBuilder(c.getId())
+                        .withName(newName)
+                        .withTimezone(ZoneId.of(validTimeZone))
+                        .build()
+        );
         c.setName(newName);
         c.setTimeZone(ZoneId.of(validTimeZone));
         verifyPresentInDatastore(c);
@@ -1065,17 +1070,16 @@ public class CoursesLogicTest extends BaseLogicTest {
         ______TS("Invalid time zone and name");
 
         String emptyName = "";
-        String invalidTimeZone = "Invalid Timezone";
         InvalidParametersException ipe = assertThrows(InvalidParametersException.class,
-                () -> coursesLogic.updateCourse(c.getId(), emptyName, invalidTimeZone));
+                () -> coursesLogic.updateCourseCascade(
+                        CourseAttributes.updateOptionsBuilder(c.getId())
+                                .withName(emptyName)
+                                .build()
+                ));
         String expectedErrorMessage =
                 getPopulatedEmptyStringErrorMessage(
                         FieldValidator.SIZE_CAPPED_NON_EMPTY_STRING_ERROR_MESSAGE_EMPTY_STRING,
-                        FieldValidator.COURSE_NAME_FIELD_NAME, FieldValidator.COURSE_NAME_MAX_LENGTH)
-                        + System.lineSeparator()
-                        + getPopulatedErrorMessage(
-                        FieldValidator.TIME_ZONE_ERROR_MESSAGE, invalidTimeZone,
-                        FieldValidator.TIME_ZONE_FIELD_NAME, FieldValidator.REASON_UNAVAILABLE_AS_CHOICE);
+                        FieldValidator.COURSE_NAME_FIELD_NAME, FieldValidator.COURSE_NAME_MAX_LENGTH);
         assertEquals(expectedErrorMessage, ipe.getMessage());
         verifyPresentInDatastore(c);
     }
