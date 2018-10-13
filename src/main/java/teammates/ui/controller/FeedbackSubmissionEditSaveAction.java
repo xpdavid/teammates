@@ -47,7 +47,7 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
     protected List<FeedbackResponseAttributes> responsesToDelete = new ArrayList<>();
     protected List<FeedbackResponseAttributes> responsesToUpdate = new ArrayList<>();
     protected List<FeedbackResponseCommentAttributes> commentsToSave = new ArrayList<>();
-    protected List<FeedbackResponseCommentAttributes> commentsToUpdate = new ArrayList<>();
+    protected List<FeedbackResponseCommentAttributes.UpdateOptions> commentsToUpdate = new ArrayList<>();
 
     @Override
     protected ActionResult execute() throws EntityDoesNotExistException {
@@ -314,7 +314,7 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
                         + "by: " + frc.commentGiver + " at "
                         + frc.createdAt + "<br>"
                         + "comment text: " + frc.commentText;
-            } catch (InvalidParametersException e) {
+            } catch (InvalidParametersException | EntityAlreadyExistsException e) {
                 setStatusForException(e);
             }
         }
@@ -338,19 +338,19 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
         }
     }
 
-    private void updateFeedbackParticipantComments(List<FeedbackResponseCommentAttributes> commentsToUpdate)
+    private void updateFeedbackParticipantComments(List<FeedbackResponseCommentAttributes.UpdateOptions> commentsToUpdate)
             throws EntityDoesNotExistException {
-        for (FeedbackResponseCommentAttributes feedbackResponseComment : commentsToUpdate) {
+        for (FeedbackResponseCommentAttributes.UpdateOptions updateOptions : commentsToUpdate) {
             try {
                 FeedbackResponseCommentAttributes updatedComment =
-                        logic.updateFeedbackResponseComment(feedbackResponseComment);
+                        logic.updateFeedbackResponseComment(updateOptions);
                 logic.putDocument(updatedComment);
                 statusToAdmin += this.getClass().getName() + ":<br>"
-                        + "Editing feedback response comment: " + feedbackResponseComment.getId() + "<br>"
-                        + "in course/feedback session: " + feedbackResponseComment.courseId + "/"
-                        + feedbackResponseComment.feedbackSessionName + "<br>"
-                        + "by: " + feedbackResponseComment.commentGiver + "<br>"
-                        + "comment text: " + feedbackResponseComment.commentText;
+                        + "Editing feedback response comment: " + updatedComment.getId() + "<br>"
+                        + "in course/feedback session: " + updatedComment.courseId + "/"
+                        + updatedComment.feedbackSessionName + "<br>"
+                        + "by: " + updatedComment.commentGiver + "<br>"
+                        + "comment text: " + updatedComment.commentText;
             } catch (InvalidParametersException e) {
                 setStatusForException(e);
             }
@@ -472,9 +472,11 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
                     feedbackResponseComment.feedbackQuestionId + "%" + response.giver + "%" + response.recipient;
             commentsToSave.add(feedbackResponseComment);
         } else {
-            feedbackResponseComment.setId(Long.parseLong(commentId));
-            feedbackResponseComment.feedbackResponseId = response.getId();
-            commentsToUpdate.add(feedbackResponseComment);
+            commentsToUpdate.add(
+                    FeedbackResponseCommentAttributes.updateOptionsBuilder(Long.parseLong(commentId))
+                            .withCommentText(feedbackResponseComment.commentText)
+                            .build()
+            );
         }
     }
 
