@@ -78,7 +78,14 @@ public class PutCourseStudentDetailsEditAction extends Action {
             }
 
             try {
-                logic.updateStudent(studentEmail, student);
+                logic.updateStudentCascade(
+                        StudentAttributes.updateOptionsBuilder(courseId, studentEmail)
+                                .withName(student.name)
+                                .withNewEmail(student.email)
+                                .withTeamName(student.team)
+                                .withSectionName(student.section)
+                                .withComment(student.comments)
+                                .build());
             } catch (EntityDoesNotExistException e) {
                 throw new EntityNotFoundException(e);
             } catch (InvalidParametersException e) {
