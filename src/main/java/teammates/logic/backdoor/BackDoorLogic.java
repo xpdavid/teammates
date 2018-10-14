@@ -266,7 +266,16 @@ public class BackDoorLogic extends Logic {
             throws InvalidParametersException, EntityDoesNotExistException {
         StudentAttributes student = JsonUtils.fromJson(newValues, StudentAttributes.class);
         populateNullSection(student);
-        updateStudentWithoutDocument(originalEmail, student);
+        updateStudentWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(student.course, originalEmail)
+                        .withGoogleId(student.googleId)
+                        .withSectionName(student.section)
+                        .withTeamName(student.team)
+                        .withComment(student.comments)
+                        .withName(student.name)
+                        .withNewEmail(student.email)
+                        .build()
+        );
     }
 
     public void editFeedbackSessionAsJson(String feedbackSessionJson)

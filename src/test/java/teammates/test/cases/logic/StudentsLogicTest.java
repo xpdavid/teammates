@@ -69,7 +69,7 @@ public class StudentsLogicTest extends BaseLogicTest {
         testAdjustFeedbackResponseForEnrollments();
 
         testValidateSections();
-        testupdateStudentCascadeWithoutDocument();
+        testUpdateStudentCascadeWithoutDocument();
         testEnrollLinesChecking();
         testEnrollStudents();
 
@@ -182,7 +182,11 @@ public class StudentsLogicTest extends BaseLogicTest {
         ______TS("modify info of existing student");
         //add some more details to the student
         student1.googleId = "googleId";
-        studentsLogic.updateStudentCascadeWithoutDocument(student1.email, student1);
+        studentsLogic.updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(student1.course, student1.email)
+                        .withGoogleId(student1.googleId)
+                        .build()
+        );
 
     }
 
@@ -247,7 +251,7 @@ public class StudentsLogicTest extends BaseLogicTest {
                 ee.getMessage());
     }
 
-    private void testupdateStudentCascadeWithoutDocument() throws Exception {
+    private void testUpdateStudentCascadeWithoutDocument() throws Exception {
 
         ______TS("typical edit");
 
@@ -262,7 +266,16 @@ public class StudentsLogicTest extends BaseLogicTest {
         student4InCourse1.section = "Section 2";
         student4InCourse1.team = "Team 1.2"; // move to a different team
 
-        studentsLogic.updateStudentCascadeWithoutDocument(originalEmail, student4InCourse1);
+        studentsLogic.updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(student4InCourse1.course, originalEmail)
+                        .withName(student4InCourse1.name)
+                        .withGoogleId(student4InCourse1.googleId)
+                        .withComment(student4InCourse1.comments)
+                        .withNewEmail(student4InCourse1.email)
+                        .withSectionName(student4InCourse1.section)
+                        .withTeamName(student4InCourse1.team)
+                        .build()
+        );
         StudentAttributes updatedStudent4InCourse1 =
                 studentsLogic.getStudentForEmail(student4InCourse1.course, student4InCourse1.email);
         assertFalse(student4InCourse1.getUpdatedAt().equals(updatedStudent4InCourse1.getUpdatedAt()));
@@ -270,42 +283,45 @@ public class StudentsLogicTest extends BaseLogicTest {
         ______TS("check for KeepExistingPolicy : change email only");
 
         originalEmail = student4InCourse1.email;
-        String newEmail = student4InCourse1.email + "y";
-        student4InCourse1.email = newEmail;
+        student4InCourse1.email = student4InCourse1.email + "y";
 
-        // create an empty student and then copy course and email attributes
-        StudentAttributes copyOfStudent1 = StudentAttributes
-                .builder(student4InCourse1.course, student4InCourse1.name, newEmail)
-                .build();
-        student4InCourse1.googleId = "";
-        student4InCourse1.section = "None";
-
-        studentsLogic.updateStudentCascadeWithoutDocument(originalEmail, copyOfStudent1);
+        studentsLogic.updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(student4InCourse1.course, originalEmail)
+                        .withNewEmail(student4InCourse1.email)
+                        .build()
+        );
         verifyPresentInDatastore(student4InCourse1);
 
-        ______TS("check for KeepExistingPolicy : change nothing");
+        ______TS("update nothing");
 
-        originalEmail = student4InCourse1.email;
-        copyOfStudent1.email = null;
-        studentsLogic.updateStudentCascadeWithoutDocument(originalEmail, copyOfStudent1);
-        verifyPresentInDatastore(copyOfStudent1);
+        studentsLogic.updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(student4InCourse1.course, student4InCourse1.email)
+                        .build()
+        );
+        verifyPresentInDatastore(student4InCourse1);
 
         ______TS("non-existent student");
 
         StudentAttributes finalStudent4InCourse1 = student4InCourse1;
+        StudentAttributes.UpdateOptions updateOptions =
+                StudentAttributes.updateOptionsBuilder(finalStudent4InCourse1.course, "non-existent@email")
+                        .withName("test")
+                        .build();
         EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> studentsLogic.updateStudentCascadeWithoutDocument("non-existent@email", finalStudent4InCourse1));
+                () -> studentsLogic.updateStudentCascadeWithoutDocument(updateOptions));
         assertEquals(
-                StudentsDb.ERROR_UPDATE_NON_EXISTENT_STUDENT + student4InCourse1.course + "/" + "non-existent@email",
+                StudentsDb.ERROR_UPDATE_NON_EXISTENT_STUDENT + updateOptions,
                 ednee.getMessage());
 
         ______TS("check for InvalidParameters");
-        copyOfStudent1.email = "invalid email";
-        InvalidParametersException ipe = assertThrows(InvalidParametersException.class,
-                () -> studentsLogic.updateStudentCascadeWithoutDocument(finalStudent4InCourse1.email, copyOfStudent1));
-        AssertHelper.assertContains(FieldValidator.REASON_INCORRECT_FORMAT, ipe.getMessage());
 
-        // delete student from db
+        InvalidParametersException ipe = assertThrows(InvalidParametersException.class,
+                () -> studentsLogic.updateStudentCascadeWithoutDocument(
+                        StudentAttributes.updateOptionsBuilder(finalStudent4InCourse1.course, finalStudent4InCourse1.email)
+                                .withNewEmail("invalid email")
+                                .build()
+                ));
+        AssertHelper.assertContains(FieldValidator.REASON_INCORRECT_FORMAT, ipe.getMessage());
 
     }
 
@@ -590,7 +606,6 @@ public class StudentsLogicTest extends BaseLogicTest {
      * Returns the error message of EnrollException thrown when trying to call
      * {@link StudentsLogic#createStudents(String, String)} method with
      * {@code invalidEnrollLines}. This method assumes that an EnrollException is thrown, else this method fails with
-     * {@link #signalFailureToDetectException(String...)} ()}.
      *
      * @param invalidEnrollLines is assumed to be invalid
      */

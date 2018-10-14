@@ -595,7 +595,11 @@ public class FeedbackResponsesLogicTest extends BaseLogicTest {
         studentToDelete = dataBundle.students.get("student2InCourse1");
 
         studentToDelete.team = "Team 1.3";
-        StudentsLogic.inst().updateStudentCascadeWithoutDocument(studentToDelete.email, studentToDelete);
+        StudentsLogic.inst().updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(studentToDelete.course, studentToDelete.email)
+                        .withTeamName(studentToDelete.team)
+                        .build()
+        );
 
         frLogic.deleteFeedbackResponsesForStudentAndCascade(studentToDelete.course, studentToDelete.email);
 

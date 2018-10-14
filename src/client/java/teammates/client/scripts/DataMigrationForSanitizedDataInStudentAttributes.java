@@ -143,17 +143,17 @@ public class DataMigrationForSanitizedDataInStudentAttributes extends DataMigrat
     private void updateStudent(String originalEmail, StudentAttributes student)
             throws InvalidParametersException, EntityDoesNotExistException {
         studentsDb.verifyStudentExists(student.course, originalEmail);
-        StudentAttributes originalStudent = studentsDb.getStudentForEmail(student.course, originalEmail);
+        // StudentAttributes originalStudent = studentsDb.getStudentForEmail(student.course, originalEmail);
 
         // prepare new student
-        student.updateWithExistingRecord(originalStudent);
+        // student.updateWithExistingRecord(originalStudent);
 
         if (!student.isValid()) {
             throw new InvalidParametersException(student.getInvalidityInfo());
         }
 
-        studentsDb.updateStudent(student.course, originalEmail, student.name, student.team, student.section,
-                                 student.email, student.googleId, student.comments, true);
+        //studentsDb.updateStudent(student.course, originalEmail, student.name, student.team, student.section,
+        //                         student.email, student.googleId, student.comments, true);
     }
 
 }

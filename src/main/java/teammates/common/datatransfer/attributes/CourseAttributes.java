@@ -240,7 +240,7 @@ public class CourseAttributes extends EntityAttributes<Course> implements Compar
     }
 
     /**
-     * Helper class to specific the fields to update in {@link AccountAttributes}.
+     * Helper class to specific the fields to update in {@link CourseAttributes}.
      */
     public static class UpdateOptions {
         private String courseId;

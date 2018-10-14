@@ -894,22 +894,20 @@ public class Logic {
      * Preconditions: <br>
      * * All parameters are non-null.
      */
-    public void updateStudent(String originalEmail, StudentAttributes student)
+    public void updateStudent(StudentAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
 
-        Assumption.assertNotNull(originalEmail);
-        Assumption.assertNotNull(student);
+        Assumption.assertNotNull(updateOptions);
 
-        studentsLogic.updateStudentCascade(originalEmail, student);
+        studentsLogic.updateStudentCascade(updateOptions);
     }
 
-    public void updateStudentWithoutDocument(String originalEmail, StudentAttributes student)
+    public void updateStudentWithoutDocument(StudentAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
 
-        Assumption.assertNotNull(originalEmail);
-        Assumption.assertNotNull(student);
+        Assumption.assertNotNull(updateOptions);
 
-        studentsLogic.updateStudentCascadeWithoutDocument(originalEmail, student);
+        studentsLogic.updateStudentCascadeWithoutDocument(updateOptions);
     }
 
     /**

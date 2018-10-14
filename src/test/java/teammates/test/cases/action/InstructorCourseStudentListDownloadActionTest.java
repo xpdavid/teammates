@@ -68,7 +68,11 @@ public class InstructorCourseStudentListDownloadActionTest extends BaseActionTes
 
         StudentAttributes student1InCourse1 = typicalBundle.students.get("student1InCourse1");
         student1InCourse1.name = "new name {new last name}";
-        StudentsLogic.inst().updateStudentCascade(student1InCourse1.email, student1InCourse1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(student1InCourse1.course, student1InCourse1.email)
+                        .withName(student1InCourse1.name)
+                        .build()
+        );
 
         a = getAction(submissionParams);
         r = getFileDownloadResult(a);
@@ -103,7 +107,11 @@ public class InstructorCourseStudentListDownloadActionTest extends BaseActionTes
 
         student1InCourse1 = StudentsLogic.inst().getStudentForEmail("idOfTypicalCourse1", "student1InCourse1@gmail.tmt");
         student1InCourse1.team = "N/A";
-        StudentsLogic.inst().updateStudentCascade("student1InCourse1@gmail.tmt", student1InCourse1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(student1InCourse1.course, student1InCourse1.email)
+                        .withTeamName(student1InCourse1.team)
+                        .build()
+        );
 
         a = getAction(submissionParams);
         r = getFileDownloadResult(a);

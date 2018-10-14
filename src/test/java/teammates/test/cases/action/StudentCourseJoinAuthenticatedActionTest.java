@@ -348,20 +348,32 @@ public class StudentCourseJoinAuthenticatedActionTest extends BaseActionTest {
 
         verifyUnaccessibleWithoutLogin(submissionParams);
 
-        unregStudent1.googleId = "";
-        StudentsLogic.inst().updateStudentCascade(unregStudent1.email, unregStudent1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(unregStudent1.course, unregStudent1.email)
+                        .withGoogleId("")
+                        .build()
+        );
         verifyAccessibleForUnregisteredUsers(submissionParams);
 
-        unregStudent1.googleId = "";
-        StudentsLogic.inst().updateStudentCascade(unregStudent1.email, unregStudent1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(unregStudent1.course, unregStudent1.email)
+                        .withGoogleId("")
+                        .build()
+        );
         verifyAccessibleForStudents(submissionParams);
 
-        unregStudent1.googleId = "";
-        StudentsLogic.inst().updateStudentCascade(unregStudent1.email, unregStudent1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(unregStudent1.course, unregStudent1.email)
+                        .withGoogleId("")
+                        .build()
+        );
         verifyAccessibleForInstructorsOfOtherCourses(submissionParams);
 
-        unregStudent1.googleId = "";
-        StudentsLogic.inst().updateStudentCascade(unregStudent1.email, unregStudent1);
+        StudentsLogic.inst().updateStudentCascade(
+                StudentAttributes.updateOptionsBuilder(unregStudent1.course, unregStudent1.email)
+                        .withGoogleId("")
+                        .build()
+        );
         verifyAccessibleForAdminToMasqueradeAsInstructor(submissionParams);
     }
 }
