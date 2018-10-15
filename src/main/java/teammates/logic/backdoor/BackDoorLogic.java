@@ -1,6 +1,7 @@
 package teammates.logic.backdoor;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -138,8 +139,54 @@ public class BackDoorLogic extends Logic {
             // question ID already injected
         }
         frDb.createEntityWithoutExistenceCheck(response);
-        updateRespondents(response.feedbackSessionName, response.courseId);
+        updateRespondentsForSession(response.feedbackSessionName, response.courseId);
         return Const.StatusCodes.BACKDOOR_STATUS_SUCCESS;
+    }
+
+    /**
+     * Syncs the respondents set of student and instructor with the responses they given.
+     */
+    public void updateRespondentsForSession(String feedbackSessionName, String courseId)
+            throws InvalidParametersException, EntityDoesNotExistException {
+        FeedbackSessionAttributes fsa = getFeedbackSession(feedbackSessionName, courseId);
+        List<FeedbackQuestionAttributes> questions =
+                feedbackQuestionsLogic.getFeedbackQuestionsForSession(feedbackSessionName, courseId);
+        List<InstructorAttributes> instructors = instructorsLogic.getInstructorsForCourse(courseId);
+
+        Map<String, List<String>> instructorQuestionsMap = new HashMap<>();
+
+        for (InstructorAttributes instructor : instructors) {
+            List<FeedbackQuestionAttributes> instructorQns =
+                    feedbackQuestionsLogic.getFeedbackQuestionsForInstructor(questions, fsa.isCreator(instructor.email));
+
+            if (!instructorQns.isEmpty()) {
+                List<String> questionIds = new ArrayList<>();
+                for (FeedbackQuestionAttributes question : instructorQns) {
+                    questionIds.add(question.getId());
+                }
+                instructorQuestionsMap.put(instructor.email, questionIds);
+            }
+        }
+
+        Set<String> respondingStudentList = new HashSet<>();
+        Set<String> respondingInstructorList = new HashSet<>();
+        List<FeedbackResponseAttributes> responses =
+                feedbackResponsesLogic.getFeedbackResponsesForSession(feedbackSessionName, courseId);
+        for (FeedbackResponseAttributes response : responses) {
+            List<String> instructorQuestions = instructorQuestionsMap.get(response.giver);
+            if (instructorQuestions != null && instructorQuestions.contains(response.feedbackQuestionId)) {
+                respondingInstructorList.add(response.giver);
+            } else {
+                respondingStudentList.add(response.giver);
+            }
+        }
+
+        fbDb.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(feedbackSessionName, courseId)
+                        .withRespondingInstructorSet(respondingInstructorList)
+                        .withRespondingStudentSet(respondingStudentList)
+                        .build()
+        );
     }
 
     /**
@@ -282,7 +329,28 @@ public class BackDoorLogic extends Logic {
             throws InvalidParametersException, EntityDoesNotExistException {
         FeedbackSessionAttributes feedbackSession =
                 JsonUtils.fromJson(feedbackSessionJson, FeedbackSessionAttributes.class);
-        updateFeedbackSession(feedbackSession);
+        updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                        .withInstructions(feedbackSession.getInstructions())
+                        .withCreatedTime(feedbackSession.getCreatedTime())
+                        .withDeletedTime(feedbackSession.getDeletedTime())
+                        .withStartTime(feedbackSession.getStartTime())
+                        .withEndTime(feedbackSession.getEndTime())
+                        .withSessionVisibleFromTime(feedbackSession.getSessionVisibleFromTime())
+                        .withResultsVisibleFromTime(feedbackSession.getResultsVisibleFromTime())
+                        .withTimeZone(feedbackSession.getTimeZone())
+                        .withGracePeriod(Duration.ofMinutes(feedbackSession.getGracePeriodMinutes()))
+                        .withSentOpenEmail(feedbackSession.isSentOpenEmail())
+                        .withSentClosingEmail(feedbackSession.isSentClosingEmail())
+                        .withSentClosedEmail(feedbackSession.isSentClosedEmail())
+                        .withSentPublishedEmail(feedbackSession.isSentPublishedEmail())
+                        .withIsOpeningEmailEnabled(feedbackSession.isOpeningEmailEnabled())
+                        .withIsClosingEmailEnabled(feedbackSession.isClosingEmailEnabled())
+                        .withIsPublishedEmailEnabled(feedbackSession.isPublishedEmailEnabled())
+                        .withRespondingStudentSet(feedbackSession.getRespondingStudentList())
+                        .withRespondingInstructorSet(feedbackSession.getRespondingInstructorList())
+                        .build());
     }
 
     public void editFeedbackQuestionAsJson(String feedbackQuestionJson)

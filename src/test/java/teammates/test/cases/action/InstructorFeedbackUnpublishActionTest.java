@@ -132,7 +132,14 @@ public class InstructorFeedbackUnpublishActionTest extends BaseActionTest {
 
         session.setSentPublishedEmail(true);
 
-        new FeedbackSessionsDb().updateFeedbackSession(session);
+        new FeedbackSessionsDb().updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withStartTime(session.getStartTime())
+                        .withEndTime(session.getEndTime())
+                        .withResultsVisibleFromTime(session.getResultsVisibleFromTime())
+                        .withSentPublishedEmail(session.isSentPublishedEmail())
+                        .build()
+        );
     }
 
     private void makeFeedbackSessionPublished(FeedbackSessionAttributes session) throws Exception {

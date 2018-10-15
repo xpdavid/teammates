@@ -46,9 +46,18 @@ public class FeedbackSessionOpeningRemindersActionTest extends BaseAutomatedActi
         FeedbackSessionAttributes session1 = dataBundle.feedbackSessions.get("session1InCourse1");
         session1.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(2));
         session1.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(3));
-        fsLogic.updateFeedbackSession(session1);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withStartTime(session1.getStartTime())
+                        .withEndTime(session1.getEndTime())
+                        .build());
         session1.setStartTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-23));
-        fsLogic.updateFeedbackSession(session1);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withStartTime(session1.getStartTime())
+                        .build());
 
         // Ditto, but disable the opening reminder, but currently open emails will still be sent regardless
 
@@ -56,9 +65,19 @@ public class FeedbackSessionOpeningRemindersActionTest extends BaseAutomatedActi
         session2.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(2));
         session2.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(3));
         session2.setOpeningEmailEnabled(false);
-        fsLogic.updateFeedbackSession(session2);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session2.getFeedbackSessionName(), session2.getCourseId())
+                        .withStartTime(session2.getStartTime())
+                        .withEndTime(session2.getEndTime())
+                        .withIsOpeningEmailEnabled(session2.isOpeningEmailEnabled())
+                        .build());
         session2.setStartTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-23));
-        fsLogic.updateFeedbackSession(session2);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session2.getFeedbackSessionName(), session2.getCourseId())
+                        .withStartTime(session2.getStartTime())
+                        .build());
 
         action = getAction();
         action.execute();
@@ -84,9 +103,17 @@ public class FeedbackSessionOpeningRemindersActionTest extends BaseAutomatedActi
         ______TS("2 sessions opened with emails sent");
 
         session1.setSentOpenEmail(true);
-        fsLogic.updateFeedbackSession(session1);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withSentOpenEmail(session1.isSentOpenEmail())
+                        .build());
         session2.setSentOpenEmail(true);
-        fsLogic.updateFeedbackSession(session2);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session2.getFeedbackSessionName(), session2.getCourseId())
+                        .withSentOpenEmail(session2.isSentOpenEmail())
+                        .build());
 
         action = getAction();
         action.execute();

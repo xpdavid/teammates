@@ -6,6 +6,7 @@ import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.util.Const;
 import teammates.common.util.TimeHelper;
 import teammates.logic.core.FeedbackSessionsLogic;
+import teammates.storage.api.FeedbackSessionsDb;
 import teammates.ui.automated.FeedbackSessionPublishedRemindersAction;
 
 /**
@@ -38,7 +39,11 @@ public class FeedbackSessionPublishedRemindersActionTest extends BaseAutomatedAc
 
         FeedbackSessionAttributes session1 = dataBundle.feedbackSessions.get("session1InCourse1");
         session1.setResultsVisibleFromTime(TimeHelper.getInstantDaysOffsetFromNow(-1));
-        fsLogic.updateFeedbackSession(session1);
+        new FeedbackSessionsDb().updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withResultsVisibleFromTime(session1.getResultsVisibleFromTime())
+                        .build());
         verifyPresentInDatastore(session1);
 
         // Publish session by moving automated publish time and disable publish reminder
@@ -46,15 +51,26 @@ public class FeedbackSessionPublishedRemindersActionTest extends BaseAutomatedAc
         FeedbackSessionAttributes session2 = dataBundle.feedbackSessions.get("session2InCourse1");
         session2.setResultsVisibleFromTime(TimeHelper.getInstantDaysOffsetFromNow(-1));
         session2.setPublishedEmailEnabled(false);
-        fsLogic.updateFeedbackSession(session2);
+        new FeedbackSessionsDb().updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session2.getFeedbackSessionName(), session2.getCourseId())
+                        .withResultsVisibleFromTime(session2.getResultsVisibleFromTime())
+                        .withIsPublishedEmailEnabled(session2.isPublishedEmailEnabled())
+                        .build());
         verifyPresentInDatastore(session2);
 
         // Do a manual publish
 
         FeedbackSessionAttributes session3 = dataBundle.feedbackSessions.get("gracePeriodSession");
-        session3.setResultsVisibleFromTime(Const.TIME_REPRESENTS_LATER);
-        fsLogic.updateFeedbackSession(session3);
+        new FeedbackSessionsDb().updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session3.getFeedbackSessionName(), session3.getCourseId())
+                        .withResultsVisibleFromTime(Const.TIME_REPRESENTS_LATER)
+                        .build());
         fsLogic.publishFeedbackSession(session3);
+        session3.setResultsVisibleFromTime(
+                fsLogic.getFeedbackSession(session3.getFeedbackSessionName(), session3.getCourseId())
+                        .getResultsVisibleFromTime());
         verifyPresentInDatastore(session3);
 
         action = getAction();
@@ -74,7 +90,11 @@ public class FeedbackSessionPublishedRemindersActionTest extends BaseAutomatedAc
         ______TS("1 session published with emails sent");
 
         session1.setSentPublishedEmail(true);
-        fsLogic.updateFeedbackSession(session1);
+        new FeedbackSessionsDb().updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withSentPublishedEmail(session1.isSentPublishedEmail())
+                        .build());
 
         action = getAction();
         action.execute();

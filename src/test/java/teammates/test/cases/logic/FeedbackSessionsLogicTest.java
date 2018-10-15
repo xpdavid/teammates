@@ -115,16 +115,20 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
     }
 
     @Test
+    public void testFeedbackSessionNotification() throws Exception {
+        testGetFeedbackSessionsClosingWithinTimeLimit();
+        testGetFeedbackSessionsClosedWithinThePastHour();
+        testGetFeedbackSessionsWhichNeedOpenMailsToBeSent();
+        testGetFeedbackSessionWhichNeedPublishedEmailsToBeSent();
+    }
+
+    @Test
     public void testAll() throws Exception {
 
         testGetFeedbackSessionsForCourse();
         testGetFeedbackSessionsListForInstructor();
         testGetSoftDeletedFeedbackSessionsListForInstructor();
         testGetSoftDeletedFeedbackSessionsListForInstructors();
-        testGetFeedbackSessionsClosingWithinTimeLimit();
-        testGetFeedbackSessionsClosedWithinThePastHour();
-        testGetFeedbackSessionsWhichNeedOpenMailsToBeSent();
-        testGetFeedbackSessionWhichNeedPublishedEmailsToBeSent();
         testGetFeedbackSessionDetailsForInstructor();
         testGetFeedbackSessionQuestionsForStudent();
         testGetFeedbackSessionQuestionsForInstructor();
@@ -316,7 +320,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
 
         ______TS("case : 1 open session in undeleted course with mail sent");
         session.setSentOpenEmail(true);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentOpenEmail(session.isSentOpenEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedOpenEmailsToBeSent();
 
@@ -325,7 +332,11 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         ______TS("case : 1 closed session in undeleted course with mail unsent");
         session.setSentOpenEmail(false);
         session.setEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-1));
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentOpenEmail(session.isSentOpenEmail())
+                        .withEndTime(session.getEndTime())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedOpenEmailsToBeSent();
 
@@ -334,7 +345,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         ______TS("case : 1 open session in deleted course with mail unsent");
         coursesLogic.moveCourseToRecycleBin(session.getCourseId());
         session.setEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(1));
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withEndTime(session.getEndTime())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedOpenEmailsToBeSent();
 
@@ -342,7 +356,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
 
         ______TS("case : 1 open session in deleted course with mail sent");
         session.setSentOpenEmail(true);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentOpenEmail(session.isSentOpenEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedOpenEmailsToBeSent();
 
@@ -351,7 +368,11 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         ______TS("case : 1 closed session in deleted course with mail unsent");
         session.setSentOpenEmail(false);
         session.setEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-1));
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentOpenEmail(session.isSentOpenEmail())
+                        .withEndTime(session.getEndTime())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedOpenEmailsToBeSent();
 
@@ -378,9 +399,15 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         session.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(-2));
         session.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(-1));
         session.setResultsVisibleFromTime(TimeHelper.getInstantDaysOffsetFromNow(-1));
-
         session.setSentPublishedEmail(false);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withTimeZone(session.getTimeZone())
+                        .withStartTime(session.getStartTime())
+                        .withEndTime(session.getEndTime())
+                        .withResultsVisibleFromTime(session.getResultsVisibleFromTime())
+                        .withSentPublishedEmail(session.isSentPublishedEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedAutomatedPublishedEmailsToBeSent();
 
@@ -389,7 +416,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
 
         ______TS("case : 1 published session in undeleted course with mail sent");
         session.setSentPublishedEmail(true);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentPublishedEmail(session.isSentPublishedEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedAutomatedPublishedEmailsToBeSent();
 
@@ -398,7 +428,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         ______TS("case : 1 published session in deleted course with mail unsent");
         coursesLogic.moveCourseToRecycleBin(session.getCourseId());
         session.setSentPublishedEmail(false);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentPublishedEmail(session.isSentPublishedEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedAutomatedPublishedEmailsToBeSent();
 
@@ -406,7 +439,10 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
 
         ______TS("case : 1 published session in deleted course with mail sent");
         session.setSentPublishedEmail(true);
-        fsLogic.updateFeedbackSession(session);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                        .withSentPublishedEmail(session.isSentPublishedEmail())
+                        .build());
 
         sessionList = fsLogic.getFeedbackSessionsWhichNeedAutomatedPublishedEmailsToBeSent();
 
@@ -649,8 +685,7 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
                         "First feedback session", "idOfTypicalCourse1", "student1InCourse1@gmail.tmt");
 
         // We just test this once.
-        assertEquals(actual.feedbackSession.toString(),
-                dataBundle.feedbackSessions.get("session1InCourse1").toString());
+        assertEquals(dataBundle.feedbackSessions.get("session1InCourse1").toString(), actual.feedbackSession.toString());
 
         // There should be 3 questions for students to do in session 1.
         // Other questions are set for instructors.
@@ -1942,27 +1977,25 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         AssertHelper.assertContains(Const.StatusCodes.NULL_PARAMETER, ae.getMessage());
 
         ______TS("failure 2: non-existent session name");
-        FeedbackSessionAttributes fsa = FeedbackSessionAttributes
-                .builder("asdf_randomName1423", "idOfTypicalCourse1", "")
-                .build();
-
-        FeedbackSessionAttributes finalFsa = fsa;
+        FeedbackSessionAttributes.UpdateOptions updateOptions =
+                FeedbackSessionAttributes.updateOptionsBuilder("asdf_randomName1423", "idOfTypicalCourse1")
+                        .withInstructions("test")
+                        .build();
         EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> fsLogic.updateFeedbackSession(finalFsa));
+                () -> fsLogic.updateFeedbackSession(updateOptions));
         assertEquals(
                 "Trying to update a non-existent feedback session: "
-                        + fsa.getCourseId() + "/" + fsa.getFeedbackSessionName(),
+                        + updateOptions.getCourseId() + "/" + updateOptions.getFeedbackSessionName(),
                 ednee.getMessage());
 
-        ______TS("success 1: all changeable values sent are null");
-        fsa = dataBundle.feedbackSessions.get("session1InCourse1");
-        fsa.setInstructions(null);
-        fsa.setStartTime(null);
-        fsa.setEndTime(null);
-        fsa.setSessionVisibleFromTime(null);
-        fsa.setResultsVisibleFromTime(null);
+        ______TS("success 1: typical case");
+        FeedbackSessionAttributes fsa = dataBundle.feedbackSessions.get("session1InCourse1");
+        fsa.setInstructions("test");
 
-        fsLogic.updateFeedbackSession(fsa);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes.updateOptionsBuilder(fsa.getFeedbackSessionName(), fsa.getCourseId())
+                        .withInstructions(fsa.getInstructions())
+                        .build());
 
         assertEquals(fsa.toString(), fsLogic.getFeedbackSession(fsa.getFeedbackSessionName(), fsa.getCourseId()).toString());
     }
@@ -1975,7 +2008,11 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         // set as manual publish
 
         sessionUnderTest.setResultsVisibleFromTime(Const.TIME_REPRESENTS_LATER);
-        fsLogic.updateFeedbackSession(sessionUnderTest);
+        fsLogic.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(sessionUnderTest.getFeedbackSessionName(), sessionUnderTest.getCourseId())
+                        .withResultsVisibleFromTime(sessionUnderTest.getResultsVisibleFromTime())
+                        .build());
 
         fsLogic.publishFeedbackSession(sessionUnderTest);
 
