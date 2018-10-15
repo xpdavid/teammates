@@ -603,9 +603,12 @@ public class BackDoorLogic extends Logic {
     }
 
     public void uploadAndUpdateStudentProfilePicture(String googleId,
-            byte[] pictureData) throws EntityDoesNotExistException, IOException {
+            byte[] pictureData) throws IOException, InvalidParametersException {
         String pictureKey = GoogleCloudStorageHelper.writeImageDataToGcs(googleId, pictureData);
-        updateStudentProfilePicture(googleId, pictureKey);
+        updateOrCreateStudentProfile(
+                StudentProfileAttributes.updateOptionsBuilder(googleId)
+                        .withPictureKey(pictureKey)
+                        .build());
     }
 
     public boolean isGroupListFilePresentInGcs(String groupListKey) {

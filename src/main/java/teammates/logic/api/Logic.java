@@ -93,35 +93,19 @@ public class Logic {
     }
 
     /**
-     * Updates/Creates student profile based on the given new profile attributes.
+     * Updates/Creates the profile using {@link StudentProfileAttributes.UpdateOptions}.
      *
      * <br/> Preconditions: <br/>
      * * All parameters are non-null.
      *
-     * @throws InvalidParametersException if attributes in {@code newStudentProfileAttributes} are not valid
+     * @throws InvalidParametersException if attributes to update are not valid
      */
-    public void updateOrCreateStudentProfile(StudentProfileAttributes newStudentProfileAttributes)
+    public void updateOrCreateStudentProfile(StudentProfileAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException {
 
-        Assumption.assertNotNull(newStudentProfileAttributes);
+        Assumption.assertNotNull(updateOptions);
 
-        profilesLogic.updateOrCreateStudentProfile(newStudentProfileAttributes);
-    }
-
-    /**
-     * Updates {@code pictureKey} for the student profile associated with {@code googleId}.
-     *
-     * <br/> Preconditions: <br/>
-     * * All parameters are non-null.
-     *
-     * <p>If the associated profile doesn't exist, create a new one.</p>
-     */
-    public void updateStudentProfilePicture(String googleId, String newPictureKey) {
-
-        Assumption.assertNotNull(googleId);
-        Assumption.assertNotNull(newPictureKey);
-
-        profilesLogic.updateStudentProfilePicture(googleId, newPictureKey);
+        profilesLogic.updateOrCreateStudentProfile(updateOptions);
     }
 
     /**
