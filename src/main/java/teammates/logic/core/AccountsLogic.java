@@ -175,7 +175,10 @@ public final class AccountsLogic {
         }
 
         instructor.googleId = googleId;
-        instructorsLogic.updateInstructorByEmail(instructor.email, instructor);
+        instructorsLogic.updateInstructorByEmail(
+                InstructorAttributes.updateOptionsWithEmailBuilder(instructor.courseId, instructor.email)
+                        .withGoogleId(instructor.googleId)
+                        .build());
 
         //Update the goolgeId of the student entity for the instructor which was created from sampleData.
         StudentAttributes student = studentsLogic.getStudentForEmail(instructor.courseId, instructor.email);

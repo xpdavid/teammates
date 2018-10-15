@@ -80,10 +80,11 @@ public final class InstructorsLogic {
 
     public void setArchiveStatusOfInstructor(String googleId, String courseId, boolean archiveStatus)
             throws InvalidParametersException, EntityDoesNotExistException {
-
-        InstructorAttributes instructor = instructorsDb.getInstructorForGoogleId(courseId, googleId);
-        instructor.isArchived = archiveStatus;
-        instructorsDb.updateInstructorByGoogleId(instructor);
+        instructorsDb.updateInstructorByGoogleId(
+                InstructorAttributes.updateOptionsWithGoogleIdBuilder(courseId, googleId)
+                        .withIsAchieved(archiveStatus)
+                        .build()
+        );
     }
 
     public InstructorAttributes getInstructorForEmail(String courseId, String email) {
@@ -175,58 +176,37 @@ public final class InstructorsLogic {
     }
 
     /**
-     * Update the name and email address of an instructor with the specific Google ID.
-     * @param instructor InstructorAttributes object containing the details to be updated
+     * Updates the instructor cascade with {@link InstructorAttributes.UpdateOptionsWithGoogleId}.
      */
-    public void updateInstructorByGoogleId(String googleId, InstructorAttributes instructor)
+    public void updateInstructorByGoogleId(InstructorAttributes.UpdateOptionsWithGoogleId updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
+        Assumption.assertNotNull("Supplied parameter was null", updateOptions);
 
-        // TODO: either refactor this to constant or just remove it. check not null should be in db
-        Assumption.assertNotNull("Supplied parameter was null", instructor);
+        InstructorAttributes originalInstructor =
+                instructorsDb.getInstructorForGoogleId(updateOptions.getCourseId(), updateOptions.getGoogleId());
+        InstructorAttributes updatedInstructor = instructorsDb.updateInstructorByGoogleId(updateOptions);
 
-        coursesLogic.verifyCourseIsPresent(instructor.courseId);
-        verifyInstructorInDbAndCascadeEmailChange(googleId, instructor);
-        checkForUpdatingRespondents(instructor);
-
-        instructorsDb.updateInstructorByGoogleId(instructor);
-    }
-
-    private void checkForUpdatingRespondents(InstructorAttributes instructor)
-            throws InvalidParametersException, EntityDoesNotExistException {
-
-        InstructorAttributes currentInstructor = getInstructorForGoogleId(instructor.courseId, instructor.googleId);
-        if (!currentInstructor.email.equals(instructor.email)) {
-            fsLogic.updateRespondentsForInstructor(currentInstructor.email, instructor.email, instructor.courseId);
-        }
-    }
-
-    private void verifyInstructorInDbAndCascadeEmailChange(String googleId,
-            InstructorAttributes instructor) throws EntityDoesNotExistException {
-        InstructorAttributes instructorInDb = instructorsDb.getInstructorForGoogleId(instructor.courseId, googleId);
-        if (instructorInDb == null) {
-            throw new EntityDoesNotExistException("Instructor " + googleId
-                    + " does not belong to course " + instructor.courseId);
-        }
         // cascade comments
-        if (!instructorInDb.email.equals(instructor.email)) {
+        if (!originalInstructor.email.equals(updatedInstructor.email)) {
             frcLogic.updateFeedbackResponseCommentsEmails(
-                    instructor.courseId, instructorInDb.email, instructor.email);
+                    updatedInstructor.courseId, originalInstructor.email, updatedInstructor.email);
+        }
+
+        // cascade respondents
+        if (!originalInstructor.email.equals(updatedInstructor.email)) {
+            fsLogic.updateRespondentsForInstructor(
+                    originalInstructor.email, updatedInstructor.email, updatedInstructor.courseId);
         }
     }
 
     /**
-     * Update the Google ID and name of an instructor with the specific email.
-     * @param instructor InstructorAttributes object containing the details to be updated
+     * Updates the instructor cascade with {@link InstructorAttributes.UpdateOptionsWithEmail}.
      */
-    public void updateInstructorByEmail(String email, InstructorAttributes instructor)
+    public void updateInstructorByEmail(InstructorAttributes.UpdateOptionsWithEmail updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
+        Assumption.assertNotNull("Supplied parameter was null", updateOptions);
 
-        Assumption.assertNotNull("Supplied parameter was null", instructor);
-
-        coursesLogic.verifyCourseIsPresent(instructor.courseId);
-        verifyIsEmailOfInstructorOfCourse(email, instructor.courseId);
-
-        instructorsDb.updateInstructorByEmail(instructor);
+        instructorsDb.updateInstructorByEmail(updateOptions);
     }
 
     public List<String> getInvalidityInfoForNewInstructorData(String name,

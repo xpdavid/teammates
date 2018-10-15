@@ -337,27 +337,30 @@ public class Logic {
     }
 
     /**
-     * Update the name and email address of an instructor with the specific Google ID.
-     * Preconditions: <br>
+     * Updates the instructor cascade with {@link InstructorAttributes.UpdateOptionsWithGoogleId}.
+     *
+     * <br/>Preconditions: <br/>
      * * All parameters are non-null.
-     * @param instr InstructorAttributes object containing the details to be updated
      */
-    public void updateInstructorByGoogleId(String googleId, InstructorAttributes instr)
+    public void updateInstructor(InstructorAttributes.UpdateOptionsWithGoogleId updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
 
-        Assumption.assertNotNull(googleId);
-        Assumption.assertNotNull(instr);
+        Assumption.assertNotNull(updateOptions);
 
-        instructorsLogic.updateInstructorByGoogleId(googleId, instr);
+        instructorsLogic.updateInstructorByGoogleId(updateOptions);
     }
 
-    public void updateInstructorByEmail(String email, InstructorAttributes instr)
+    /**
+     * Updates the instructor with {@link InstructorAttributes.UpdateOptionsWithEmail}.
+     *
+     * <br/>Preconditions: <br/>
+     * * All parameters are non-null.
+     */
+    public void updateInstructor(InstructorAttributes.UpdateOptionsWithEmail updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
+        Assumption.assertNotNull(updateOptions);
 
-        Assumption.assertNotNull(email);
-        Assumption.assertNotNull(instr);
-
-        instructorsLogic.updateInstructorByEmail(email, instr);
+        instructorsLogic.updateInstructorByEmail(updateOptions);
     }
 
     /**

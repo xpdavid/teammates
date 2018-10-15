@@ -8,7 +8,6 @@ import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.util.SanitizationHelper;
-import teammates.storage.api.InstructorsDb;
 import teammates.storage.entity.Instructor;
 
 /**
@@ -17,7 +16,7 @@ import teammates.storage.entity.Instructor;
 
 public class DataMigrationForSanitizedDataInInstructorAttributes extends DataMigrationForEntities<InstructorAttributes> {
 
-    private InstructorsDb instructorsDb = new InstructorsDb();
+    //private InstructorsDb instructorsDb = new InstructorsDb();
 
     public static void main(String[] args) throws IOException {
         DataMigrationForSanitizedDataInInstructorAttributes migrator =
@@ -60,7 +59,7 @@ public class DataMigrationForSanitizedDataInInstructorAttributes extends DataMig
     @Override
     protected void migrate(InstructorAttributes instructor) throws InvalidParametersException, EntityDoesNotExistException {
         fixSanitizationForInstructor(instructor);
-        updateInstructor(instructor);
+        //updateInstructor(instructor);
     }
 
     @Override
@@ -77,11 +76,11 @@ public class DataMigrationForSanitizedDataInInstructorAttributes extends DataMig
         instructor.role = fixSanitization(instructor.role);
     }
 
-    private void updateInstructor(InstructorAttributes instructor)
-                throws InvalidParametersException, EntityDoesNotExistException {
-
-        instructorsDb.updateInstructorByEmail(instructor);
-    }
+    //private void updateInstructor(InstructorAttributes instructor)
+    //            throws InvalidParametersException, EntityDoesNotExistException {
+    //
+    //    instructorsDb.updateInstructorByEmail(instructor);
+    //}
 
     private List<InstructorAttributes> getAllCourseInstructors() {
         ArrayList<InstructorAttributes> result = new ArrayList<>();
