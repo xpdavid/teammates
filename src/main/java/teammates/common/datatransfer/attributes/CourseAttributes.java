@@ -222,4 +222,88 @@ public class CourseAttributes extends EntityAttributes<Course> implements Compar
             }
         }
     }
+
+    /**
+     * Updates with {@link UpdateOptions}.
+     */
+    public void update(UpdateOptions updateOptions) {
+        updateOptions.deletedAtOption.ifPresent(s -> deletedAt = s);
+        updateOptions.nameOption.ifPresent(s -> name = s);
+        updateOptions.timeZoneOption.ifPresent(s -> timeZone = s);
+    }
+
+    /**
+     * Returns a {@link UpdateOptions.Builder} to build {@link UpdateOptions} for course.
+     */
+    public static UpdateOptions.Builder updateOptionsBuilder(String courseId) {
+        return new UpdateOptions.Builder(courseId);
+    }
+
+    /**
+     * Helper class to specific the fields to update in {@link CourseAttributes}.
+     */
+    public static class UpdateOptions {
+        private String courseId;
+
+        private UpdateOption<Instant> deletedAtOption = UpdateOption.empty();
+        private UpdateOption<String> nameOption = UpdateOption.empty();
+        private UpdateOption<ZoneId> timeZoneOption = UpdateOption.empty();
+
+        private UpdateOptions(String courseId) {
+            Assumption.assertNotNull(Const.StatusCodes.UPDATE_OPTIONS_NULL_INPUT, courseId);
+
+            this.courseId = courseId;
+        }
+
+        public String getCourseId() {
+            return courseId;
+        }
+
+        /**
+         * Builder class to build {@link UpdateOptions}.
+         */
+        public static class Builder {
+            private UpdateOptions updateOptions;
+
+            private Builder(String courseId) {
+                updateOptions = new UpdateOptions(courseId);
+            }
+
+            public Builder withDeletedAt(Instant deletedAt) {
+                // deletedAt can be updated to null
+                updateOptions.deletedAtOption = UpdateOption.of(deletedAt);
+                return this;
+            }
+
+            public Builder withName(String name) {
+                Assumption.assertNotNull(Const.StatusCodes.UPDATE_OPTIONS_NULL_INPUT, name);
+
+                updateOptions.nameOption = UpdateOption.of(name);
+                return this;
+            }
+
+            public Builder withTimezone(ZoneId timezone) {
+                Assumption.assertNotNull(Const.StatusCodes.UPDATE_OPTIONS_NULL_INPUT, timezone);
+
+                updateOptions.timeZoneOption = UpdateOption.of(timezone);
+                return this;
+            }
+
+            public UpdateOptions build() {
+                return updateOptions;
+            }
+
+        }
+
+        @Override
+        public String toString() {
+            return "CourseAttributes.UpdateOptions ["
+                    + "courseId = " + courseId
+                    + ", name = " + nameOption
+                    + ", deletedAt = " + deletedAtOption
+                    + ", timezone = " + timeZoneOption
+                    + "]";
+        }
+
+    }
 }

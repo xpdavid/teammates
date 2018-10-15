@@ -716,7 +716,6 @@ public class InstructorFeedbackSubmissionEditSaveActionTest extends BaseActionTe
     @Test
     public void testGracePeriodExecuteAndPostProcess() throws Exception {
         dataBundle = loadDataBundle("/InstructorFeedbackSubmissionEditSaveActionTest.json");
-        FeedbackSessionsDb feedbackSessionDb = new FeedbackSessionsDb();
         FeedbackSessionAttributes fs = dataBundle.feedbackSessions.get("Grace Period Session");
         InstructorAttributes instructor = dataBundle.instructors.get("instructor1InCourse1");
         gaeSimulation.loginAsInstructor(instructor.googleId);
@@ -729,7 +728,11 @@ public class InstructorFeedbackSubmissionEditSaveActionTest extends BaseActionTe
         ______TS("opened");
 
         fs.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(1));
-        feedbackSessionDb.updateFeedbackSession(fs);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertTrue(fs.isOpened());
         assertFalse(fs.isInGracePeriod());
@@ -747,7 +750,11 @@ public class InstructorFeedbackSubmissionEditSaveActionTest extends BaseActionTe
         ______TS("during grace period");
 
         fs.setEndTime(Instant.now());
-        feedbackSessionDb.updateFeedbackSession(fs);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertFalse(fs.isOpened());
         assertTrue(fs.isInGracePeriod());
@@ -763,7 +770,11 @@ public class InstructorFeedbackSubmissionEditSaveActionTest extends BaseActionTe
         ______TS("after grace period");
 
         fs.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(-10));
-        feedbackSessionDb.updateFeedbackSession(fs);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertFalse(fs.isOpened());
         assertFalse(fs.isInGracePeriod());
@@ -813,7 +824,11 @@ public class InstructorFeedbackSubmissionEditSaveActionTest extends BaseActionTe
 
     private void closeSession(FeedbackSessionAttributes fs) throws Exception {
         fs.setEndTime(Instant.now());
-        fsDb.updateFeedbackSession(fs);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
     }
 
     @Test

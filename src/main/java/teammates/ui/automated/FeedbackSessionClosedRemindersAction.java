@@ -33,8 +33,11 @@ public class FeedbackSessionClosedRemindersAction extends AutomatedAction {
             List<EmailWrapper> emailsToBeSent = new EmailGenerator().generateFeedbackSessionClosedEmails(session);
             try {
                 taskQueuer.scheduleEmailsForSending(emailsToBeSent);
-                session.setSentClosedEmail(true);
-                logic.updateFeedbackSession(session);
+                logic.updateFeedbackSession(
+                        FeedbackSessionAttributes
+                                .updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                                .withSentClosedEmail(true)
+                                .build());
             } catch (Exception e) {
                 log.severe("Unexpected error: " + TeammatesException.toStringWithStackTrace(e));
             }

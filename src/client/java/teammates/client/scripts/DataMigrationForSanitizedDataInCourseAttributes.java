@@ -66,13 +66,11 @@ public class DataMigrationForSanitizedDataInCourseAttributes extends DataMigrati
      */
     @Override
     protected void migrate(CourseAttributes course) throws InvalidParametersException, EntityDoesNotExistException {
-        course.setName(desanitizeFromHtml(course.getName()));
-
-        if (!course.isValid()) {
-            throw new InvalidParametersException(course.getInvalidityInfo());
-        }
-
-        coursesDb.updateCourse(course);
+        coursesDb.updateCourse(
+                CourseAttributes.updateOptionsBuilder(course.getId())
+                        .withName(desanitizeFromHtml(course.getName()))
+                        .build()
+        );
     }
 
     /**

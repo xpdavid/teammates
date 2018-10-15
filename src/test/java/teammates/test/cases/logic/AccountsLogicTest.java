@@ -8,7 +8,6 @@ import teammates.common.datatransfer.attributes.AccountAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.datatransfer.attributes.StudentProfileAttributes;
-import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.exception.JoinCourseException;
 import teammates.common.util.Config;
@@ -118,33 +117,6 @@ public class AccountsLogicTest extends BaseLogicTest {
 
         assertEquals(14, accountsLogic.getInstructorAccounts().size());
 
-        ______TS("test updateAccount");
-
-        AccountAttributes expectedAccount = AccountAttributes.builder()
-                .withGoogleId("idOfInstructor1OfCourse1")
-                .withName("name")
-                .withEmail("test2@email.com")
-                .withInstitute("dev")
-                .withIsInstructor(true)
-                .build();
-
-        accountsLogic.updateAccount(expectedAccount);
-        AccountAttributes actualAccount = accountsLogic.getAccount(expectedAccount.googleId);
-        expectedAccount.createdAt = actualAccount.createdAt;
-        assertEquals(expectedAccount.toString(), actualAccount.toString());
-
-        expectedAccount = AccountAttributes.builder()
-                .withGoogleId("id-does-not-exist")
-                .withName("name")
-                .withEmail("test2@email.com")
-                .withInstitute("dev")
-                .withIsInstructor(true)
-                .build();
-        AccountAttributes finalAccount = expectedAccount;
-        EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> accountsLogic.updateAccount(finalAccount));
-        AssertHelper.assertContains(AccountsDb.ERROR_UPDATE_NON_EXISTENT_ACCOUNT, ednee.getMessage());
-
         ______TS("test downgradeInstructorToStudentCascade");
 
         accountsLogic.downgradeInstructorToStudentCascade("idOfInstructor2OfCourse1");
@@ -153,18 +125,11 @@ public class AccountsLogicTest extends BaseLogicTest {
         accountsLogic.downgradeInstructorToStudentCascade("student1InCourse1");
         assertFalse(accountsLogic.isAccountAnInstructor("student1InCourse1"));
 
-        accountsLogic.downgradeInstructorToStudentCascade("id-does-not-exist");
-        assertFalse(accountsLogic.isAccountPresent("id-does-not-exist"));
-
         ______TS("test makeAccountInstructor");
 
         accountsLogic.makeAccountInstructor("student2InCourse1");
         assertTrue(accountsLogic.isAccountAnInstructor("student2InCourse1"));
         accountsLogic.downgradeInstructorToStudentCascade("student2InCourse1");
-
-        accountsLogic.makeAccountInstructor("id-does-not-exist");
-        assertFalse(accountsLogic.isAccountPresent("id-does-not-exist"));
-
     }
 
     @Test
@@ -293,7 +258,11 @@ public class AccountsLogicTest extends BaseLogicTest {
 
         // make the student 'unregistered' again
         studentData.googleId = "";
-        studentsLogic.updateStudentCascadeWithoutDocument(studentData.email, studentData);
+        studentsLogic.updateStudentCascadeWithoutDocument(
+                StudentAttributes.updateOptionsBuilder(studentData.course, studentData.email)
+                        .withGoogleId(studentData.googleId)
+                        .build()
+        );
         assertEquals("",
                 logic.getStudentForEmail(studentData.course, studentData.email).googleId);
 
@@ -451,7 +420,10 @@ public class AccountsLogicTest extends BaseLogicTest {
         StudentProfileAttributes studentProfile = StudentProfileAttributes.builder(account.googleId)
                 .withShortName("Test")
                 .build();
-        profilesLogic.updateOrCreateStudentProfile(studentProfile);
+        profilesLogic.updateOrCreateStudentProfile(
+                StudentProfileAttributes.updateOptionsBuilder(account.googleId)
+                        .withShortName(studentProfile.shortName)
+                        .build());
 
         // Make instructor account id a student too.
         StudentAttributes student = StudentAttributes

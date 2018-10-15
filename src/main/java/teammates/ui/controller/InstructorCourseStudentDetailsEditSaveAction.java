@@ -71,7 +71,15 @@ public class InstructorCourseStudentDetailsEditSaveAction extends Action {
                 logic.validateTeams(Arrays.asList(student), courseId);
             }
 
-            logic.updateStudent(studentEmail, student);
+            logic.updateStudent(
+                    StudentAttributes.updateOptionsBuilder(originalStudentAttribute.course, originalStudentAttribute.email)
+                            .withName(student.name)
+                            .withNewEmail(student.email)
+                            .withTeamName(student.team)
+                            .withSectionName(student.section)
+                            .withComment(student.comments)
+                            .build()
+            );
 
             boolean isSessionSummarySendEmail = getRequestParamAsBoolean(Const.ParamsNames.SESSION_SUMMARY_EMAIL_SEND_CHECK);
             if (isEmailChanged) {

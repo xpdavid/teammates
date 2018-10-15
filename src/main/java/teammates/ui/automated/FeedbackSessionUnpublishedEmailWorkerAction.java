@@ -45,8 +45,11 @@ public class FeedbackSessionUnpublishedEmailWorkerAction extends AutomatedAction
                 new EmailGenerator().generateFeedbackSessionUnpublishedEmails(session);
         try {
             taskQueuer.scheduleEmailsForSending(emailsToBeSent);
-            session.setSentPublishedEmail(false);
-            logic.updateFeedbackSession(session);
+            logic.updateFeedbackSession(
+                    FeedbackSessionAttributes
+                            .updateOptionsBuilder(session.getFeedbackSessionName(), session.getCourseId())
+                            .withSentPublishedEmail(false)
+                            .build());
         } catch (Exception e) {
             log.severe("Unexpected error: " + TeammatesException.toStringWithStackTrace(e));
         }

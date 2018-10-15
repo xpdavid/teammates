@@ -1642,6 +1642,9 @@ public final class Const {
         public static final String INVALID_KEY = "ERRORCODE_INVALID_KEY";
         public static final String KEY_BELONGS_TO_DIFFERENT_USER = "ERRORCODE_KEY_BELONGS_TO_DIFFERENT_USER";
 
+        // Error message for update options
+        public static final String UPDATE_OPTIONS_NULL_INPUT = "Fields to update is null";
+
         // Error message used across DB level
         public static final String DBLEVEL_NULL_INPUT = "Supplied parameter was null";
 

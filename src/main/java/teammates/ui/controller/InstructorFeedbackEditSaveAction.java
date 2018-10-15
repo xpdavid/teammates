@@ -1,5 +1,6 @@
 package teammates.ui.controller;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
@@ -36,7 +37,19 @@ public class InstructorFeedbackEditSaveAction extends InstructorFeedbackAbstract
         try {
             validateTimeData(feedbackSession);
             addResolvedTimeFieldsToDataIfRequired(feedbackSession, data);
-            logic.updateFeedbackSession(feedbackSession);
+            logic.updateFeedbackSession(
+                    FeedbackSessionAttributes
+                            .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                            .withInstructions(feedbackSession.getInstructions())
+                            .withStartTime(feedbackSession.getStartTime())
+                            .withEndTime(feedbackSession.getEndTime())
+                            .withSessionVisibleFromTime(feedbackSession.getSessionVisibleFromTime())
+                            .withResultsVisibleFromTime(feedbackSession.getResultsVisibleFromTime())
+                            .withGracePeriod(Duration.ofMinutes(feedbackSession.getGracePeriodMinutes()))
+                            .withIsOpeningEmailEnabled(feedbackSession.isOpeningEmailEnabled())
+                            .withIsClosingEmailEnabled(feedbackSession.isClosingEmailEnabled())
+                            .withIsPublishedEmailEnabled(feedbackSession.isPublishedEmailEnabled())
+                            .build());
             statusToUser.add(new StatusMessage(Const.StatusMessages.FEEDBACK_SESSION_EDITED, StatusMessageColor.SUCCESS));
             statusToAdmin =
                     "Updated Feedback Session "

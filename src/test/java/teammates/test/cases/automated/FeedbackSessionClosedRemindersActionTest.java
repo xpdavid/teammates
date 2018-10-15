@@ -14,7 +14,7 @@ import teammates.common.util.EmailType;
 import teammates.common.util.TaskWrapper;
 import teammates.common.util.TimeHelper;
 import teammates.logic.core.CoursesLogic;
-import teammates.logic.core.FeedbackSessionsLogic;
+import teammates.storage.api.FeedbackSessionsDb;
 import teammates.test.driver.TimeHelperExtension;
 import teammates.ui.automated.FeedbackSessionClosedRemindersAction;
 
@@ -24,7 +24,7 @@ import teammates.ui.automated.FeedbackSessionClosedRemindersAction;
 public class FeedbackSessionClosedRemindersActionTest extends BaseAutomatedActionTest {
 
     private static final CoursesLogic coursesLogic = CoursesLogic.inst();
-    private static final FeedbackSessionsLogic fsLogic = FeedbackSessionsLogic.inst();
+    private static final FeedbackSessionsDb fsDb = new FeedbackSessionsDb();
 
     @Override
     protected String getActionUri() {
@@ -50,7 +50,13 @@ public class FeedbackSessionClosedRemindersActionTest extends BaseAutomatedActio
         session1.setTimeZone(ZoneId.of("UTC"));
         session1.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(-2));
         session1.setEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-1));
-        fsLogic.updateFeedbackSession(session1);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withTimeZone(session1.getTimeZone())
+                        .withStartTime(session1.getStartTime())
+                        .withEndTime(session1.getEndTime())
+                        .build());
         verifyPresentInDatastore(session1);
 
         // Ditto, but with disabled closed reminder
@@ -60,7 +66,14 @@ public class FeedbackSessionClosedRemindersActionTest extends BaseAutomatedActio
         session2.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(-2));
         session2.setEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(-1));
         session2.setClosingEmailEnabled(false);
-        fsLogic.updateFeedbackSession(session2);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session2.getFeedbackSessionName(), session2.getCourseId())
+                        .withTimeZone(session2.getTimeZone())
+                        .withStartTime(session2.getStartTime())
+                        .withEndTime(session2.getEndTime())
+                        .withIsClosingEmailEnabled(session2.isClosingEmailEnabled())
+                        .build());
         verifyPresentInDatastore(session2);
 
         // Still in grace period; closed reminder should not be sent
@@ -69,7 +82,13 @@ public class FeedbackSessionClosedRemindersActionTest extends BaseAutomatedActio
         session3.setTimeZone(ZoneId.of("UTC"));
         session3.setStartTime(TimeHelper.getInstantDaysOffsetFromNow(-2));
         session3.setEndTime(Instant.now());
-        fsLogic.updateFeedbackSession(session3);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session3.getFeedbackSessionName(), session3.getCourseId())
+                        .withTimeZone(session3.getTimeZone())
+                        .withStartTime(session3.getStartTime())
+                        .withEndTime(session3.getEndTime())
+                        .build());
         verifyPresentInDatastore(session3);
 
         action = getAction();
@@ -90,7 +109,11 @@ public class FeedbackSessionClosedRemindersActionTest extends BaseAutomatedActio
         ______TS("1 session closed recently with closed emails sent");
 
         session1.setSentClosedEmail(true);
-        fsLogic.updateFeedbackSession(session1);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(session1.getFeedbackSessionName(), session1.getCourseId())
+                        .withSentClosedEmail(session1.isSentClosedEmail())
+                        .build());
 
         action = getAction();
         action.execute();

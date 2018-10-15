@@ -68,6 +68,7 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
                 Const.ParamsNames.NEW_STUDENT_EMAIL, newStudentEmail,
                 Const.ParamsNames.COMMENTS, newStudentComments,
                 Const.ParamsNames.TEAM_NAME, newStudentTeam,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
                 Const.ParamsNames.SESSION_SUMMARY_EMAIL_SEND_CHECK, "true"
         };
 
@@ -117,6 +118,7 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
                 Const.ParamsNames.NEW_STUDENT_EMAIL, newStudentEmailToBeTrimmed,
                 Const.ParamsNames.COMMENTS, newStudentCommentsToBeTrimmed,
                 Const.ParamsNames.TEAM_NAME, newStudentTeamToBeTrimmed,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
                 Const.ParamsNames.SESSION_SUMMARY_EMAIL_SEND_CHECK, "true"
         };
 
@@ -159,7 +161,8 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
                 Const.ParamsNames.STUDENT_NAME, student1InCourse1.name,
                 Const.ParamsNames.NEW_STUDENT_EMAIL, invalidStudentEmail,
                 Const.ParamsNames.COMMENTS, student1InCourse1.comments,
-                Const.ParamsNames.TEAM_NAME, student1InCourse1.team
+                Const.ParamsNames.TEAM_NAME, student1InCourse1.team,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
         };
 
         gaeSimulation.loginAsInstructor(instructorId);
@@ -202,7 +205,8 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
                 Const.ParamsNames.STUDENT_NAME, student1InCourse1.name,
                 Const.ParamsNames.NEW_STUDENT_EMAIL, takenStudentEmail,
                 Const.ParamsNames.COMMENTS, student1InCourse1.comments,
-                Const.ParamsNames.TEAM_NAME, student1InCourse1.team
+                Const.ParamsNames.TEAM_NAME, student1InCourse1.team,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
         };
 
         gaeSimulation.loginAsInstructor(instructorId);
@@ -244,7 +248,8 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
                 Const.ParamsNames.STUDENT_NAME, student1InCourse1.name,
                 Const.ParamsNames.NEW_STUDENT_EMAIL, student1InCourse1.email,
                 Const.ParamsNames.COMMENTS, student1InCourse1.comments,
-                Const.ParamsNames.TEAM_NAME, student1InCourse1.team
+                Const.ParamsNames.TEAM_NAME, student1InCourse1.team,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
         };
 
         gaeSimulation.loginAsInstructor(instructorId);
@@ -320,7 +325,12 @@ public class InstructorCourseStudentDetailsEditSaveActionTest extends BaseAction
 
         String[] submissionParams = new String[] {
                 Const.ParamsNames.COURSE_ID, instructor1OfCourse1.courseId,
-                Const.ParamsNames.STUDENT_EMAIL, student1InCourse1.email
+                Const.ParamsNames.STUDENT_EMAIL, instructor1OfCourse1.email,
+                Const.ParamsNames.STUDENT_NAME, student1InCourse1.name,
+                Const.ParamsNames.NEW_STUDENT_EMAIL, student1InCourse1.email,
+                Const.ParamsNames.COMMENTS, student1InCourse1.comments,
+                Const.ParamsNames.TEAM_NAME, student1InCourse1.team,
+                Const.ParamsNames.SECTION_NAME, student1InCourse1.section,
         };
 
         verifyOnlyInstructorsOfTheSameCourseCanAccess(submissionParams);

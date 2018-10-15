@@ -421,7 +421,13 @@ public class InstructorsLogicTest extends BaseLogicTest {
         instructorToBeUpdated.name = "New Name";
         instructorToBeUpdated.email = "new-email@course1.tmt";
 
-        instructorsLogic.updateInstructorByGoogleId(googleId, instructorToBeUpdated);
+        instructorsLogic.updateInstructorByGoogleId(
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.googleId)
+                        .withName(instructorToBeUpdated.name)
+                        .withEmail(instructorToBeUpdated.email)
+                        .build());
 
         InstructorAttributes instructorUpdated = instructorsLogic.getInstructorForGoogleId(courseId, googleId);
         verifySameInstructor(instructorToBeUpdated, instructorUpdated);
@@ -430,24 +436,36 @@ public class InstructorsLogicTest extends BaseLogicTest {
 
         instructorsLogic.deleteInstructorCascade(courseId, instructorUpdated.email);
 
+        InstructorAttributes.UpdateOptionsWithGoogleId updateOptions =
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.googleId)
+                        .withName("New Name")
+                        .build();
         EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> instructorsLogic.updateInstructorByGoogleId(googleId, instructorUpdated));
-        assertEquals("Instructor " + googleId + " does not belong to course " + courseId, ednee.getMessage());
+                () -> instructorsLogic.updateInstructorByGoogleId(updateOptions));
+        assertEquals("Trying to update non-existent Entity: " + updateOptions, ednee.getMessage());
 
         ______TS("failure: course doesn't exist");
 
         courseId = "random-course";
         instructorToBeUpdated.courseId = courseId;
 
+        InstructorAttributes.UpdateOptionsWithGoogleId updateOptions2 =
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.googleId)
+                        .withName("New Name")
+                        .build();
         ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> instructorsLogic.updateInstructorByGoogleId(googleId, instructorToBeUpdated));
-        assertEquals("Course does not exist: " + courseId, ednee.getMessage());
+                () -> instructorsLogic.updateInstructorByGoogleId(updateOptions2));
+        assertEquals("Trying to update non-existent Entity: " + updateOptions2, ednee.getMessage());
 
         ______TS("failure: null parameter");
 
         AssertionError ae = assertThrows(AssertionError.class,
-                () -> instructorsLogic.updateInstructorByGoogleId(googleId, null));
-        AssertHelper.assertContains("Supplied parameter was null", ae.getMessage());
+                () -> instructorsLogic.updateInstructorByGoogleId(null));
+        assertEquals("Supplied parameter was null", ae.getMessage());
 
     }
 
@@ -465,7 +483,13 @@ public class InstructorsLogicTest extends BaseLogicTest {
         instructorToBeUpdated.googleId = newGoogleId;
         instructorToBeUpdated.name = newName;
 
-        instructorsLogic.updateInstructorByEmail(email, instructorToBeUpdated);
+        instructorsLogic.updateInstructorByEmail(
+                InstructorAttributes
+                        .updateOptionsWithEmailBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.email)
+                        .withName(instructorToBeUpdated.name)
+                        .withGoogleId(instructorToBeUpdated.googleId)
+                        .build());
 
         InstructorAttributes instructorUpdated = instructorsLogic.getInstructorForEmail(courseId, email);
         verifySameInstructor(instructorToBeUpdated, instructorUpdated);
@@ -474,24 +498,36 @@ public class InstructorsLogicTest extends BaseLogicTest {
 
         instructorsLogic.deleteInstructorCascade(courseId, instructorToBeUpdated.email);
 
+        InstructorAttributes.UpdateOptionsWithEmail updateOptions =
+                InstructorAttributes
+                        .updateOptionsWithEmailBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.email)
+                        .withName("New Name")
+                        .build();
         EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> instructorsLogic.updateInstructorByEmail(email, instructorToBeUpdated));
-        assertEquals("Instructor " + email + " does not belong to course " + courseId, ednee.getMessage());
+                () -> instructorsLogic.updateInstructorByEmail(updateOptions));
+        assertEquals("Trying to update non-existent Entity: " + updateOptions, ednee.getMessage());
 
         ______TS("failure: course doesn't exist");
 
         courseId = "random-course";
         instructorToBeUpdated.courseId = courseId;
 
+        InstructorAttributes.UpdateOptionsWithEmail updateOptions2 =
+                InstructorAttributes
+                        .updateOptionsWithEmailBuilder(
+                                instructorToBeUpdated.courseId, instructorToBeUpdated.email)
+                        .withName("New Name")
+                        .build();
         ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> instructorsLogic.updateInstructorByEmail(email, instructorToBeUpdated));
-        assertEquals("Course does not exist: " + courseId, ednee.getMessage());
+                () -> instructorsLogic.updateInstructorByEmail(updateOptions2));
+        assertEquals("Trying to update non-existent Entity: " + updateOptions2, ednee.getMessage());
 
         ______TS("failure: null parameter");
 
         AssertionError ae = assertThrows(AssertionError.class,
-                () -> instructorsLogic.updateInstructorByEmail(email, null));
-        AssertHelper.assertContains("Supplied parameter was null", ae.getMessage());
+                () -> instructorsLogic.updateInstructorByEmail(null));
+        assertEquals("Supplied parameter was null", ae.getMessage());
 
     }
 

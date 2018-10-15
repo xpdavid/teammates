@@ -3,6 +3,7 @@ package teammates.test.cases.action;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.attributes.CourseAttributes;
@@ -23,6 +24,13 @@ public class InstructorCourseDeleteAllSoftDeletedCoursesActionTest extends BaseA
     @Override
     protected String getActionUri() {
         return Const.ActionURIs.INSTRUCTOR_COURSE_SOFT_DELETED_COURSE_DELETE_ALL;
+    }
+
+    @BeforeClass
+    public void createCourse() throws Exception {
+        CoursesLogic.inst().createCourseAndInstructor(
+                typicalBundle.instructors.get("instructor1OfCourse3").googleId,
+                "icdat.owncourse", "New course", "UTC");
     }
 
     @Override
@@ -56,10 +64,8 @@ public class InstructorCourseDeleteAllSoftDeletedCoursesActionTest extends BaseA
         ______TS("Typical case, delete all courses from Recycle Bin, with privilege for only some courses");
 
         InstructorAttributes instructor1OfCourse3 = typicalBundle.instructors.get("instructor1OfCourse3");
-        InstructorAttributes newInstructor = InstructorAttributes
-                .builder(instructor1OfCourse3.getGoogleId(), "icdat.owncourse", "Instructor1 Course3",
-                        "instructor1@course3.tmt")
-                .build();
+        InstructorAttributes newInstructor = InstructorsLogic.inst()
+                .getInstructorForGoogleId("icdat.owncourse", instructor1OfCourse3.getGoogleId());
         gaeSimulation.loginAsInstructor(instructor1OfCourse3.googleId);
         instructorList.remove(instructor2OfCourse3);
         instructorList.add(instructor1OfCourse3);
@@ -70,14 +76,19 @@ public class InstructorCourseDeleteAllSoftDeletedCoursesActionTest extends BaseA
         courseList = CoursesLogic.inst().getSoftDeletedCoursesForInstructors(instructorList);
         assertEquals(2, courseList.size());
         newInstructor.privileges.updatePrivilege("canmodifycourse", false);
-        InstructorsLogic.inst().updateInstructorByGoogleId(instructor1OfCourse3.getGoogleId(), newInstructor);
+        InstructorsLogic.inst().updateInstructorByGoogleId(
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(newInstructor.getCourseId(), newInstructor.getGoogleId())
+                        .withPrivilege(newInstructor.privileges)
+                        .build()
+        );
 
         try {
             deleteAllAction = getAction();
             getRedirectResult(deleteAllAction);
             signalFailureToDetectException();
         } catch (UnauthorizedAccessException e) {
-            assertEquals("Course [icdat.owncourse] is not accessible to instructor [instructor1@course3.tmt] "
+            assertEquals("Course [icdat.owncourse] is not accessible to instructor [instr1@course3.tmt] "
                     + "for privilege [canmodifycourse]", e.getMessage());
         }
 
@@ -91,7 +102,12 @@ public class InstructorCourseDeleteAllSoftDeletedCoursesActionTest extends BaseA
         String instructor1Id = instructor1OfCourse3.googleId;
         gaeSimulation.loginAsInstructor(instructor1Id);
         newInstructor.privileges.updatePrivilege("canmodifycourse", true);
-        InstructorsLogic.inst().updateInstructorByGoogleId(instructor1OfCourse3.getGoogleId(), newInstructor);
+        InstructorsLogic.inst().updateInstructorByGoogleId(
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(newInstructor.getCourseId(), newInstructor.getGoogleId())
+                        .withPrivilege(newInstructor.privileges)
+                        .build()
+        );
 
         deleteAllAction = getAction();
         RedirectResult redirectResult = getRedirectResult(deleteAllAction);
@@ -119,10 +135,6 @@ public class InstructorCourseDeleteAllSoftDeletedCoursesActionTest extends BaseA
     @Override
     @Test
     protected void testAccessControl() throws Exception {
-        CoursesLogic.inst().createCourseAndInstructor(
-                typicalBundle.instructors.get("instructor1OfCourse3").googleId,
-                "icdat.owncourse", "New course", "UTC");
-
         String[] submissionParams = new String[] {
                 Const.ParamsNames.COURSE_ID, "icdat.owncourse"
         };
