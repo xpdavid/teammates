@@ -1,4 +1,4 @@
-package teammates.ui.newcontroller;
+package teammates.ui.filter;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -26,11 +26,12 @@ import teammates.common.util.HttpRequestHelper;
 import teammates.common.util.Logger;
 import teammates.common.util.StringHelper;
 import teammates.common.util.Url;
+import teammates.ui.newcontroller.JsonResult;
 
 /**
  * Checks and validates origin of HTTP requests.
  */
-public class OriginCheckFilter implements Filter {
+public class WebApiOriginCheckFilter implements Filter {
 
     private static final Logger log = Logger.getLogger();
 

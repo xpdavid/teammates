@@ -1,5 +1,7 @@
 package teammates.logic.api;
 
+import org.springframework.stereotype.Component;
+
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
@@ -22,6 +24,7 @@ import teammates.logic.core.StudentsLogic;
 /**
  * Provides access control mechanisms.
  */
+@Component
 public class GateKeeper {
 
     private static UserService userService = UserServiceFactory.getUserService();

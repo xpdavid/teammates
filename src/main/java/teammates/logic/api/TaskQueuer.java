@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import teammates.common.datatransfer.StudentEnrollDetails;
 import teammates.common.util.Const.ParamsNames;
 import teammates.common.util.Const.TaskQueue;
@@ -16,6 +18,7 @@ import teammates.logic.core.TaskQueuesLogic;
 /**
  * Allows for adding specific type of tasks to the task queue.
  */
+@Component
 public class TaskQueuer {
 
     private static final Logger log = Logger.getLogger();

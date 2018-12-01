@@ -5,6 +5,8 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import com.google.appengine.api.blobstore.BlobKey;
 
 import teammates.common.datatransfer.CourseDetailsBundle;
@@ -56,6 +58,7 @@ import teammates.logic.core.StudentsLogic;
  *
  * <p>This is a Facade class which simply forwards the method to internal classes.
  */
+@Component
 public class Logic {
 
     private static final AccountsLogic accountsLogic = AccountsLogic.inst();

@@ -36,7 +36,7 @@ public class JsonResult extends ActionResult {
         return output;
     }
 
-    void setRequestId(String requestId) {
+    public void setRequestId(String requestId) {
         this.output.setRequestId(requestId);
     }
 

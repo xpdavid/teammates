@@ -1,18 +1,17 @@
-package teammates.ui.newcontroller;
+package teammates.ui.newcontroller.webpage;
 
-import java.io.IOException;
 import java.util.Arrays;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
 /**
- * Servlet that handles the single web page.
+ * Controller that handles the single web page.
  */
-@SuppressWarnings("serial")
-public class WebPageServlet extends HttpServlet {
+@Controller
+public class WebPageController {
 
     private static final String CSP_POLICY = String.join("; ", Arrays.asList(
             "default-src 'none'",
@@ -26,14 +25,19 @@ public class WebPageServlet extends HttpServlet {
             "base-uri 'self'"
     ));
 
-    @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    @RequestMapping("/web/**")
+    public String handleFrontEndRequest(HttpServletResponse resp) {
         resp.setHeader("Content-Security-Policy", CSP_POLICY);
         resp.setHeader("X-Content-Type-Options", "nosniff");
         resp.setHeader("X-Frame-Options", "SAMEORIGIN");
         resp.setHeader("X-XSS-Protection", "1; mode=block");
         resp.setHeader("Strict-Transport-Security", "max-age=31536000");
-        req.getRequestDispatcher("/dist/index.html").forward(req, resp);
+        return "/dist/index.html";
+    }
+
+    @RequestMapping("/")
+    public String welcomeStranger() {
+        return "redirect:/web/front/home";
     }
 
 }
