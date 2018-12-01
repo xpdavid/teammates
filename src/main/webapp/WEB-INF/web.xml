@@ -28,50 +28,6 @@
         <url-pattern>/remote_api</url-pattern>
     </servlet-mapping>
 
-    <filter>
-        <filter-name>OriginCheckFilter</filter-name>
-        <filter-class>teammates.ui.newcontroller.OriginCheckFilter</filter-class>
-    </filter>
-    <filter-mapping>
-        <filter-name>OriginCheckFilter</filter-name>
-        <url-pattern>/webapi/*</url-pattern>
-    </filter-mapping>
-
-    <welcome-file-list>
-        <welcome-file>web/front/home</welcome-file>
-    </welcome-file-list>
-    <servlet>
-        <description>Servlet that handles the single web page application</description>
-        <servlet-name>WebPageServlet</servlet-name>
-        <servlet-class>teammates.ui.newcontroller.WebPageServlet</servlet-class>
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>WebPageServlet</servlet-name>
-        <url-pattern>/web/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <description>Servlet that handles requests from web application</description>
-        <servlet-name>WebApiServlet</servlet-name>
-        <servlet-class>teammates.ui.newcontroller.WebApiServlet</servlet-class>
-        <load-on-startup>0</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>WebApiServlet</servlet-name>
-        <url-pattern>/webapi/*</url-pattern>
-    </servlet-mapping>
-
-    <servlet>
-        <description>Servlet that handles mapping from legacy URL to new one</description>
-        <servlet-name>LegacyUrlMapper</servlet-name>
-        <servlet-class>teammates.ui.newcontroller.LegacyUrlMapper</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LegacyUrlMapper</servlet-name>
-        <url-pattern>/page/*</url-pattern>
-    </servlet-mapping>
-
     <servlet>
         <description>Servlet that handles cron jobs</description>
         <servlet-name>CronJobServlet</servlet-name>

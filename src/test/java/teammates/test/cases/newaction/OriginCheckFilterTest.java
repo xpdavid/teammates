@@ -12,14 +12,14 @@ import teammates.test.cases.BaseTestCase;
 import teammates.test.driver.MockFilterChain;
 import teammates.test.driver.MockHttpServletRequest;
 import teammates.test.driver.MockHttpServletResponse;
-import teammates.ui.newcontroller.OriginCheckFilter;
+import teammates.ui.filter.WebApiOriginCheckFilter;
 
 /**
- * SUT: {@link OriginCheckFilter}.
+ * SUT: {@link WebApiOriginCheckFilter}.
  */
 public class OriginCheckFilterTest extends BaseTestCase {
 
-    private static final OriginCheckFilter FILTER = new OriginCheckFilter();
+    private static final WebApiOriginCheckFilter FILTER = new WebApiOriginCheckFilter();
 
     private MockHttpServletRequest mockRequest;
     private MockHttpServletResponse mockResponse;

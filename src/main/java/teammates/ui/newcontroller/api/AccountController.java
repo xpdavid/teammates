@@ -1,15 +1,20 @@
-package teammates.ui.newcontroller;
+package teammates.ui.newcontroller.api;
 
+import java.net.URI;
 import java.util.List;
 
-import org.apache.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import teammates.common.datatransfer.DataBundle;
+import teammates.common.datatransfer.UserInfo;
 import teammates.common.datatransfer.attributes.FeedbackResponseCommentAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.exception.EmailSendingException;
-import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.exception.TeammatesException;
 import teammates.common.exception.UnauthorizedAccessException;
@@ -22,72 +27,72 @@ import teammates.common.util.Logger;
 import teammates.common.util.StringHelper;
 import teammates.common.util.Templates;
 import teammates.logic.api.EmailGenerator;
+import teammates.logic.api.EmailSender;
+import teammates.logic.api.GateKeeper;
+import teammates.logic.api.Logic;
+import teammates.ui.newcontroller.AuthType;
+import teammates.ui.newcontroller.data.CreateAccountRequest;
+import teammates.ui.newcontroller.data.CreateAccountResponse;
 
-/**
- * Action: creates a new instructor account with sample courses.
- */
-public class CreateAccountAction extends Action {
+@RestController
+public class AccountController extends BaseRestController {
 
     private static final Logger log = Logger.getLogger();
 
-    @Override
-    protected AuthType getMinAuthLevel() {
-        return AuthType.LOGGED_IN;
+    private Logic logic;
+
+    private EmailSender emailSender;
+
+    public AccountController(GateKeeper gateKeeper, Logic logic, EmailSender emailSender) {
+        super(gateKeeper);
+        this.logic = logic;
+        this.emailSender = emailSender;
     }
 
-    @Override
-    public void checkSpecificAccessControl() {
-        // Only admins can create new accounts
-        if (!userInfo.isAdmin) {
-            throw new UnauthorizedAccessException("Admin privilege is required to access this resource.");
-        }
-    }
+    @PostMapping("/accounts")
+    public ResponseEntity<CreateAccountResponse> create(@ModelAttribute("authVerifier") AuthenticationVerifier authVerifier,
+                                                        @RequestBody CreateAccountRequest createAccountRequest) throws InvalidParametersException {
+        authVerifier
+                .requireMinAuthLevel(AuthType.LOGGED_IN)
+                .checkSpecificAccessControl(() -> {
+                    // Only admins can create new accounts
+                    if (!authVerifier.getUserInfo().isAdmin) {
+                        throw new UnauthorizedAccessException("Admin privilege is required to access this resource.");
+                    }
+                });
 
-    @Override
-    public ActionResult execute() {
-        String instructorName = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_NAME).trim();
-        String instructorEmail = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_EMAIL).trim();
-        String instructorInstitution = getNonNullRequestParamValue(Const.ParamsNames.INSTRUCTOR_INSTITUTION).trim();
+        logic.verifyInputForAdminHomePage(createAccountRequest.getInstructorName(),
+                createAccountRequest.getInstructorEmail(), createAccountRequest.getInstitute());
 
-        try {
-            logic.verifyInputForAdminHomePage(instructorName, instructorInstitution, instructorEmail);
-        } catch (InvalidParametersException e) {
-            return new JsonResult(e.getMessage(), HttpStatus.SC_BAD_REQUEST);
-        }
-
-        String courseId = null;
-
-        try {
-            courseId = importDemoData(instructorEmail, instructorName);
-        } catch (InvalidParametersException | EntityDoesNotExistException e) {
-            return new JsonResult(e.getMessage(), HttpStatus.SC_BAD_REQUEST);
-        }
+        String courseId = importDemoData(createAccountRequest.getInstructorEmail(), createAccountRequest.getInstructorName());
 
         List<InstructorAttributes> instructorList = logic.getInstructorsForCourse(courseId);
         String joinLink = Config.getFrontEndAppUrl(Const.WebPageURIs.JOIN_PAGE)
                 .withRegistrationKey(StringHelper.encrypt(instructorList.get(0).key))
-                .withInstructorInstitution(instructorInstitution)
+                .withInstructorInstitution(createAccountRequest.getInstitute())
                 .withParam(Const.ParamsNames.ENTITY_TYPE, Const.EntityType.INSTRUCTOR)
                 .toAbsoluteString();
         EmailWrapper email = new EmailGenerator().generateNewInstructorAccountJoinEmail(
-                instructorList.get(0).email, instructorName, joinLink);
+                instructorList.get(0).email, createAccountRequest.getInstructorName(), joinLink);
+
         try {
             emailSender.sendEmail(email);
         } catch (EmailSendingException e) {
             log.severe("Instructor welcome email failed to send: " + TeammatesException.toStringWithStackTrace(e));
         }
 
-        JoinLink output = new JoinLink(joinLink);
-        return new JsonResult(output);
+        CreateAccountResponse output = new CreateAccountResponse(joinLink);
+
+        return ResponseEntity.created(URI.create("/")).body(output);
     }
+
 
     /**
      * Imports demo course for the new instructor.
      *
      * @return the ID of demo course
      */
-    private String importDemoData(String instructorEmail, String instructorName)
-            throws InvalidParametersException, EntityDoesNotExistException {
+    private String importDemoData(String instructorEmail, String instructorName) throws InvalidParametersException {
 
         String courseId = generateDemoCourseId(instructorEmail);
 
@@ -200,22 +205,4 @@ public class CreateAccountAction extends Action {
 
         return StringHelper.truncateHead(root + "-demo" + (previousDedupSuffix + 1), maximumIdLength);
     }
-
-    /**
-     * Output format for {@link CreateAccountAction}.
-     */
-    public static class JoinLink extends ActionResult.ActionOutput {
-
-        private final String joinLink;
-
-        public JoinLink(String joinLink) {
-            this.joinLink = joinLink;
-        }
-
-        public String getJoinLink() {
-            return joinLink;
-        }
-
-    }
-
 }

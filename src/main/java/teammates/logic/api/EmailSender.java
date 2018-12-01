@@ -2,6 +2,8 @@ package teammates.logic.api;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import teammates.common.exception.EmailSendingException;
 import teammates.common.exception.TeammatesException;
 import teammates.common.util.Config;
@@ -17,6 +19,7 @@ import teammates.logic.core.SendgridService;
 /**
  * Handles operations related to sending emails.
  */
+@Component
 public class EmailSender {
 
     private static final Logger log = Logger.getLogger();

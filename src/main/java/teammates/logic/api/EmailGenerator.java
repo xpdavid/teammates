@@ -4,6 +4,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import com.google.appengine.api.log.AppLogLine;
 
 import teammates.common.datatransfer.attributes.AccountAttributes;
@@ -34,6 +36,7 @@ import teammates.logic.core.StudentsLogic;
  * @see EmailType
  * @see EmailWrapper
  */
+@Component
 public class EmailGenerator {
     // status-related strings
     private static final String FEEDBACK_STATUS_SESSION_OPEN = "is still open for submissions";
