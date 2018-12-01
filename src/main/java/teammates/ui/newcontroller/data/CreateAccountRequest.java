@@ -1,11 +1,16 @@
 package teammates.ui.newcontroller.data;
 
+import javax.validation.constraints.NotEmpty;
+
 public class CreateAccountRequest {
 
+    @NotEmpty
     private String instructorName;
 
+    @NotEmpty
     private String instructorEmail;
 
+    @NotEmpty
     private String institute;
 
     public String getInstructorName() {

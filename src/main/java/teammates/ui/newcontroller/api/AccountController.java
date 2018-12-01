@@ -3,6 +3,8 @@ package teammates.ui.newcontroller.api;
 import java.net.URI;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,7 +53,7 @@ public class AccountController extends BaseRestController {
 
     @PostMapping("/accounts")
     public ResponseEntity<CreateAccountResponse> create(@ModelAttribute("authVerifier") AuthenticationVerifier authVerifier,
-                                                        @RequestBody CreateAccountRequest createAccountRequest) throws InvalidParametersException {
+                                                        @RequestBody @Valid CreateAccountRequest createAccountRequest) throws InvalidParametersException {
         authVerifier
                 .requireMinAuthLevel(AuthType.LOGGED_IN)
                 .checkSpecificAccessControl(() -> {
