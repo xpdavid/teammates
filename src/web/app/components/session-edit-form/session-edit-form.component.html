@@ -1,0 +1,353 @@
+<div class="card card-plain">
+  <div class="card-body">
+
+    <div class="row" *ngIf="formMode === SessionEditFromMode.ADD">
+      <div class="col-6">
+        <div class="row align-items-center">
+          <div class="col-4">
+            <h4 class="text-center">Create new </h4>
+          </div>
+          <div class="col-7">
+            <select class="form-control" ngbTooltip="Select a session type here." [(ngModel)]="sessionTemplateName">
+              <option *ngFor="let sessionTemplate of sessionTemplates" [value]="sessionTemplate.name">{{ sessionTemplate.description }}</option>
+            </select>
+          </div>
+          <div class="col-1">
+            <a href="#" target="_blank" rel="noopener noreferrer" class="col-md-2"><i class="fas fa-info-circle"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="row align-items-center">
+          <div class="col-2">
+            <h4 class="text-right">Or: </h4>
+          </div>
+          <div class="col-10">
+            <button type="button" class="btn btn-info" (click)="copyOthersHandler()">Copy from previous feedback sessions</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row" *ngIf="formMode === SessionEditFromMode.EDIT">
+      <div class="col-12 text-right session-form-buttons">
+        <button type="button" class="btn btn-primary" (click)="this.isEditable = true" *ngIf="formMode == SessionEditFromMode.EDIT && !isEditable"><i class="fas fa-pencil-alt"></i> Edit</button>
+        <button type="button" class="btn btn-primary" (click)="submitFormHandler()" [disabled]="isSaving" *ngIf="isEditable"><i class="fas fa-check"></i> Save <tm-ajax-loading *ngIf="isSaving"></tm-ajax-loading></button>
+        <button type="button" class="btn btn-primary" ngbTooltip="Delete the feedback session" (click)="deleteHandler()"><i class="fas fa-trash"></i> Delete</button>
+        <button type="button" class="btn btn-primary" ngbTooltip="Copy this feedback session to other courses" (click)="copyHandler()"><i class="far fa-copy"></i> Copy</button>
+      </div>
+    </div>
+
+    <div class="card border-primary margin-top-20px">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-2 text-right font-bold">
+            Course ID
+          </div>
+          <div class="col-4">
+            <div *ngIf="formMode === SessionEditFromMode.ADD" ngbTooltip="Please select the course for which the feedback session is to be created.">
+              <select class="form-control" [ngClass]="{'is-invalid': coursesIdCandidates.length === 0}" [(ngModel)]="courseId" [disabled]="coursesIdCandidates.length === 0">
+                <option *ngFor="let courseId of coursesIdCandidates">{{ courseId }}</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="coursesIdCandidates.length === 0">
+                There is no un-archived course.
+              </div>
+            </div>
+            <div *ngIf="formMode === SessionEditFromMode.EDIT"> {{ courseId }} </div>
+          </div>
+          <div class="col-2 text-right font-bold">
+            Time Zone
+          </div>
+          <div class="col-4" ngbTooltip="To change this, edit the course settings. TEAMMATES automatically adjusts to match the current time offset in your area, including clock changes due to daylight saving time.">
+            {{ timeZone }}
+          </div>
+        </div>
+        <br/>
+        <div class="row">
+          <div class="col-2 text-right font-bold">
+            Course Name
+          </div>
+          <div class="col-4">
+            {{ courseName }}
+          </div>
+        </div>
+        <br/>
+        <div class="row">
+          <div class="col-2 text-right font-bold">
+            Session Name
+          </div>
+          <div class="col-4">
+            <div *ngIf="formMode === SessionEditFromMode.ADD" ngbTooltip="Enter the name of the feedback session e.g. Feedback Session 1.">
+              <input type="text" class="form-control" [(ngModel)]="feedbackSessionName" placeholder="e.g. Feedback for Project Presentation 1" maxlength="38" />
+              <div>
+                {{38 - feedbackSessionName.length}} characters left
+              </div>
+            </div>
+            <div *ngIf="formMode === SessionEditFromMode.EDIT"> {{ feedbackSessionName }} </div>
+          </div>
+        </div>
+        <br/>
+        <div class="row">
+          <div class="col-2 text-right font-bold">
+            Instructions
+          </div>
+          <div class="col-8" ngbTooltip="Enter instructions for this feedback session. e.g. Avoid comments which are too critical. It will be displayed at the top of the page when users respond to the session.">
+            <textarea class="form-control" [(ngModel)]="instructions" [disabled]="!isEditable"></textarea>
+          </div>
+        </div>
+        <br/>
+        <div class="row" *ngIf="formMode === SessionEditFromMode.EDIT">
+          <div class="col-2 text-right font-bold">
+            Submission Status
+          </div>
+          <div class="col-4">
+            {{ submissionStatus }}
+          </div>
+          <div class="col-2 text-right font-bold">
+            Published Status
+          </div>
+          <div class="col-4">
+            {{ publishStatus }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-primary margin-top-20px">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-5">
+            <div class="row">
+              <div class="col-8" ngbTooltip="Please select the date and time for which users can start submitting responses for the feedback session.">
+                <label class="label-control font-bold">
+                  Submission opening time
+                </label>
+              </div>
+            </div>
+            <div class="row align-items-center">
+              <div class="col-7">
+                <div class="input-group">
+                  <input type="text" class="form-control" ngbDatepicker [(ngModel)]="submissionStartDate" #startTimeDp="ngbDatepicker" [disabled]="!isEditable"/>
+                  <div class="input-group-append" *ngIf="isEditable">
+                    <button class="btn btn-secondary" (click)="startTimeDp.toggle()" type="button">
+                      <i class="fas fa-calendar-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-5">
+                <tm-time-picker [(time)]="submissionStartTime" [isDisabled]="!isEditable"></tm-time-picker>
+              </div>
+            </div>
+          </div>
+          <div class="col-5 border-left-gray">
+            <div class="row">
+              <div class="col-8" ngbTooltip="Please select the date and time after which the feedback session will no longer accept submissions from users.">
+                <label class="label-control font-bold">
+                  Submission closing time
+                </label>
+              </div>
+            </div>
+            <div class="row align-items-center">
+              <div class="col-7">
+                <div class="input-group">
+                  <input type="text" class="form-control" ngbDatepicker [(ngModel)]="submissionEndDate" #endTimeDp="ngbDatepicker" [disabled]="!isEditable"/>
+                  <div class="input-group-append" *ngIf="isEditable">
+                    <button class="btn btn-secondary" (click)="endTimeDp.toggle()" type="button">
+                      <i class="fas fa-calendar-alt"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="col-5">
+                <tm-time-picker [(time)]="submissionEndTime" [isDisabled]="!isEditable"></tm-time-picker>
+              </div>
+            </div>
+          </div>
+          <div class="col-2 border-left-gray">
+            <div class="row">
+              <div class="col-12" ngbTooltip="Please select the amount of time that the system will continue accepting submissions after the specified deadline.">
+                <label class="control-label font-bold">
+                  Grace period
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <select class="form-control" [(ngModel)]="gracePeriod" [disabled]="!isEditable">
+                  <option *ngFor="let graceMin of [0, 5, 10, 15, 20, 25, 30]" [value]="graceMin">{{ graceMin + ' min'}}</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!hasVisibleSettingsPanelExpanded" class="margin-top-20px">
+      <span class="text-muted">Session is visible at submission opening time, responses are only visible when you publish the results.</span>
+      <button type="button" class="btn btn-link" (click)="hasVisibleSettingsPanelExpanded = !hasVisibleSettingsPanelExpanded" [disabled]="!isEditable">[Change]</button>
+    </div>
+    <div class="card border-primary margin-top-20px" *ngIf="hasVisibleSettingsPanelExpanded">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-6">
+            <div class="row">
+              <div class="col-12">
+                <label class="label-control font-bold" ngbTooltip="Please select when you want the questions for the feedback session to be visible to users who need to participate. Note that users cannot submit their responses until the submissions opening time set below.">Make session visible </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <div class="row align-items-center">
+                  <div class="col-2" ngbTooltip="Select this option to enter in a custom date and time for which the feedback session will become visible. Note that you can make a session visible before it is open for submissions so that users can preview the questions.">
+                    <div class="form-check">
+                      <label class="form-check-label">
+                        <input class="form-check-input" type="radio" name="sessionVisibleRadio" [value]="SessionVisibleSetting.CUSTOM" [(ngModel)]="sessionVisibleSetting" [disabled]="!isEditable">
+                        At
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="input-group">
+                      <input type="text" class="form-control" ngbDatepicker #sessionVisibleTimeDp="ngbDatepicker" [maxDate]="submissionStartDate"
+                             [(ngModel)]="customSessionVisibleDate" [disabled]="sessionVisibleSetting !== SessionVisibleSetting.CUSTOM || !isEditable"/>
+                      <div class="input-group-append" *ngIf="sessionVisibleSetting === SessionVisibleSetting.CUSTOM && isEditable">
+                        <button class="btn btn-secondary" (click)="sessionVisibleTimeDp.toggle()" type="button">
+                          <i class="fas fa-calendar-alt"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <tm-time-picker [(time)]="customSessionVisibleTime" [isDisabled]="sessionVisibleSetting !== SessionVisibleSetting.CUSTOM || !isEditable"></tm-time-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-12">
+                <div class="form-check">
+                  <label class="form-check-label" ngbTooltip="Select this option to have the feedback session become visible when it is open for submissions (as selected above).">
+                    <input class="form-check-input" type="radio" name="sessionVisibleRadio" [value]="SessionVisibleSetting.AT_OPEN" [(ngModel)]="sessionVisibleSetting" [disabled]="!isEditable">
+                    Submission opening time
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6 sessionVisibleRadio">
+            <div class="row">
+              <div class="col-12">
+                <label class="label-control font-bold" ngbTooltip="Please select when the responses for the feedback session will be visible to the designated recipients. You can select the response visibility for each type of user and question later.">Make response visible </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <div class="row align-items-center">
+                  <div class="col-2" ngbTooltip="Select this option to use a custom time for when the responses of the feedback session will be visible to the designated recipients.">
+                    <div class="form-check">
+                      <label class="form-check-label">
+                        <input class="form-check-input" type="radio" name="responseVisibleRadio" [value]="ResponseVisibleSetting.CUSTOM" [(ngModel)]="responseVisibleSetting" [disabled]="!isEditable"/>
+                        At
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="input-group">
+                      <input type="text" class="form-control" ngbDatepicker #responseVisibleTimeDp="ngbDatepicker"
+                             [(ngModel)]="customResponseVisibleDate" [disabled]="responseVisibleSetting !== ResponseVisibleSetting.CUSTOM || !isEditable"/>
+                      <div class="input-group-append" *ngIf="responseVisibleSetting === ResponseVisibleSetting.CUSTOM && isEditable">
+                        <button class="btn btn-secondary" (click)="responseVisibleTimeDp.toggle()" type="button">
+                          <i class="fas fa-calendar-alt"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-4">
+                    <tm-time-picker [(time)]="customResponseVisibleTime" [isDisabled]="responseVisibleSetting !== ResponseVisibleSetting.CUSTOM || !isEditable"></tm-time-picker>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-12">
+                <div class="form-check">
+                  <label class="form-check-label" ngbTooltip="Select this option to have the feedback responses be immediately visible when the session becomes visible to users.">
+                    <input class="form-check-input" type="radio" name="responseVisibleRadio" [value]="ResponseVisibleSetting.AT_VISIBLE" [(ngModel)]="responseVisibleSetting" [disabled]="!isEditable">
+                    Immediately
+                  </label>
+                </div>
+              </div>
+            </div>
+            <br>
+            <div class="row">
+              <div class="col-12">
+                <div class="form-check">
+                  <label class="form-check-label" ngbTooltip="Select this option if you intend to manually publish the responses for this session later on.">
+                    <input class="form-check-input" type="radio" name="responseVisibleRadio" [value]="ResponseVisibleSetting.LATER" [(ngModel)]="responseVisibleSetting" [disabled]="!isEditable">
+                    Not now (publish manually)
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div *ngIf="!hasEmailSettingsPanelExpanded">
+      <span class="text-muted">Emails are sent when session opens (within 15 mins), 24 hrs before session closes and when results are published.</span>
+      <button type="button" class="btn btn-link" (click)="hasEmailSettingsPanelExpanded = !hasEmailSettingsPanelExpanded" [disabled]="!isEditable">[Change]</button>
+    </div>
+    <div class="card border-primary margin-top-20px" *ngIf="hasEmailSettingsPanelExpanded">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-12 font-bold">
+            Send emails for
+          </div>
+        </div>
+        <br>
+        <div class="row">
+          <div class="col-3">
+            <div class="form-check form-check-inline">
+              <label class="form-check-label" ngbTooltip="Select this option to automatically send an email to students to notify them when the session is open for submission.">
+                <input class="form-check-input" type="checkbox" checked disabled>Session opening reminder
+              </label>
+            </div>
+          </div>
+          <div class="col-3">
+            <div class="form-check form-check-inline">
+              <label class="form-check-label" ngbTooltip="Select this option to automatically send an email to students to remind them to submit 24 hours before the end of the session.">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="isClosingEmailEnabled" [disabled]="!isEditable"> Session closing reminder
+              </label>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="form-check form-check-inline">
+              <label class="form-check-label" ngbTooltip="Select this option to automatically send an email to students to notify them when the session results is published.">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="isPublishedEmailEnabled" [disabled]="!isEditable"> Results published announcement
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row margin-top-20px">
+      <div class="col-12 text-center">
+        <span class="loader"></span>
+        <div *ngIf="formMode === SessionEditFromMode.ADD">
+          <button type="button" class="btn btn-primary" [disabled]="coursesIdCandidates.length === 0 || isSaving" (click)="submitFormHandler()">
+            <tm-ajax-loading *ngIf="isSaving"></tm-ajax-loading> Create Feedback Session
+          </button>
+          <p class="text-danger margin-top-20px" *ngIf="coursesIdCandidates.length === 0"><b>You need to have an active(unarchived) course to create a session!</b></p>
+        </div>
+        <div *ngIf="formMode === SessionEditFromMode.EDIT">
+          <button type="button" class="btn btn-primary" [disabled]="isSaving || !isEditable" *ngIf="formMode === SessionEditFromMode.EDIT" (click)="submitFormHandler()">
+            <tm-ajax-loading *ngIf="isSaving"></tm-ajax-loading> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
