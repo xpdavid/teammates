@@ -620,6 +620,7 @@ public class FeedbackQuestionAttributes extends EntityAttributes<FeedbackQuestio
             case INSTRUCTORS:
             case OWN_TEAM:
             case OWN_TEAM_MEMBERS:
+            case OWN_TEAM_MEMBERS_INCLUDING_SELF:
                 optionsToRemove.add(FeedbackParticipantType.RECEIVER_TEAM_MEMBERS);
                 break;
             default:
