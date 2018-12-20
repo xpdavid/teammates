@@ -25,9 +25,9 @@ export class TimePickerComponent implements OnInit {
   }
 
   /**
-   * Handles select change event.
+   * Triggers time change event.
    */
-  timeSelectEventHandler(newTime: TimeFormat): void {
+  triggerTimeChange(newTime: TimeFormat): void {
     this.timeChange.emit(newTime);
   }
 

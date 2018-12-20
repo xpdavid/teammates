@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
-  SessionEditFromMode,
+  SessionEditFormMode,
   SessionTemplate,
 } from '../../components/session-edit-form/session-edit-form-model';
 
@@ -16,7 +16,7 @@ import {
 export class InstructorSessionsPageComponent implements OnInit {
 
   // enum
-  SessionEditFromMode: typeof SessionEditFromMode = SessionEditFromMode;
+  SessionEditFormMode: typeof SessionEditFormMode = SessionEditFormMode;
 
   user: string = '';
 

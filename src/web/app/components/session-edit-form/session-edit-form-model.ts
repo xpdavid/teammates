@@ -11,7 +11,7 @@ export interface SessionTemplate {
 /**
  * The mode of operation for session edit form.
  */
-export enum SessionEditFromMode {
+export enum SessionEditFormMode {
   /**
    * Adding a new feedback session.
    */
@@ -24,78 +24,55 @@ export enum SessionEditFromMode {
 }
 
 /**
- * The basic input data model for session edit form.
+ * The form model of session edit form.
  */
-export interface SessionEditFormBasicInputModel {
+export interface SessionEditFormModel {
   courseId: string;
   timeZone: string;
   courseName: string;
   feedbackSessionName: string;
   instructions: string;
 
-  submissionStartTimestamp: number;
-  submissionEndTimestamp: number;
+  submissionStartTime: TimeFormat;
+  submissionStartDate: DateFormat;
+  submissionEndTime: TimeFormat;
+  submissionEndDate: DateFormat;
   gracePeriod: number;
 
   sessionVisibleSetting: SessionVisibleSetting;
-  customSessionVisibleTimestamp?: number;
+  customSessionVisibleTime: TimeFormat;
+  customSessionVisibleDate: DateFormat;
 
   responseVisibleSetting: ResponseVisibleSetting;
-  customResponseVisibleTimestamp?: number;
+  customResponseVisibleTime: TimeFormat;
+  customResponseVisibleDate: DateFormat;
 
-  isClosingEmailEnabled: boolean;
-  isPublishedEmailEnabled: boolean;
-}
+  hasVisibleSettingsPanelExpanded: boolean;
+  hasEmailSettingsPanelExpanded: boolean;
 
-/**
- * The basic output data model for session edit form.
- */
-export interface SessionEditFormBasicOutputModel {
-  instructions: string;
-
-  submissionStartTimestamp: number;
-  submissionEndTimestamp: number;
-  gracePeriod: number;
-
-  sessionVisibleSetting: SessionVisibleSetting;
-  customSessionVisibleTimestamp?: number;
-
-  responseVisibleSetting: ResponseVisibleSetting;
-  customResponseVisibleTimestamp?: number;
-
-  isClosingEmailEnabled: boolean;
-  isPublishedEmailEnabled: boolean;
-}
-
-/**
- * The input data model for session edit form in EDIT mode.
- */
-export interface SessionEditFormEditInputModel extends SessionEditFormBasicInputModel {
   submissionStatus: string;
   publishStatus: string;
+
+  isClosingEmailEnabled: boolean;
+  isPublishedEmailEnabled: boolean;
+
+  isSaving: boolean;
+  isEditable: boolean;
 }
 
 /**
- * The output data model for session edit form in EDIT mode.
+ * The time format.
  */
-// tslint:disable-next-line:no-empty-interface
-export interface SessionEditFormEditOutputModel extends SessionEditFormBasicOutputModel {
-
+export interface TimeFormat {
+  hour: number;
+  minute: number;
 }
 
 /**
- * The input data model for session edit form in ADD mode.
+ * The date format.
  */
-// tslint:disable-next-line:no-empty-interface
-export interface SessionEditFormAddInputModel extends SessionEditFormBasicInputModel {
-
-}
-
-/**
- * The output data model for session edit form in ADD mode.
- */
-export interface SessionEditFormAddOutputModel extends SessionEditFormBasicOutputModel {
-  courseId: string;
-  feedbackSessionName: string;
-  sessionTemplateName: string;
+export interface DateFormat {
+  year: number;
+  month: number;
+  day: number;
 }
