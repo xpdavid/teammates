@@ -1,12 +1,8 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { NgbDateParserFormatter } from '@ng-bootstrap/ng-bootstrap';
-import { ResponseVisibleSetting, SessionVisibleSetting } from '../../feedback-session';
+import { FeedbackSessionSubmissionStatus, ResponseVisibleSetting, SessionVisibleSetting } from '../../feedback-session';
 import { SessionEditFormDatePickerFormatter } from './session-edit-form-datepicker-formatter';
-import {
-  SessionEditFormMode,
-  SessionEditFormModel,
-  SessionTemplate,
-} from './session-edit-form-model';
+import { SessionEditFormMode, SessionEditFormModel, SessionTemplate } from './session-edit-form-model';
 
 /**
  * Form to Add/Edit feedback sessions.
@@ -46,7 +42,7 @@ export class SessionEditFormComponent implements OnInit {
     customResponseVisibleTime: { hour: 0, minute: 0 },
     customResponseVisibleDate: { year: 0, month: 0, day: 0 },
 
-    submissionStatus: '',
+    submissionStatus: FeedbackSessionSubmissionStatus.OPEN,
     publishStatus: '',
 
     isClosingEmailEnabled: true,

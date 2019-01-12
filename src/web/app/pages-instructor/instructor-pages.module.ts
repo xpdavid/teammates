@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { Intent } from '../Intent';
 import { PageNotFoundComponent } from '../page-not-found/page-not-found.component';
 import { PageNotFoundModule } from '../page-not-found/page-not-found.module';
 import { InstructorHelpPageComponent } from '../pages-help/instructor-help-page/instructor-help-page.component';
@@ -97,6 +98,10 @@ const routes: Routes = [
       {
         path: 'submission',
         component: SessionSubmissionPageComponent,
+        data: {
+          pageTitle: 'Submit Feedback',
+          intent: Intent.INSTRUCTOR_SUBMISSION,
+        },
       },
       {
         path: 'result',
