@@ -51,6 +51,12 @@ public class ActionFactory {
         map(ResourceURIs.QUESTION, POST, CreateFeedbackQuestionAction.class);
         map(ResourceURIs.QUESTION, PUT, SaveFeedbackQuestionAction.class);
         map(ResourceURIs.QUESTION, DELETE, DeleteFeedbackQuestionAction.class);
+        map(ResourceURIs.QUESTION_PARTICIPANTS, GET, GetFeedbackQuestionParticipantsAction.class);
+        map(ResourceURIs.RESPONSE, POST, CreateFeedbackResponse.class);
+        map(ResourceURIs.RESPONSE, PUT, SaveFeedbackResponse.class);
+        map(ResourceURIs.RESPONSE, DELETE, DeleteFeedbackResponse.class);
+        map(ResourceURIs.RESPONSES, GET, GetFeedbackResponsesAction.class);
+        map(ResourceURIs.SUBMISSION_CONFIRMATION, POST, ConfirmSubmissionAction.class);
         map(ResourceURIs.LOCAL_DATE_TIME, GET, GetLocalDateTimeInfoAction.class);
         map(ResourceURIs.JOIN, GET, GetCourseJoinStatusAction.class);
         map(ResourceURIs.JOIN, PUT, JoinCourseAction.class);
