@@ -110,7 +110,18 @@ public class InstructorFeedbackQuestionEditAction extends Action {
         }
 
         if (questionDetailsErrors.isEmpty()) {
-            logic.updateFeedbackQuestionNumber(updatedQuestion);
+            logic.updateFeedbackQuestionCascade(
+                    FeedbackQuestionAttributes.updateOptionsBuilder(updatedQuestion.getId())
+                            .withQuestionNumber(updatedQuestion.getQuestionNumber())
+                            .withQuestionDescription(updatedQuestion.getQuestionDescription())
+                            .withGiverType(updatedQuestion.getGiverType())
+                            .withRecipientType(updatedQuestion.getRecipientType())
+                            .withNumberOfEntitiesToGiveFeedbackTo(updatedQuestion.getNumberOfEntitiesToGiveFeedbackTo())
+                            .withQuestionDetails(updatedQuestion.getQuestionDetails())
+                            .withShowResponsesTo(updatedQuestion.getShowResponsesTo())
+                            .withShowGiveNameTo(updatedQuestion.getShowGiverNameTo())
+                            .withShowRecipientNameTo(updatedQuestion.getShowRecipientNameTo())
+                            .build());
 
             statusToUser.add(new StatusMessage(Const.StatusMessages.FEEDBACK_QUESTION_EDITED, StatusMessageColor.SUCCESS));
             statusToAdmin = "Feedback Question " + updatedQuestion.questionNumber
