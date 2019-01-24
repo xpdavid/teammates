@@ -330,7 +330,14 @@ public abstract class FeedbackSubmissionEditSaveAction extends Action {
             throws EntityDoesNotExistException {
         for (FeedbackResponseAttributes response : responsesToUpdate) {
             try {
-                logic.updateFeedbackResponse(response);
+                logic.updateFeedbackResponseCascade(
+                        FeedbackResponseAttributes.updateOptionsBuilder(response.getId())
+                                .withGiver(response.giver)
+                                .withGiverSection(response.giverSection)
+                                .withRecipient(response.recipient)
+                                .withRecipientSection(response.recipientSection)
+                                .withResponseDetails(response.getResponseDetails())
+                                .build());
                 hasValidResponse = true;
             } catch (EntityAlreadyExistsException | InvalidParametersException e) {
                 setStatusForException(e);

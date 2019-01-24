@@ -2,7 +2,6 @@ package teammates.test.cases.action;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -972,9 +971,9 @@ public class StudentFeedbackSubmissionEditSaveActionTest extends BaseActionTest 
         assertNotNull("Feedback question not found in database", fq);
 
         FeedbackResponseAttributes otherFr = dataBundle.feedbackResponses.get("response2ForQ1S1C1");
-        List<FeedbackResponseAttributes> responsesToAdd = new ArrayList<>();
-        responsesToAdd.add(fr);
-        frDb.createFeedbackResponses(responsesToAdd);
+        //List<FeedbackResponseAttributes> responsesToAdd = new ArrayList<>();
+        //responsesToAdd.add(fr);
+        //frDb.createFeedbackResponses(responsesToAdd);
 
         // necessary to get the correct responseId
         otherFr = frDb.getFeedbackResponse(fq.getId(), otherFr.giver, otherFr.recipient);
