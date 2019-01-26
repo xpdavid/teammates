@@ -616,24 +616,25 @@ public final class CoursesLogic {
     }
 
     /**
-     * Updates the course details.
-     * @param courseId Id of the course to update
-     * @param courseName new name of the course
-     * @param courseTimeZone new time zone of the course
+     * Updates a course by {@link CourseAttributes.UpdateOptions}.
+     *
+     * <p>If the {@code timezone} of the course is changed, cascade the change to its corresponding feedback sessions.
+     *
+     * @return updated course
+     * @throws InvalidParametersException if attributes to update are not valid
+     * @throws EntityDoesNotExistException if the course cannot be found
      */
-    public void updateCourse(String courseId, String courseName, String courseTimeZone)
+    public CourseAttributes updateCourseCascade(CourseAttributes.UpdateOptions updateOptions)
             throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes newCourse = validateAndCreateCourseAttributes(courseId, courseName, courseTimeZone);
-        CourseAttributes oldCourse = coursesDb.getCourse(newCourse.getId());
+        CourseAttributes oldCourse = coursesDb.getCourse(updateOptions.getCourseId());
+        CourseAttributes updatedCourse = coursesDb.updateCourse(updateOptions);
 
-        if (oldCourse == null) {
-            throw new EntityDoesNotExistException("Trying to update a course that does not exist.");
+        if (!updatedCourse.getTimeZone().equals(oldCourse.getTimeZone())) {
+            feedbackSessionsLogic
+                    .updateFeedbackSessionsTimeZoneForCourse(updatedCourse.getId(), updatedCourse.getTimeZone());
         }
 
-        coursesDb.updateCourse(newCourse);
-        if (!newCourse.getTimeZone().equals(oldCourse.getTimeZone())) {
-            feedbackSessionsLogic.updateFeedbackSessionsTimeZoneForCourse(newCourse.getId(), newCourse.getTimeZone());
-        }
+        return updatedCourse;
     }
 
     /**
@@ -666,32 +667,45 @@ public final class CoursesLogic {
 
     /**
      * Moves a course to Recycle Bin by its given corresponding ID.
+     *
      * @return Soft-deletion time of the course.
      */
     public Instant moveCourseToRecycleBin(String courseId)
-            throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes course = coursesDb.getCourse(courseId);
-        course.setDeletedAt();
-        coursesDb.updateCourse(course);
-
-        return course.deletedAt;
+            throws EntityDoesNotExistException {
+        try {
+            CourseAttributes updatedCourse = coursesDb.updateCourse(
+                    CourseAttributes.updateOptionsBuilder(courseId)
+                            .withDeletedAt(Instant.now())
+                            .build()
+            );
+            return updatedCourse.deletedAt;
+        } catch (InvalidParametersException e) {
+            Assumption.fail("Updating deletedAt shall not cause: " + e.getMessage());
+        }
+        return null;
     }
 
     /**
      * Restores a course from Recycle Bin by its given corresponding ID.
      */
     public void restoreCourseFromRecycleBin(String courseId)
-            throws InvalidParametersException, EntityDoesNotExistException {
-        CourseAttributes course = coursesDb.getCourse(courseId);
-        course.resetDeletedAt();
-        coursesDb.updateCourse(course);
+            throws EntityDoesNotExistException {
+        try {
+            coursesDb.updateCourse(
+                    CourseAttributes.updateOptionsBuilder(courseId)
+                            .withDeletedAt(null)
+                            .build()
+            );
+        } catch (InvalidParametersException e) {
+            Assumption.fail("Updating deletedAt shall not cause: " + e.getMessage());
+        }
     }
 
     /**
      * Restores all courses from Recycle Bin.
      */
     public void restoreAllCoursesFromRecycleBin(List<InstructorAttributes> instructorList)
-            throws InvalidParametersException, EntityDoesNotExistException {
+            throws EntityDoesNotExistException {
         Assumption.assertNotNull("Supplied parameter was null", instructorList);
 
         List<String> softDeletedCourseIdList = instructorList.stream()

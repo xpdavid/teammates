@@ -84,7 +84,13 @@ public class InstructorFeedbackDeleteAllSoftDeletedSessionsActionTest extends Ba
         CoursesLogic.inst().restoreCourseFromRecycleBin(typicalCourse3.getId());
         InstructorAttributes instructor1OfCourse4 = typicalBundle.instructors.get("instructor1OfCourse4");
         instructor1OfCourse4.privileges.updatePrivilege("canmodifysession", true);
-        InstructorsLogic.inst().updateInstructorByGoogleId(instructor1OfCourse4.googleId, instructor1OfCourse4);
+        InstructorsLogic.inst().updateInstructorByGoogleIdCascade(
+                InstructorAttributes
+                        .updateOptionsWithGoogleIdBuilder(
+                                instructor1OfCourse4.getCourseId(), instructor1OfCourse4.getGoogleId())
+                        .withPrivilege(instructor1OfCourse4.privileges)
+                        .build()
+        );
 
         deleteAllAction = getAction();
         RedirectResult r = getRedirectResult(deleteAllAction);

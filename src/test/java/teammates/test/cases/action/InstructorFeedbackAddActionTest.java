@@ -1,5 +1,7 @@
 package teammates.test.cases.action;
 
+import java.time.ZoneId;
+
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.attributes.CourseAttributes;
@@ -113,7 +115,12 @@ public class InstructorFeedbackAddActionTest extends BaseActionTest {
         longFsName = StringHelperExtension.generateStringOfLength(39);
         params = createParamsCombinationForFeedbackSession(
                 instructor1ofCourse1.courseId, longFsName, 1);
-        logic.updateCourse(course.getId(), course.getName(), "Asia/Jerusalem");
+
+        logic.updateCourseCascade(
+                CourseAttributes.updateOptionsBuilder(course.getId())
+                        .withTimezone(ZoneId.of("Asia/Jerusalem"))
+                        .build());
+
         // After Sun, 25 Oct 2015, 01:59:59 AM: clocks fell back to Sun, 25 Oct 2015, 01:00:00 AM
         params[21] = "Sun, 25 Oct, 2015";
         params[23] = "1";
@@ -177,7 +184,12 @@ public class InstructorFeedbackAddActionTest extends BaseActionTest {
 
         params = createParamsForTypicalFeedbackSession(
                          instructor1ofCourse1.courseId, "Course with DST time zone");
-        logic.updateCourse(course.getId(), course.getName(), "Asia/Jerusalem");
+
+        logic.updateCourseCascade(
+                CourseAttributes.updateOptionsBuilder(course.getId())
+                        .withTimezone(ZoneId.of("Asia/Jerusalem"))
+                        .build());
+
         // After Fri, 28 Mar 2014, 01:59:59 AM: clocks sprang forward to Fri, 28 Mar 2014, 03:00:00 AM
         params[9] = "Fri, 28 Mar, 2014";
         params[11] = "2";

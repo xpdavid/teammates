@@ -21,7 +21,15 @@ public class StudentProfileEditSaveAction extends Action {
     protected ActionResult execute() throws EntityDoesNotExistException {
         try {
             StudentProfileAttributes studentProfile = extractProfileData();
-            logic.updateOrCreateStudentProfile(studentProfile);
+            logic.updateOrCreateStudentProfile(
+                    StudentProfileAttributes.updateOptionsBuilder(studentProfile.googleId)
+                        .withShortName(studentProfile.shortName)
+                        .withEmail(studentProfile.email)
+                        .withInstitute(studentProfile.institute)
+                        .withNationality(studentProfile.nationality)
+                        .withGender(studentProfile.gender)
+                        .withMoreInfo(studentProfile.moreInfo)
+                        .build());
             statusToUser.add(new StatusMessage(Const.StatusMessages.STUDENT_PROFILE_EDITED, StatusMessageColor.SUCCESS));
             statusToAdmin = "Student Profile for <span class=\"bold\">(" + account.googleId
                           + ")</span> edited.<br>"

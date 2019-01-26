@@ -35,9 +35,24 @@ public class InstructorCourseInstructorEditSaveAction extends InstructorCourseIn
 
         try {
             if (instructorId == null) {
-                logic.updateInstructorByEmail(instructorEmail, instructorToEdit);
+                logic.updateInstructor(
+                        InstructorAttributes.updateOptionsWithEmailBuilder(instructorToEdit.courseId, instructorEmail)
+                                .withName(instructorToEdit.name)
+                                .withDisplayedName(instructorToEdit.displayedName)
+                                .withIsDisplayedToStudents(instructorToEdit.isDisplayedToStudents)
+                                .withPrivilege(instructorToEdit.privileges)
+                                .withRole(instructorToEdit.role)
+                                .build());
             } else {
-                logic.updateInstructorByGoogleId(instructorId, instructorToEdit);
+                logic.updateInstructorCascade(
+                        InstructorAttributes.updateOptionsWithGoogleIdBuilder(instructorToEdit.courseId, instructorId)
+                                .withEmail(instructorToEdit.email)
+                                .withName(instructorToEdit.name)
+                                .withDisplayedName(instructorToEdit.displayedName)
+                                .withIsDisplayedToStudents(instructorToEdit.isDisplayedToStudents)
+                                .withPrivilege(instructorToEdit.privileges)
+                                .withRole(instructorToEdit.role)
+                                .build());
             }
 
             statusToUser.add(new StatusMessage(String.format(Const.StatusMessages.COURSE_INSTRUCTOR_EDITED, instructorName),

@@ -36,11 +36,7 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
     public void addSessionsToDb() throws Exception {
         Set<String> keys = dataBundle.feedbackSessions.keySet();
         for (String i : keys) {
-            try {
-                fsDb.createEntity(dataBundle.feedbackSessions.get(i));
-            } catch (EntityAlreadyExistsException e) {
-                fsDb.updateFeedbackSession(dataBundle.feedbackSessions.get(i));
-            }
+            fsDb.createEntity(dataBundle.feedbackSessions.get(i));
         }
     }
 
@@ -228,8 +224,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         // soft delete a feedback session now
         FeedbackSessionAttributes feedbackSession = fsaList.get(0);
-        feedbackSession.setDeletedTime();
-        fsDb.updateFeedbackSession(feedbackSession);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                        .withDeletedTime(Instant.now())
+                        .build());
 
         fsaList = fsDb.getFeedbackSessionsPossiblyNeedingOpenEmail();
         assertEquals(0, fsaList.size());
@@ -253,8 +252,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         // soft delete a feedback session now
         FeedbackSessionAttributes feedbackSession = fsaList.get(0);
-        feedbackSession.setDeletedTime();
-        fsDb.updateFeedbackSession(feedbackSession);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                        .withDeletedTime(Instant.now())
+                        .build());
 
         fsaList = fsDb.getFeedbackSessionsPossiblyNeedingClosingEmail();
         assertEquals(8, fsaList.size());
@@ -278,8 +280,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         // soft delete a feedback session now
         FeedbackSessionAttributes feedbackSession = fsaList.get(0);
-        feedbackSession.setDeletedTime();
-        fsDb.updateFeedbackSession(feedbackSession);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                        .withDeletedTime(Instant.now())
+                        .build());
 
         fsaList = fsDb.getFeedbackSessionsPossiblyNeedingClosedEmail();
         assertEquals(8, fsaList.size());
@@ -303,8 +308,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         // soft delete a feedback session now
         FeedbackSessionAttributes feedbackSession = fsaList.get(0);
-        feedbackSession.setDeletedTime();
-        fsDb.updateFeedbackSession(feedbackSession);
+        fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(feedbackSession.getFeedbackSessionName(), feedbackSession.getCourseId())
+                        .withDeletedTime(Instant.now())
+                        .build());
 
         fsaList = fsDb.getFeedbackSessionsPossiblyNeedingPublishedEmail();
         assertEquals(10, fsaList.size());
@@ -317,7 +325,7 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
         AssertionError ae = assertThrows(AssertionError.class, () -> fsDb.updateFeedbackSession(null));
         AssertHelper.assertContains(Const.StatusCodes.DBLEVEL_NULL_INPUT, ae.getLocalizedMessage());
 
-        ______TS("invalid feedback sesion attributes");
+        ______TS("invalid feedback session attributes");
         FeedbackSessionAttributes invalidFs = getNewFeedbackSession();
         fsDb.deleteEntity(invalidFs);
         fsDb.createEntity(invalidFs);
@@ -325,7 +333,12 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
         invalidFs.setStartTime(afterEndTime);
         invalidFs.setResultsVisibleFromTime(afterEndTime);
         InvalidParametersException ipe = assertThrows(InvalidParametersException.class,
-                () -> fsDb.updateFeedbackSession(invalidFs));
+                () -> fsDb.updateFeedbackSession(
+                        FeedbackSessionAttributes
+                                .updateOptionsBuilder(invalidFs.getFeedbackSessionName(), invalidFs.getCourseId())
+                                .withStartTime(invalidFs.getStartTime())
+                                .withResultsVisibleFromTime(invalidFs.getResultsVisibleFromTime())
+                                .build()));
         assertEquals(
                 String.format(TIME_FRAME_ERROR_MESSAGE, SESSION_END_TIME_FIELD_NAME, SESSION_START_TIME_FIELD_NAME),
                 ipe.getLocalizedMessage());
@@ -335,7 +348,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
         nonexistantFs.setFeedbackSessionName("non existant fs");
         nonexistantFs.setCourseId("non.existant.course");
         EntityDoesNotExistException ednee = assertThrows(EntityDoesNotExistException.class,
-                () -> fsDb.updateFeedbackSession(nonexistantFs));
+                () -> fsDb.updateFeedbackSession(
+                        FeedbackSessionAttributes
+                                .updateOptionsBuilder(nonexistantFs.getFeedbackSessionName(), nonexistantFs.getCourseId())
+                                .withInstructions("test")
+                                .build()));
         AssertHelper.assertContains(FeedbackSessionsDb.ERROR_UPDATE_NON_EXISTENT, ednee.getLocalizedMessage());
 
         ______TS("standard success case");
@@ -347,10 +364,18 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
         modifiedSession.setGracePeriodMinutes(0);
         modifiedSession.setSentOpenEmail(false);
         modifiedSession.setDeletedTime(Instant.now());
-        fsDb.updateFeedbackSession(modifiedSession);
+        FeedbackSessionAttributes updatedSession = fsDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(modifiedSession.getFeedbackSessionName(), modifiedSession.getCourseId())
+                        .withInstructions(modifiedSession.getInstructions())
+                        .withGracePeriod(Duration.ofMinutes(modifiedSession.getGracePeriodMinutes()))
+                        .withSentOpenEmail(modifiedSession.isSentOpenEmail())
+                        .withDeletedTime(modifiedSession.getDeletedTime())
+                        .build());
         FeedbackSessionAttributes actualFs =
                 fsDb.getSoftDeletedFeedbackSession(modifiedSession.getCourseId(), modifiedSession.getFeedbackSessionName());
         assertEquals(JsonUtils.toJson(modifiedSession), JsonUtils.toJson(actualFs));
+        assertEquals(JsonUtils.toJson(modifiedSession), JsonUtils.toJson(updatedSession));
         assertTrue(fsDb.getFeedbackSessionsForCourse("testCourse").isEmpty());
         assertFalse(fsDb.getSoftDeletedFeedbackSessionsForCourse("testCourse").isEmpty());
     }

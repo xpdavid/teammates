@@ -2,7 +2,6 @@ package teammates.test.cases.action;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -972,9 +971,9 @@ public class StudentFeedbackSubmissionEditSaveActionTest extends BaseActionTest 
         assertNotNull("Feedback question not found in database", fq);
 
         FeedbackResponseAttributes otherFr = dataBundle.feedbackResponses.get("response2ForQ1S1C1");
-        List<FeedbackResponseAttributes> responsesToAdd = new ArrayList<>();
-        responsesToAdd.add(fr);
-        frDb.createFeedbackResponses(responsesToAdd);
+        //List<FeedbackResponseAttributes> responsesToAdd = new ArrayList<>();
+        //responsesToAdd.add(fr);
+        //frDb.createFeedbackResponses(responsesToAdd);
 
         // necessary to get the correct responseId
         otherFr = frDb.getFeedbackResponse(fq.getId(), otherFr.giver, otherFr.recipient);
@@ -1260,7 +1259,11 @@ public class StudentFeedbackSubmissionEditSaveActionTest extends BaseActionTest 
         ______TS("opened");
 
         fs.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(1));
-        feedbackSessionDb.updateFeedbackSession(fs);
+        feedbackSessionDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertTrue(fs.isOpened());
         assertFalse(fs.isInGracePeriod());
@@ -1281,7 +1284,11 @@ public class StudentFeedbackSubmissionEditSaveActionTest extends BaseActionTest 
         ______TS("during grace period");
 
         fs.setEndTime(Instant.now());
-        feedbackSessionDb.updateFeedbackSession(fs);
+        feedbackSessionDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertFalse(fs.isOpened());
         assertTrue(fs.isInGracePeriod());
@@ -1302,7 +1309,11 @@ public class StudentFeedbackSubmissionEditSaveActionTest extends BaseActionTest 
         ______TS("after grace period");
 
         fs.setEndTime(TimeHelper.getInstantDaysOffsetFromNow(-10));
-        feedbackSessionDb.updateFeedbackSession(fs);
+        feedbackSessionDb.updateFeedbackSession(
+                FeedbackSessionAttributes
+                        .updateOptionsBuilder(fs.getFeedbackSessionName(), fs.getCourseId())
+                        .withEndTime(fs.getEndTime())
+                        .build());
 
         assertFalse(fs.isOpened());
         assertFalse(fs.isInGracePeriod());
