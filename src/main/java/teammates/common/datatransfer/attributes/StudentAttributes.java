@@ -263,11 +263,6 @@ public class StudentAttributes extends EntityAttributes<CourseStudent> {
     }
 
     @Override
-    public String getJsonString() {
-        return JsonUtils.toJson(this, StudentAttributes.class);
-    }
-
-    @Override
     public void sanitizeForSaving() {
         googleId = SanitizationHelper.sanitizeGoogleId(googleId);
         name = SanitizationHelper.sanitizeName(name);

@@ -140,11 +140,6 @@ public class FeedbackQuestionAttributes extends EntityAttributes<FeedbackQuestio
     }
 
     @Override
-    public String getJsonString() {
-        return JsonUtils.toJson(this, FeedbackQuestionAttributes.class);
-    }
-
-    @Override
     public List<String> getInvalidityInfo() {
         FieldValidator validator = new FieldValidator();
         List<String> errors = new ArrayList<>();
