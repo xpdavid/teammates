@@ -97,16 +97,18 @@ public class SendReminderEmailActionTest extends BaseActionTest<SendReminderEmai
 
         loginAsAdmin();
         StudentAttributes unregisteredStudent1 = StudentAttributes
-                .builder(courseId, "Unregistered student 1", "unregistered1@email.com")
-                .withSection("Section 1")
-                .withTeam("Team Unregistered")
-                .withComments("")
+                .builder(courseId, "unregistered1@email.com")
+                .withName("Unregistered student 1")
+                .withSectionName("Section 1")
+                .withTeamName("Team Unregistered")
+                .withComment("")
                 .build();
         StudentAttributes unregisteredStudent2 = StudentAttributes
-                .builder(courseId, "Unregistered student 2", "unregistered2@email.com")
-                .withSection("Section 1")
-                .withTeam("Team Unregistered")
-                .withComments("")
+                .builder(courseId, "unregistered2@email.com")
+                .withName("Unregistered student 2")
+                .withSectionName("Section 1")
+                .withTeamName("Team Unregistered")
+                .withComment("")
                 .build();
         StudentsLogic.inst().createStudentCascade(unregisteredStudent1);
         StudentsLogic.inst().createStudentCascade(unregisteredStudent2);
