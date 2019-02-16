@@ -1,6 +1,6 @@
 package teammates.test.cases.logic;
 
-import java.time.Instant;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -615,16 +615,14 @@ public class StudentsLogicTest extends BaseLogicTest {
         FeedbackSessionAttributes fsAttr = FeedbackSessionAttributes
                 .builder("newFeedbackSessionName", courseIdForEnrollTest, instructorEmail)
                 .withInstructions("default instructions")
-                .withCreatedTime(Instant.now())
                 .withStartTime(TimeHelperExtension.getInstantHoursOffsetFromNow(2))
                 .withEndTime(TimeHelperExtension.getInstantHoursOffsetFromNow(5))
                 .withSessionVisibleFromTime(TimeHelperExtension.getInstantHoursOffsetFromNow(1))
                 .withResultsVisibleFromTime(TimeHelperExtension.getInstantHoursOffsetFromNow(6))
                 .withTimeZone(ZoneId.of("Asia/Singapore"))
-                .withGracePeriodMinutes(0)
-                .withOpeningEmailEnabled(false)
-                .withClosingEmailEnabled(false)
-                .withPublishedEmailEnabled(false)
+                .withGracePeriod(Duration.ZERO)
+                .withIsClosingEmailEnabled(false)
+                .withIsPublishedEmailEnabled(false)
                 .build();
         fsLogic.createFeedbackSession(fsAttr);
 

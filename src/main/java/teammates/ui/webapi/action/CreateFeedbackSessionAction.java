@@ -1,7 +1,5 @@
 package teammates.ui.webapi.action;
 
-import java.time.Instant;
-
 import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
@@ -52,13 +50,11 @@ public class CreateFeedbackSessionAction extends Action {
                         .withInstructions(createRequest.getInstructions())
                         .withStartTime(createRequest.getSubmissionStartTime())
                         .withEndTime(createRequest.getSubmissionEndTime())
-                        .withGracePeriodMinutes(createRequest.getGracePeriod())
+                        .withGracePeriod(createRequest.getGracePeriod())
                         .withSessionVisibleFromTime(createRequest.getSessionVisibleFromTime())
                         .withResultsVisibleFromTime(createRequest.getResultsVisibleFromTime())
-                        .withOpeningEmailEnabled(true)
-                        .withClosingEmailEnabled(createRequest.isClosingEmailEnabled())
-                        .withPublishedEmailEnabled(createRequest.isPublishedEmailEnabled())
-                        .withCreatedTime(Instant.now())
+                        .withIsClosingEmailEnabled(createRequest.isClosingEmailEnabled())
+                        .withIsPublishedEmailEnabled(createRequest.isPublishedEmailEnabled())
                         .build();
 
         try {
