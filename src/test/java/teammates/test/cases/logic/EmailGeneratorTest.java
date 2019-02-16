@@ -292,12 +292,12 @@ public class EmailGeneratorTest extends BaseLogicTest {
 
         InstructorAttributes instructor = InstructorAttributes
                 .builder("courseId", instructorEmail)
-                .withName("googleId")
+                .withGoogleId("googleId")
                 .withName("Instructor Name")
                 .build();
         instructor.key = regkey;
 
-        AccountAttributes inviter = AccountAttributes.builder()
+        AccountAttributes inviter = AccountAttributes.builder("otherGoogleId")
                 .withEmail("instructor-joe@gmail.com")
                 .withName("Joe Wilson")
                 .build();
