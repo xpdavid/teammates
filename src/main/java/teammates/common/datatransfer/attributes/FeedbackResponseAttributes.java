@@ -32,49 +32,19 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
      */
     public String recipient;
 
-    /** Contains the JSON formatted string that holds the information of the response details <br>
-     * Don't use directly unless for storing/loading from data store <br>
-     * To get the answer text use {@code getResponseDetails().getAnswerString()}
-     *
-     * <p>This is set to null to represent a missing response.
-     */
     public FeedbackResponseDetails responseDetails;
+
     public String giverSection;
     public String recipientSection;
+
     protected transient Instant createdAt;
     protected transient Instant updatedAt;
+
     private String feedbackResponseId;
 
-    public FeedbackResponseAttributes() {
-        // attributes to be set after construction
-    }
-
-    public FeedbackResponseAttributes(String feedbackSessionName,
-            String courseId, String feedbackQuestionId, String giver, String giverSection,
-            String recipient, String recipientSection, FeedbackResponseDetails responseDetails) {
-        this.feedbackSessionName = feedbackSessionName;
-        this.courseId = courseId;
-        this.feedbackQuestionId = feedbackQuestionId;
-        this.giver = giver;
-        this.giverSection = giverSection;
-        this.recipient = recipient;
-        this.recipientSection = recipientSection;
-        this.responseDetails = responseDetails.getDeepCopy();
-    }
-
-    public FeedbackResponseAttributes(FeedbackResponse fr) {
-        this.feedbackResponseId = fr.getId();
-        this.feedbackSessionName = fr.getFeedbackSessionName();
-        this.courseId = fr.getCourseId();
-        this.feedbackQuestionId = fr.getFeedbackQuestionId();
-        this.giver = fr.getGiverEmail();
-        this.giverSection = fr.getGiverSection() == null ? Const.DEFAULT_SECTION : fr.getGiverSection();
-        this.recipient = fr.getRecipientEmail();
-        this.recipientSection = fr.getRecipientSection() == null ? Const.DEFAULT_SECTION : fr.getRecipientSection();
-        this.responseDetails = deserializeResponseFromSerializedString(fr.getResponseMetaData(),
-                                                                       fr.getFeedbackQuestionType());
-        this.createdAt = fr.getCreatedAt();
-        this.updatedAt = fr.getUpdatedAt();
+    FeedbackResponseAttributes() {
+        this.giverSection = Const.DEFAULT_SECTION;
+        this.recipientSection = Const.DEFAULT_SECTION;
     }
 
     public FeedbackResponseAttributes(FeedbackResponseAttributes copy) {
@@ -91,6 +61,29 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
         this.responseDetails = copy.getResponseDetails();
     }
 
+    public static FeedbackResponseAttributes valueOf(FeedbackResponse fr) {
+        FeedbackResponseAttributes fra = new FeedbackResponseAttributes();
+
+        fra.feedbackResponseId = fr.getId();
+        fra.feedbackSessionName = fr.getFeedbackSessionName();
+        fra.courseId = fr.getCourseId();
+        fra.feedbackQuestionId = fr.getFeedbackQuestionId();
+        fra.giver = fr.getGiverEmail();
+        if (fr.getGiverSection() != null) {
+            fra.giverSection = fr.getGiverSection();
+        }
+        fra.recipient = fr.getRecipientEmail();
+        if (fr.getRecipientSection() != null) {
+            fra.recipientSection = fr.getRecipientSection();
+        }
+        fra.responseDetails =
+                fra.deserializeResponseFromSerializedString(fr.getResponseMetaData(), fr.getFeedbackQuestionType());
+        fra.createdAt = fr.getCreatedAt();
+        fra.updatedAt = fr.getUpdatedAt();
+
+        return fra;
+    }
+
     public FeedbackQuestionType getFeedbackQuestionType() {
         return responseDetails.questionType;
     }
@@ -104,11 +97,39 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
     }
 
     public Instant getCreatedAt() {
-        return createdAt == null ? Const.TIME_REPRESENTS_DEFAULT_TIMESTAMP : createdAt;
+        return createdAt;
     }
 
     public Instant getUpdatedAt() {
-        return updatedAt == null ? Const.TIME_REPRESENTS_DEFAULT_TIMESTAMP : updatedAt;
+        return updatedAt;
+    }
+
+    public String getFeedbackSessionName() {
+        return feedbackSessionName;
+    }
+
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public String getFeedbackQuestionId() {
+        return feedbackQuestionId;
+    }
+
+    public String getGiver() {
+        return giver;
+    }
+
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public String getGiverSection() {
+        return giverSection;
+    }
+
+    public String getRecipientSection() {
+        return recipientSection;
     }
 
     @Override
@@ -192,6 +213,13 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
     }
 
     /**
+     * Returns a builder for {@link FeedbackResponseAttributes}.
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
      * Updates with {@link UpdateOptions}.
      */
     public void update(UpdateOptions updateOptions) {
@@ -207,6 +235,49 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
      */
     public static UpdateOptions.Builder updateOptionsBuilder(String feedbackResponseId) {
         return new UpdateOptions.Builder(feedbackResponseId);
+    }
+
+    /**
+     * A builder for {@link FeedbackResponseCommentAttributes}.
+     */
+    public static class Builder extends BasicBuilder<FeedbackResponseAttributes, Builder> {
+
+        private FeedbackResponseAttributes fra;
+
+        private Builder() {
+            super(new UpdateOptions(""));
+            thisBuilder = this;
+
+            fra = new FeedbackResponseAttributes();
+        }
+
+        public Builder withCourseId(String courseId) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, courseId);
+            fra.courseId = courseId;
+
+            return this;
+        }
+
+        public Builder withFeedbackSessionName(String feedbackSessionName) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, feedbackSessionName);
+            fra.feedbackSessionName = feedbackSessionName;
+
+            return this;
+        }
+
+        public Builder withFeedbackQuestionId(String feedbackQuestionId) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, feedbackQuestionId);
+            fra.feedbackQuestionId = feedbackQuestionId;
+
+            return this;
+        }
+
+        @Override
+        public FeedbackResponseAttributes build() {
+            fra.update(updateOptions);
+
+            return fra;
+        }
     }
 
     /**
@@ -246,53 +317,73 @@ public class FeedbackResponseAttributes extends EntityAttributes<FeedbackRespons
         /**
          * Builder class to build {@link UpdateOptions}.
          */
-        public static class Builder {
-            private UpdateOptions updateOptions;
+        public static class Builder extends BasicBuilder<UpdateOptions, Builder> {
 
             private Builder(String feedbackResponseId) {
-                updateOptions = new UpdateOptions(feedbackResponseId);
+                super(new UpdateOptions(feedbackResponseId));
+                thisBuilder = this;
             }
 
-            public Builder withGiver(String giver) {
-                Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, giver);
-
-                updateOptions.giverOption = UpdateOption.of(giver);
-                return this;
-            }
-
-            public Builder withGiverSection(String giverSection) {
-                Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, giverSection);
-
-                updateOptions.giverSectionOption = UpdateOption.of(giverSection);
-                return this;
-            }
-
-            public Builder withRecipient(String recipient) {
-                Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, recipient);
-
-                updateOptions.recipientOption = UpdateOption.of(recipient);
-                return this;
-            }
-
-            public Builder withRecipientSection(String recipientSection) {
-                Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, recipientSection);
-
-                updateOptions.recipientSectionOption = UpdateOption.of(recipientSection);
-                return this;
-            }
-
-            public Builder withResponseDetails(FeedbackResponseDetails responseDetails) {
-                Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, responseDetails);
-
-                updateOptions.responseDetailsUpdateOption = UpdateOption.of(responseDetails);
-                return this;
-            }
-
+            @Override
             public UpdateOptions build() {
                 return updateOptions;
             }
 
         }
+
+    }
+
+    /**
+     * Basic builder to build {@link FeedbackResponseAttributes} related classes.
+     *
+     * @param <T> type to be built
+     * @param <B> type of the builder
+     */
+    private abstract static class BasicBuilder<T, B extends BasicBuilder<T, B>> {
+
+        protected UpdateOptions updateOptions;
+        protected B thisBuilder;
+
+        protected BasicBuilder(UpdateOptions updateOptions) {
+            this.updateOptions = updateOptions;
+        }
+
+        public B withGiver(String giver) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, giver);
+
+            updateOptions.giverOption = UpdateOption.of(giver);
+            return thisBuilder;
+        }
+
+        public B withGiverSection(String giverSection) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, giverSection);
+
+            updateOptions.giverSectionOption = UpdateOption.of(giverSection);
+            return thisBuilder;
+        }
+
+        public B withRecipient(String recipient) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, recipient);
+
+            updateOptions.recipientOption = UpdateOption.of(recipient);
+            return thisBuilder;
+        }
+
+        public B withRecipientSection(String recipientSection) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, recipientSection);
+
+            updateOptions.recipientSectionOption = UpdateOption.of(recipientSection);
+            return thisBuilder;
+        }
+
+        public B withResponseDetails(FeedbackResponseDetails responseDetails) {
+            Assumption.assertNotNull(Const.StatusCodes.NULL_PARAMETER, responseDetails);
+
+            updateOptions.responseDetailsUpdateOption = UpdateOption.of(responseDetails.getDeepCopy());
+            return thisBuilder;
+        }
+
+        public abstract T build();
 
     }
 

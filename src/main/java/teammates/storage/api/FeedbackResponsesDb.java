@@ -394,7 +394,16 @@ public class FeedbackResponsesDb extends EntitiesDb<FeedbackResponse, FeedbackRe
             return makeAttributes(oldResponse);
         } else {
             // need to recreate the entity
-            newAttributes.setId(null);
+            newAttributes = FeedbackResponseAttributes.builder()
+                    .withCourseId(newAttributes.getCourseId())
+                    .withFeedbackSessionName(newAttributes.getFeedbackSessionName())
+                    .withFeedbackQuestionId(newAttributes.getFeedbackQuestionId())
+                    .withGiver(newAttributes.getGiver())
+                    .withRecipient(newAttributes.getRecipient())
+                    .withResponseDetails(newAttributes.getResponseDetails())
+                    .withGiverSection(newAttributes.getGiverSection())
+                    .withRecipientSection(newAttributes.getRecipientSection())
+                    .build();
             FeedbackResponse recreatedResponseEntity = createEntity(newAttributes);
             deleteEntityDirect(oldResponse);
 
@@ -728,6 +737,6 @@ public class FeedbackResponsesDb extends EntitiesDb<FeedbackResponse, FeedbackRe
     protected FeedbackResponseAttributes makeAttributes(FeedbackResponse entity) {
         Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, entity);
 
-        return new FeedbackResponseAttributes(entity);
+        return FeedbackResponseAttributes.valueOf(entity);
     }
 }

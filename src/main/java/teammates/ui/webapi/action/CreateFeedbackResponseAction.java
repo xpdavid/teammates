@@ -75,37 +75,36 @@ public class CreateFeedbackResponseAction extends BasicFeedbackSubmissionAction 
         String feedbackQuestionId = getNonNullRequestParamValue(Const.ParamsNames.FEEDBACK_QUESTION_ID);
         FeedbackQuestionAttributes feedbackQuestion = logic.getFeedbackQuestion(feedbackQuestionId);
 
-        // TODO use builder pattern
-        FeedbackResponseAttributes feedbackResponse = new FeedbackResponseAttributes();
+        FeedbackResponseAttributes.Builder feedbackResponseBuilder = FeedbackResponseAttributes.builder();
         switch (intent) {
         case STUDENT_SUBMISSION:
             StudentAttributes studentAttributes = getStudentOfCourseFromRequest(feedbackQuestion.getCourseId());
-            feedbackResponse.giver =
-                    feedbackQuestion.getGiverType() == FeedbackParticipantType.TEAMS
-                            ? studentAttributes.getTeam() : studentAttributes.getEmail();
-            feedbackResponse.giverSection = studentAttributes.getSection();
+            feedbackResponseBuilder
+                    .withGiver(feedbackQuestion.getGiverType() == FeedbackParticipantType.TEAMS
+                            ? studentAttributes.getTeam() : studentAttributes.getEmail())
+                    .withGiverSection(studentAttributes.getSection());
             break;
         case INSTRUCTOR_SUBMISSION:
             InstructorAttributes instructorAttributes = getInstructorOfCourseFromRequest(feedbackQuestion.getCourseId());
-            feedbackResponse.giver = instructorAttributes.getEmail();
-            feedbackResponse.giverSection = Const.DEFAULT_SECTION;
+            feedbackResponseBuilder
+                    .withGiver(instructorAttributes.getEmail())
+                    .withGiverSection(Const.DEFAULT_SECTION);
             break;
         default:
             throw new InvalidHttpParameterException("Unknown intent " + intent);
         }
 
         FeedbackResponseCreateRequest createRequest = getAndValidateRequestBody(FeedbackResponseCreateRequest.class);
-        feedbackResponse.recipient = createRequest.getRecipientIdentifier();
-        feedbackResponse.recipientSection =
-                getRecipientSection(feedbackQuestion.getCourseId(),
-                        feedbackQuestion.getRecipientType(), createRequest.getRecipientIdentifier());
+        feedbackResponseBuilder
+                .withRecipient(createRequest.getRecipientIdentifier())
+                .withRecipientSection(getRecipientSection(feedbackQuestion.getCourseId(),
+                        feedbackQuestion.getRecipientType(), createRequest.getRecipientIdentifier()))
+                .withCourseId(feedbackQuestion.getCourseId())
+                .withFeedbackSessionName(feedbackQuestion.getFeedbackSessionName())
+                .withFeedbackQuestionId(feedbackQuestion.getId())
+                .withResponseDetails(createRequest.getResponseDetails());
 
-        feedbackResponse.courseId = feedbackQuestion.getCourseId();
-        feedbackResponse.feedbackSessionName = feedbackQuestion.getFeedbackSessionName();
-        feedbackResponse.feedbackQuestionId = feedbackQuestion.getId();
-
-        feedbackResponse.responseDetails = createRequest.getResponseDetails();
-
+        FeedbackResponseAttributes feedbackResponse = feedbackResponseBuilder.build();
         validResponseOfQuestion(feedbackQuestion, feedbackResponse);
         try {
             logic.createFeedbackResponses(Arrays.asList(feedbackResponse));

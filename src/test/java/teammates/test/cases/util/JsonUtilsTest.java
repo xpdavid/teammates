@@ -16,11 +16,16 @@ public class JsonUtilsTest extends BaseTestCase {
 
     @Test
     public void testFeedbackResponseDetailsAdaptor_withComposedResponseDetails_shouldSerializeToConcreteClass() {
-        FeedbackResponseAttributes fra = new FeedbackResponseAttributes(
-                "Session1", "CS3281",
-                "questionId", "giver@email.com", "giverSection",
-                "recipient@email.com", "recipientSection",
-                new FeedbackTextResponseDetails("My answer"));
+        FeedbackResponseAttributes fra = FeedbackResponseAttributes.builder()
+                .withFeedbackSessionName("Session1")
+                .withCourseId("CS3281")
+                .withFeedbackQuestionId("questionId")
+                .withGiver("giver@email.com")
+                .withGiverSection("giverSection")
+                .withRecipient("recipient@email.com")
+                .withRecipientSection("recipientSection")
+                .withResponseDetails(new FeedbackTextResponseDetails("My answer"))
+                .build();
 
         try {
             String serializeString = JsonUtils.toJson(fra);

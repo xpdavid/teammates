@@ -728,28 +728,31 @@ public class FeedbackResponsesDbTest extends BaseComponentTestCase {
     }
 
     private FeedbackResponseAttributes getNewFeedbackResponseAttributes() {
-        FeedbackResponseAttributes fra = new FeedbackResponseAttributes();
-
-        fra.feedbackSessionName = "fsTest1";
-        fra.courseId = "testCourse";
-        fra.giver = "giver@email.tmt";
-        fra.giverSection = "None";
-        fra.recipient = "recipient@email.tmt";
-        fra.recipientSection = "None";
-        fra.feedbackQuestionId = "testFeedbackQuestionId";
-
-        FeedbackResponseDetails responseDetails = new FeedbackTextResponseDetails("Text response");
-        fra.responseDetails = responseDetails;
-
-        return fra;
+        return FeedbackResponseAttributes.builder()
+                .withCourseId("testCourse")
+                .withFeedbackSessionName("fsTest1")
+                .withFeedbackQuestionId("testFeedbackQuestionId")
+                .withGiver("giver@email.tmt")
+                .withGiverSection("None")
+                .withRecipient("recipient@email.tmt")
+                .withRecipientSection("None")
+                .withResponseDetails(new FeedbackTextResponseDetails("Text response"))
+                .build();
     }
 
     private FeedbackResponseAttributes getResponseAttributes(String id) {
         FeedbackResponseAttributes result = fras.get(id);
-        return new FeedbackResponseAttributes(result.feedbackSessionName,
-                result.courseId, result.feedbackQuestionId,
-                result.giver, result.giverSection,
-                result.recipient, result.recipientSection, result.responseDetails);
+
+        return FeedbackResponseAttributes.builder()
+                .withCourseId(result.courseId)
+                .withFeedbackSessionName(result.feedbackSessionName)
+                .withFeedbackQuestionId(result.feedbackQuestionId)
+                .withGiver(result.giver)
+                .withGiverSection(result.giverSection)
+                .withRecipient(result.recipient)
+                .withRecipientSection(result.recipientSection)
+                .withResponseDetails(result.responseDetails)
+                .build();
     }
 
     @AfterClass
