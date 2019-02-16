@@ -1,6 +1,5 @@
 package teammates.ui.controller;
 
-import java.time.Instant;
 import java.util.ArrayList;
 
 import teammates.common.datatransfer.FeedbackParticipantType;
@@ -70,11 +69,13 @@ public class InstructorFeedbackResponseCommentAddAction extends Action {
             return createAjaxResult(data);
         }
 
-        FeedbackResponseCommentAttributes feedbackResponseComment = FeedbackResponseCommentAttributes
-                .builder(courseId, feedbackSessionName, instructor.email, commentText)
+        FeedbackResponseCommentAttributes feedbackResponseComment = FeedbackResponseCommentAttributes.builder()
+                .withCourseId(courseId)
+                .withFeedbackSessionName(feedbackSessionName)
+                .withCommentGiver(instructor.email)
+                .withCommentText(commentText)
                 .withFeedbackQuestionId(feedbackQuestionId)
                 .withFeedbackResponseId(feedbackResponseId)
-                .withCreatedAt(Instant.now())
                 .withGiverSection(response.giverSection)
                 .withReceiverSection(response.recipientSection)
                 .withCommentFromFeedbackParticipant(false)
