@@ -104,7 +104,6 @@ public class InstructorFeedbackResponseCommentAddAction extends Action {
         FeedbackResponseCommentAttributes createdComment = null;
         try {
             createdComment = logic.createFeedbackResponseComment(feedbackResponseComment);
-            logic.putDocument(createdComment);
         } catch (InvalidParametersException | EntityAlreadyExistsException e) {
             setStatusForException(e);
             data.errorMessage = e.getMessage();

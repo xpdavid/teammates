@@ -1,11 +1,15 @@
 package teammates.ui.webapi.action;
 
+import java.time.ZoneId;
+
 import org.apache.http.HttpStatus;
 
+import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.InvalidParametersException;
 import teammates.common.exception.UnauthorizedAccessException;
 import teammates.common.util.Const;
+import teammates.common.util.FieldValidator;
 
 /**
  * Action: Adds a new course for instructor.
@@ -26,12 +30,25 @@ public class AddInstructorCourseAction extends Action {
 
     @Override
     public ActionResult execute() {
-        String newCourseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
-        String newCourseName = getNonNullRequestParamValue(Const.ParamsNames.COURSE_NAME);
         String newCourseTimeZone = getNonNullRequestParamValue(Const.ParamsNames.COURSE_TIME_ZONE);
 
+        FieldValidator validator = new FieldValidator();
+        String timeZoneErrorMessage = validator.getInvalidityInfoForTimeZone(newCourseTimeZone);
+        if (!timeZoneErrorMessage.isEmpty()) {
+            return new JsonResult(timeZoneErrorMessage, HttpStatus.SC_BAD_REQUEST);
+        }
+
+        String newCourseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
+        String newCourseName = getNonNullRequestParamValue(Const.ParamsNames.COURSE_NAME);
+
+        CourseAttributes courseAttributes =
+                CourseAttributes.builder(newCourseId)
+                        .withName(newCourseName)
+                        .withTimezone(ZoneId.of(newCourseTimeZone))
+                        .build();
+
         try {
-            logic.createCourseAndInstructor(userInfo.id, newCourseId, newCourseName, newCourseTimeZone);
+            logic.createCourseAndInstructor(userInfo.getId(), courseAttributes);
         } catch (EntityAlreadyExistsException e) {
             return new JsonResult(e.getMessage(), HttpStatus.SC_CONFLICT);
         } catch (InvalidParametersException e) {

@@ -80,7 +80,7 @@ public class FeedbackQuestionsDbTest extends BaseComponentTestCase {
         fqDb.createEntity(fqa);
         verifyPresentInDatastore(fqa);
 
-        ______TS("duplicate - with same id.");
+        ______TS("duplicate - with same question number.");
 
         EntityAlreadyExistsException eaee = assertThrows(EntityAlreadyExistsException.class, () -> fqDb.createEntity(fqa));
         assertEquals(

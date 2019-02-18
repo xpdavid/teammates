@@ -1,5 +1,6 @@
 package teammates.test.cases.webapi;
 
+import java.time.ZoneId;
 import java.util.List;
 
 import org.apache.http.HttpStatus;
@@ -42,7 +43,11 @@ public class DeleteCourseActionTest extends BaseActionTest<DeleteCourseAction> {
 
         ______TS("Typical case, 2 courses");
 
-        CoursesLogic.inst().createCourseAndInstructor(instructorId, "icdct.tpa.id1", "New course", "UTC");
+        CoursesLogic.inst().createCourseAndInstructor(instructorId,
+                CourseAttributes.builder("icdct.tpa.id1")
+                        .withName("New course")
+                        .withTimezone(ZoneId.of("UTC"))
+                        .build());
         String[] submissionParams = new String[] {
                 Const.ParamsNames.COURSE_ID, instructor1OfCourse1.courseId,
         };
@@ -86,7 +91,10 @@ public class DeleteCourseActionTest extends BaseActionTest<DeleteCourseAction> {
     protected void testAccessControl() throws Exception {
         CoursesLogic.inst().createCourseAndInstructor(
                 typicalBundle.instructors.get("instructor1OfCourse1").googleId,
-                "icdat.owncourse", "New course", "UTC");
+                CourseAttributes.builder("icdat.owncourse")
+                        .withName("New course")
+                        .withTimezone(ZoneId.of("UTC"))
+                        .build());
 
         String[] submissionParams = new String[] {
                 Const.ParamsNames.COURSE_ID, "icdat.owncourse",
@@ -107,7 +115,10 @@ public class DeleteCourseActionTest extends BaseActionTest<DeleteCourseAction> {
         /* Test access for admin in masquerade mode */
         CoursesLogic.inst().createCourseAndInstructor(
                 typicalBundle.instructors.get("instructor1OfCourse1").googleId,
-                "icdat.owncourse", "New course", "UTC");
+                CourseAttributes.builder("icdat.owncourse")
+                        .withName("New course")
+                        .withTimezone(ZoneId.of("UTC"))
+                        .build());
         verifyAccessibleForAdminToMasqueradeAsInstructor(submissionParams);
 
         CoursesLogic.inst().deleteCourseCascade("icdat.owncourse");
