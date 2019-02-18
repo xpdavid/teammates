@@ -281,7 +281,6 @@ public class StudentFeedbackResultsPageActionTest extends BaseActionTest {
 
         AssertHelper.assertSameContentIgnoreOrder(expectedInfoList, actualInfoList);
         assertEquals(student1InCourse1.googleId, pageData.account.googleId);
-        assertEquals(student1InCourse1.getIdentificationString(), pageData.student.getIdentificationString());
     }
 
     @Override

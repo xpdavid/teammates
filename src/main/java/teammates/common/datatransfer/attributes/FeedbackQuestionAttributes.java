@@ -22,7 +22,6 @@ public class FeedbackQuestionAttributes extends EntityAttributes<FeedbackQuestio
         implements Comparable<FeedbackQuestionAttributes> {
 
     private static final String FEEDBACK_QUESTION_BACKUP_LOG_MSG = "Recently modified feedback question::";
-    private static final String ATTRIBUTE_NAME = "Feedback Question";
 
     public String feedbackSessionName;
     public String courseId;
@@ -133,17 +132,6 @@ public class FeedbackQuestionAttributes extends EntityAttributes<FeedbackQuestio
                + numberOfEntitiesToGiveFeedbackTo + ", showResponsesTo="
                + showResponsesTo + ", showGiverNameTo=" + showGiverNameTo
                + ", showRecipientNameTo=" + showRecipientNameTo + "]";
-    }
-
-    @Override
-    public String getIdentificationString() {
-        return this.questionNumber + ". " + this.questionMetaData + "/"
-               + this.feedbackSessionName + "/" + this.courseId;
-    }
-
-    @Override
-    public String getEntityTypeAsString() {
-        return ATTRIBUTE_NAME;
     }
 
     @Override
