@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.CourseDetailsBundle;
 import teammates.common.datatransfer.CourseSummaryBundle;
 import teammates.common.datatransfer.FeedbackSessionDetailsBundle;
@@ -57,6 +58,9 @@ public final class CoursesLogic {
 
     private static final AccountsLogic accountsLogic = AccountsLogic.inst();
     private static final FeedbackSessionsLogic feedbackSessionsLogic = FeedbackSessionsLogic.inst();
+    private static final FeedbackQuestionsLogic fqLogic = FeedbackQuestionsLogic.inst();
+    private static final FeedbackResponsesLogic frLogic = FeedbackResponsesLogic.inst();
+    private static final FeedbackResponseCommentsLogic frcLogic = FeedbackResponseCommentsLogic.inst();
     private static final InstructorsLogic instructorsLogic = InstructorsLogic.inst();
     private static final StudentsLogic studentsLogic = StudentsLogic.inst();
 
@@ -644,7 +648,15 @@ public final class CoursesLogic {
     public void deleteCourseCascade(String courseId) {
         studentsLogic.deleteStudentsForCourse(courseId);
         instructorsLogic.deleteInstructorsForCourse(courseId);
-        feedbackSessionsLogic.deleteFeedbackSessionsForCourseCascade(courseId);
+
+        AttributesDeletionQuery query = AttributesDeletionQuery.builder()
+                .withCourseId(courseId)
+                .build();
+        feedbackSessionsLogic.deleteFeedbackSessions(query);
+        fqLogic.deleteFeedbackQuestions(query);
+        frLogic.deleteFeedbackResponses(query);
+        frcLogic.deleteFeedbackResponseComments(query);
+
         coursesDb.deleteCourse(courseId);
     }
 
