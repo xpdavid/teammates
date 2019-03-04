@@ -39,7 +39,7 @@ public class DeleteStudentAction extends Action {
         // studentId takes precedence
         String studentEmail = studentId == null ? getNonNullRequestParamValue(Const.ParamsNames.STUDENT_EMAIL)
                 : logic.getStudentForGoogleId(courseId, studentId).email;
-        logic.deleteStudent(courseId, studentEmail);
+        logic.deleteStudentCascade(courseId, studentEmail);
 
         return new JsonResult("Student is successfully deleted.", HttpStatus.SC_OK);
     }

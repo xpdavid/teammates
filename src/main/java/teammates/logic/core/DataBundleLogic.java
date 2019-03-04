@@ -437,7 +437,6 @@ public final class DataBundleLogic {
         }
         if (!courseIds.isEmpty()) {
             instructorsDb.deleteInstructorsForCourses(courseIds);
-            studentsDb.deleteStudentsForCourses(courseIds);
             courseIds.forEach(courseId -> {
                 coursesDb.deleteCourse(courseId);
 
@@ -448,6 +447,7 @@ public final class DataBundleLogic {
                 fcDb.deleteFeedbackResponseComments(query);
                 fqDb.deleteFeedbackQuestions(query);
                 fbDb.deleteFeedbackSessions(query);
+                studentsDb.deleteStudents(query);
             });
         }
     }
