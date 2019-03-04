@@ -603,7 +603,7 @@ public final class FeedbackQuestionsLogic {
 
         // adjust responses
         if (oldQuestion.areResponseDeletionsRequiredForChanges(updatedQuestion)) {
-            frLogic.deleteFeedbackResponsesForQuestionAndCascade(oldQuestion.getId(), true);
+            frLogic.deleteFeedbackResponsesForQuestionCascade(oldQuestion.getId(), true);
         }
 
         return updatedQuestion;
@@ -650,7 +650,7 @@ public final class FeedbackQuestionsLogic {
 
         for (FeedbackQuestionAttributes question : questions) {
             // Cascade delete responses for question.
-            frLogic.deleteFeedbackResponsesForQuestionAndCascade(question.getId(), false);
+            frLogic.deleteFeedbackResponsesForQuestionCascade(question.getId(), false);
         }
         fqDb.deleteEntities(questions);
     }
@@ -697,7 +697,7 @@ public final class FeedbackQuestionsLogic {
             return; // Silently fail if question does not exist.
         }
         // Cascade delete responses for question.
-        frLogic.deleteFeedbackResponsesForQuestionAndCascade(questionToDelete.getId(), true);
+        frLogic.deleteFeedbackResponsesForQuestionCascade(questionToDelete.getId(), true);
         if (fsLogic.getFeedbackSession(feedbackSessionName, courseId) == null) {
             Assumption.fail("Session disappeared.");
         }
