@@ -232,7 +232,7 @@ public final class AccountsLogic {
      * <p>Cascade deletes all instructors associated with the account.
      */
     public void downgradeInstructorToStudentCascade(String googleId) throws EntityDoesNotExistException {
-        instructorsLogic.deleteInstructorsForGoogleIdAndCascade(googleId);
+        instructorsLogic.deleteInstructorsForGoogleIdCascade(googleId);
 
         try {
             accountsDb.updateAccount(
@@ -267,7 +267,7 @@ public final class AccountsLogic {
      */
     public void deleteAccountCascade(String googleId) {
         profilesLogic.deleteStudentProfile(googleId);
-        instructorsLogic.deleteInstructorsForGoogleIdAndCascade(googleId);
+        instructorsLogic.deleteInstructorsForGoogleIdCascade(googleId);
         studentsLogic.deleteStudentsForGoogleIdCascade(googleId);
         accountsDb.deleteAccount(googleId);
         //TODO: deal with orphan courses, submissions etc.

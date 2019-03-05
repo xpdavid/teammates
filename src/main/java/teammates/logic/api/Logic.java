@@ -386,8 +386,11 @@ public class Logic {
     }
 
     /**
-     * Fails silently if no match found.
-     * Preconditions: <br>
+     * Deletes an instructor cascade its associated feedback responses and comments.
+     *
+     * <p>Fails silently if the student does not exist.
+     *
+     * <br/>Preconditions: <br/>
      * * All parameters are non-null.
      */
     public void deleteInstructor(String courseId, String email) {
