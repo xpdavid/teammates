@@ -46,9 +46,11 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
     public void deleteSessionsFromDb() {
         Set<String> keys = dataBundle.feedbackSessions.keySet();
         for (String i : keys) {
-            fsDb.deleteEntity(dataBundle.feedbackSessions.get(i));
+            FeedbackSessionAttributes sessionToDelete = dataBundle.feedbackSessions.get(i);
+            fsDb.deleteFeedbackSession(sessionToDelete.getFeedbackSessionName(), sessionToDelete.getCourseId());
         }
-        fsDb.deleteEntity(getNewFeedbackSession());
+        FeedbackSessionAttributes sessionToDelete = getNewFeedbackSession();
+        fsDb.deleteFeedbackSession(sessionToDelete.getFeedbackSessionName(), sessionToDelete.getCourseId());
     }
 
     @Test
@@ -151,7 +153,7 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
                         + fsa.getIdentificationString(),
                 eaee.getMessage());
 
-        fsDb.deleteEntity(fsa);
+        fsDb.deleteFeedbackSession(fsa.getFeedbackSessionName(), fsa.getCourseId());
         verifyAbsentInDatastore(fsa);
 
         ______TS("null params");
@@ -414,7 +416,7 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         ______TS("invalid feedback session attributes");
         FeedbackSessionAttributes invalidFs = getNewFeedbackSession();
-        fsDb.deleteEntity(invalidFs);
+        fsDb.deleteFeedbackSession(invalidFs.getFeedbackSessionName(), invalidFs.getCourseId());
         fsDb.createEntity(invalidFs);
         Instant afterEndTime = invalidFs.getEndTime().plus(Duration.ofDays(30));
         invalidFs.setStartTime(afterEndTime);
@@ -444,7 +446,7 @@ public class FeedbackSessionsDbTest extends BaseComponentTestCase {
 
         ______TS("standard success case");
         FeedbackSessionAttributes modifiedSession = getNewFeedbackSession();
-        fsDb.deleteEntity(modifiedSession);
+        fsDb.deleteFeedbackSession(modifiedSession.getFeedbackSessionName(), modifiedSession.getCourseId());
         fsDb.createEntity(modifiedSession);
         verifyPresentInDatastore(modifiedSession);
         modifiedSession.setInstructions("new instructions");

@@ -47,7 +47,7 @@ public class EntitiesDbTest extends BaseComponentTestCase {
                 c.getEntityTypeAsString())
                         + c.getIdentificationString(),
                 eaee.getMessage());
-        coursesDb.deleteEntity(c);
+        coursesDb.deleteCourse(c.getId());
 
         ______TS("fails: invalid parameters");
         CourseAttributes invalidCourse = CourseAttributes

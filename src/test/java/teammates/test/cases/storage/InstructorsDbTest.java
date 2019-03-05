@@ -62,7 +62,7 @@ public class InstructorsDbTest extends BaseComponentTestCase {
                 .withPrivileges(privileges)
                 .build();
 
-        instructorsDb.deleteEntity(i);
+        instructorsDb.deleteInstructor(i.getCourseId(), i.getEmail());
         instructorsDb.createEntity(i);
 
         verifyPresentInDatastore(i);
@@ -543,7 +543,8 @@ public class InstructorsDbTest extends BaseComponentTestCase {
     private void deleteInstructorsFromDb() {
         Set<String> keys = dataBundle.instructors.keySet();
         for (String i : keys) {
-            instructorsDb.deleteEntity(dataBundle.instructors.get(i));
+            InstructorAttributes instructorToDelete = dataBundle.instructors.get(i);
+            instructorsDb.deleteInstructor(instructorToDelete.getCourseId(), instructorToDelete.getEmail());
         }
     }
 }
