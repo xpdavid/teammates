@@ -392,7 +392,7 @@ public class Logic {
      * <br/>Preconditions: <br/>
      * * All parameters are non-null.
      */
-    public void deleteInstructor(String courseId, String email) {
+    public void deleteInstructorCascade(String courseId, String email) {
 
         Assumption.assertNotNull(courseId);
         Assumption.assertNotNull(email);
