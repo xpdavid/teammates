@@ -189,48 +189,18 @@ public abstract class EntitiesDb<E extends BaseEntity, A extends EntityAttribute
         ofy().flush();
     }
 
-    // TODO: use this method for subclasses.
     /**
-     * Note: This is a non-cascade delete.<br>
-     *   <br> Fails silently if there is no such object.
+     * Deletes entity by key.
      */
-    public void deleteEntity(A entityToDelete) {
-        Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, entityToDelete);
+    protected void deleteEntity(Key<?>... keys) {
+        Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, (Object) keys);
+        Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, (Object[]) keys);
 
-        ofy().delete().keys(getEntityQueryKeys(entityToDelete)).now();
-        log.info(entityToDelete.getBackupIdentifier());
-    }
-
-    public void deleteEntities(Collection<A> entitiesToDelete) {
-        Assumption.assertNotNull(Const.StatusCodes.DBLEVEL_NULL_INPUT, entitiesToDelete);
-
-        List<Key<E>> keysToDelete = new ArrayList<>();
-        for (A entityToDelete : entitiesToDelete) {
-            Key<E> keyToDelete = getEntityQueryKeys(entityToDelete).first().now();
-            if (keyToDelete == null) {
-                continue;
-            }
-            keysToDelete.add(keyToDelete);
-            log.info(entityToDelete.getBackupIdentifier());
+        for (Key<?> key : keys) {
+            log.info(String.format("Delete entity %s of key (id: %d, name: %s)",
+                    key.getKind(), key.getId(), key.getName()));
         }
-
-        ofy().delete().keys(keysToDelete).now();
-    }
-
-    protected void deleteEntityDirect(E entityToDelete) {
-        deleteEntityDirect(entityToDelete, makeAttributes(entityToDelete));
-    }
-
-    protected void deleteEntityDirect(E entityToDelete, A entityToDeleteAttributesForLogging) {
-        ofy().delete().entity(entityToDelete).now();
-        log.info(entityToDeleteAttributesForLogging.getBackupIdentifier());
-    }
-
-    protected void deleteEntitiesDirect(Collection<E> entitiesToDelete, Collection<A> entitiesToDeleteAttributesForLogging) {
-        for (A attributes : entitiesToDeleteAttributesForLogging) {
-            log.info(attributes.getBackupIdentifier());
-        }
-        ofy().delete().entities(entitiesToDelete).now();
+        ofy().delete().keys(keys).now();
     }
 
     protected abstract LoadType<E> load();
@@ -323,11 +293,15 @@ public abstract class EntitiesDb<E extends BaseEntity, A extends EntityAttribute
         }
     }
 
-    protected void deleteDocument(String indexName, String documentId) {
+    /**
+     * Deletes document by documentId(s).
+     */
+    protected void deleteDocument(String indexName, String... documentIds) {
         try {
-            SearchManager.deleteDocument(indexName, documentId);
+            SearchManager.deleteDocument(indexName, documentIds);
         } catch (Exception e) {
-            log.info("Unable to delete document in the index: " + indexName + " with document id " + documentId);
+            log.info("Unable to delete document in the index: " + indexName
+                    + " with document Ids " + String.join(", ", documentIds));
         }
     }
 

@@ -3,6 +3,7 @@ package teammates.logic.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.CourseEnrollmentResult;
 import teammates.common.datatransfer.StudentAttributesFactory;
 import teammates.common.datatransfer.StudentEnrollDetails;
@@ -381,29 +382,35 @@ public final class StudentsLogic {
         return errorMessage.toString();
     }
 
-    public void deleteAllStudentsInCourse(String courseId) {
+    /**
+     * Deletes all the students in the course cascade their associated responses and comments.
+     */
+    public void deleteStudentsInCourseCascade(String courseId) {
         List<StudentAttributes> studentsInCourse = getStudentsForCourse(courseId);
         for (StudentAttributes student : studentsInCourse) {
             deleteStudentCascade(courseId, student.email);
         }
     }
 
+    /**
+     * Deletes a student cascade its associated feedback responses and comments.
+     *
+     * <p>Fails silently if the student does not exist.
+     */
     public void deleteStudentCascade(String courseId, String studentEmail) {
-        // delete responses before deleting the student as we need to know the student's team.
-        frLogic.deleteFeedbackResponsesForStudentAndCascade(courseId, studentEmail);
-        fsLogic.deleteStudentFromRespondentsList(getStudentForEmail(courseId, studentEmail));
-        studentsDb.deleteStudent(courseId, studentEmail);
-    }
-
-    public void deleteStudentsForGoogleId(String googleId) {
-        List<StudentAttributes> students = studentsDb.getStudentsForGoogleId(googleId);
-        for (StudentAttributes student : students) {
-            fsLogic.deleteStudentFromRespondentsList(student);
+        StudentAttributes student = getStudentForEmail(courseId, studentEmail);
+        if (student == null) {
+            return;
         }
-        studentsDb.deleteStudentsForGoogleId(googleId);
+
+        studentsDb.deleteStudent(courseId, studentEmail);
+        frLogic.deleteFeedbackResponsesInvolvedStudentOfCourseCascade(courseId, studentEmail, student.getTeam());
     }
 
-    public void deleteStudentsForGoogleIdAndCascade(String googleId) {
+    /**
+     * Deletes all students associated a googleId and cascade its associated feedback responses and comments.
+     */
+    public void deleteStudentsForGoogleIdCascade(String googleId) {
         List<StudentAttributes> students = studentsDb.getStudentsForGoogleId(googleId);
 
         // Cascade delete students
@@ -412,8 +419,11 @@ public final class StudentsLogic {
         }
     }
 
-    public void deleteStudentsForCourse(String courseId) {
-        studentsDb.deleteStudentsForCourse(courseId);
+    /**
+     * Deletes students using {@link AttributesDeletionQuery}.
+     */
+    public void deleteStudents(AttributesDeletionQuery query) {
+        studentsDb.deleteStudents(query);
     }
 
     /**

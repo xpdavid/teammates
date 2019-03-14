@@ -6,6 +6,7 @@ import java.util.List;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.FeedbackResponseCommentSearchResultBundle;
 import teammates.common.datatransfer.attributes.FeedbackResponseCommentAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
@@ -131,6 +132,32 @@ public class FeedbackResponseCommentSearchTest extends BaseSearchTest {
         feedbackSessionsLogic.deleteFeedbackSessionCascade(frc1I3Q1S2C2.feedbackSessionName, frc1I3Q1S2C2.courseId);
         assertNull(feedbackSessionsLogic
                 .getFeedbackSessionFromRecycleBin(frc1I3Q1S2C2.feedbackSessionName, frc1I3Q1S2C2.courseId));
+        bundle = commentsDb.search("\"Instructor 3 comment to instr1C2 response to student1C2\"", instructors);
+        assertEquals(0, bundle.comments.size());
+        assertEquals(0, bundle.responses.size());
+        assertEquals(0, bundle.questions.size());
+        assertEquals(0, bundle.sessions.size());
+    }
+
+    @Test
+    public void testSearchComment_commentsDeletedByBatch_shouldReturnNoResult() {
+        // perform normal search
+        FeedbackResponseCommentAttributes frc1I3Q1S2C2 =
+                dataBundle.feedbackResponseComments.get("comment1FromT1C1ToR1Q1S2C2");
+        List<InstructorAttributes> instructors = new ArrayList<>();
+        instructors.add(dataBundle.instructors.get("instructor3OfCourse2"));
+        FeedbackResponseCommentSearchResultBundle bundle =
+                commentsDb.search("\"Instructor 3 comment to instr1C2 response to student1C2\"", instructors);
+        verifySearchResults(bundle, frc1I3Q1S2C2);
+
+        // delete comments inside the session
+        commentsDb.deleteFeedbackResponseComments(
+                AttributesDeletionQuery.builder()
+                        .withCourseId(frc1I3Q1S2C2.courseId)
+                        .withFeedbackSessionName(frc1I3Q1S2C2.feedbackSessionName)
+                        .build());
+
+        // document deleted, should have no search result
         bundle = commentsDb.search("\"Instructor 3 comment to instr1C2 response to student1C2\"", instructors);
         assertEquals(0, bundle.comments.size());
         assertEquals(0, bundle.responses.size());

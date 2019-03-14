@@ -31,7 +31,7 @@ public class DeleteInstructorAction extends Action {
         String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
 
         InstructorAttributes instructor = logic.getInstructorForGoogleId(courseId, instructorId);
-        logic.deleteInstructor(courseId, instructor.email);
+        logic.deleteInstructorCascade(courseId, instructor.email);
 
         return new JsonResult("Instructor is successfully deleted.", HttpStatus.SC_OK);
     }

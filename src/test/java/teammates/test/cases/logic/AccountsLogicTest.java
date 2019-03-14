@@ -2,6 +2,7 @@ package teammates.test.cases.logic;
 
 import java.util.List;
 
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.attributes.AccountAttributes;
@@ -30,7 +31,17 @@ public class AccountsLogicTest extends BaseLogicTest {
     private static final InstructorsLogic instructorsLogic = InstructorsLogic.inst();
     private static final StudentsLogic studentsLogic = StudentsLogic.inst();
 
-    @SuppressWarnings("deprecation")
+    @Override
+    protected void prepareTestData() {
+        // test data is refreshed before each test case
+    }
+
+    @BeforeMethod
+    public void refreshTestData() {
+        dataBundle = getTypicalDataBundle();
+        removeAndRestoreTypicalDataBundle();
+    }
+
     @Test
     public void testGetInstructorAccounts() throws Exception {
 
@@ -392,10 +403,7 @@ public class AccountsLogicTest extends BaseLogicTest {
     }
 
     @Test
-    public void testDeleteAccountCascade() throws Exception {
-
-        ______TS("typical success case");
-
+    public void testDeleteAccountCascade_lastInstructorInCourse_shouldDeleteOrphanCourse() throws Exception {
         InstructorAttributes instructor = dataBundle.instructors.get("instructor5");
         AccountAttributes account = dataBundle.accounts.get("instructor5");
         // create a profile for the account
@@ -406,6 +414,9 @@ public class AccountsLogicTest extends BaseLogicTest {
                 StudentProfileAttributes.updateOptionsBuilder(account.googleId)
                         .withShortName(studentProfile.shortName)
                         .build());
+
+        // verify the instructor is the last instructor of a course
+        assertEquals(1, instructorsLogic.getInstructorsForCourse(instructor.getCourseId()).size());
 
         // Make instructor account id a student too.
         StudentAttributes student = StudentAttributes
@@ -427,7 +438,52 @@ public class AccountsLogicTest extends BaseLogicTest {
         verifyAbsentInDatastore(studentProfile);
         verifyAbsentInDatastore(instructor);
         verifyAbsentInDatastore(student);
+        // course is deleted because it is the last instructor of the course
+        assertNull(logic.getCourse(instructor.getCourseId()));
     }
 
-    //TODO: add missing test cases
+    @Test
+    public void testDeleteAccountCascade_notLastInstructorInCourse_shouldNotDeleteCourse() {
+        InstructorAttributes instructor1OfCourse1 = dataBundle.instructors.get("instructor1OfCourse1");
+
+        // verify the instructor is not the last instructor of a course
+        assertTrue(instructorsLogic.getInstructorsForCourse(instructor1OfCourse1.getCourseId()).size() > 1);
+
+        assertNotNull(instructor1OfCourse1.getGoogleId());
+        accountsLogic.deleteAccountCascade(instructor1OfCourse1.getGoogleId());
+
+        // course is not deleted
+        assertNotNull(logic.getCourse(instructor1OfCourse1.getCourseId()));
+    }
+
+    @Test
+    public void testDeleteAccountCascade_instructorArchivedAsLastInstructor_shouldDeleteCourseAlso() throws Exception {
+        InstructorAttributes instructor5 = dataBundle.instructors.get("instructor5");
+
+        assertNotNull(instructor5.getGoogleId());
+        logic.setArchiveStatusOfInstructor(instructor5.getGoogleId(), instructor5.getCourseId(), true);
+
+        // verify the instructor is the last instructor of a course
+        assertEquals(1, instructorsLogic.getInstructorsForCourse(instructor5.getCourseId()).size());
+
+        assertTrue(
+                logic.getInstructorForEmail(instructor5.getCourseId(), instructor5.getEmail()).isArchived);
+
+        accountsLogic.deleteAccountCascade(instructor5.getGoogleId());
+
+        // the archived instructor is also deleted
+        assertNull(logic.getInstructorForEmail(instructor5.getCourseId(), instructor5.getEmail()));
+        // the course is also deleted
+        assertNull(logic.getCourse(instructor5.getCourseId()));
+    }
+
+    @Test
+    public void testDeleteAccountCascade_nonExistentAccount_shouldPass() {
+        InstructorAttributes instructor1OfCourse1 = dataBundle.instructors.get("instructor1OfCourse1");
+
+        accountsLogic.deleteAccountCascade("not_exist");
+
+        // other irrelevant instructors remain
+        assertNotNull(logic.getInstructorForEmail(instructor1OfCourse1.getCourseId(), instructor1OfCourse1.getEmail()));
+    }
 }

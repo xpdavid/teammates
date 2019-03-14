@@ -184,8 +184,6 @@ public class CreateFeedbackResponseCommentActionTest extends BaseActionTest<Crea
     @Override
     @Test
     protected void testAccessControl() throws Exception {
-        FeedbackResponseCommentsDb frcDb = new FeedbackResponseCommentsDb();
-
         int questionNumber = 1;
         FeedbackSessionAttributes fs = typicalBundle.feedbackSessions.get("session1InCourse1");
         FeedbackQuestionAttributes question = logic.getFeedbackQuestion(
@@ -210,9 +208,6 @@ public class CreateFeedbackResponseCommentActionTest extends BaseActionTest<Crea
         verifyInaccessibleForStudents(submissionParams);
         verifyAccessibleForInstructorsOfTheSameCourse(submissionParams);
         verifyAccessibleForAdminToMasqueradeAsInstructor(submissionParams);
-
-        // remove the comment
-        frcDb.deleteEntity(comment);
     }
 
     /**
