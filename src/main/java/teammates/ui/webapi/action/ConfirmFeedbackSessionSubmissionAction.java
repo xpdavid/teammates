@@ -2,6 +2,8 @@ package teammates.ui.webapi.action;
 
 import java.time.Instant;
 
+import org.apache.http.HttpStatus;
+
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
@@ -10,7 +12,6 @@ import teammates.common.util.Const;
 import teammates.common.util.EmailSendingStatus;
 import teammates.common.util.EmailWrapper;
 import teammates.logic.api.EmailGenerator;
-import teammates.ui.webapi.output.ApiOutput;
 
 /**
  * Confirm the submission of a feedback session.
@@ -59,15 +60,6 @@ public class ConfirmFeedbackSessionSubmissionAction extends BasicFeedbackSubmiss
         switch (intent) {
         case STUDENT_SUBMISSION:
             StudentAttributes studentAttributes = getStudentOfCourseFromRequest(feedbackSession.getCourseId());
-            boolean hasStudentRespondedForSession =
-                    logic.hasGiverRespondedForSession(studentAttributes.getEmail(), feedbackSessionName, courseId);
-            if (hasStudentRespondedForSession) {
-                taskQueuer.scheduleUpdateRespondentForSession(
-                        courseId, feedbackSessionName, studentAttributes.getEmail(), false, false);
-            } else {
-                taskQueuer.scheduleUpdateRespondentForSession(
-                        courseId, feedbackSessionName, studentAttributes.getEmail(), false, true);
-            }
             if (isSubmissionEmailConfirmationEmailRequested) {
                 email = new EmailGenerator().generateFeedbackSubmissionConfirmationEmailForStudent(
                             feedbackSession, studentAttributes, Instant.now());
@@ -75,15 +67,6 @@ public class ConfirmFeedbackSessionSubmissionAction extends BasicFeedbackSubmiss
             break;
         case INSTRUCTOR_SUBMISSION:
             InstructorAttributes instructorAttributes = getInstructorOfCourseFromRequest(feedbackSession.getCourseId());
-            boolean hasInstructorRespondedForSession =
-                    logic.hasGiverRespondedForSession(instructorAttributes.getEmail(), feedbackSessionName, courseId);
-            if (hasInstructorRespondedForSession) {
-                taskQueuer.scheduleUpdateRespondentForSession(
-                        courseId, feedbackSessionName, instructorAttributes.getEmail(), true, false);
-            } else {
-                taskQueuer.scheduleUpdateRespondentForSession(
-                        courseId, feedbackSessionName, instructorAttributes.getEmail(), true, true);
-            }
             if (isSubmissionEmailConfirmationEmailRequested) {
                 email = new EmailGenerator().generateFeedbackSubmissionConfirmationEmailForInstructor(
                         feedbackSession, instructorAttributes, Instant.now());
@@ -96,40 +79,10 @@ public class ConfirmFeedbackSessionSubmissionAction extends BasicFeedbackSubmiss
         if (email != null) {
             EmailSendingStatus status = emailSender.sendEmail(email);
             if (!status.isSuccess()) {
-                return new JsonResult(new ConfirmationResponse(ConfirmationResult.SUCCESS_BUT_EMAIL_FAIL_TO_SEND,
-                        "Submission confirmation email failed to send"));
+                return new JsonResult("Confirmation email is failed to be sent.", HttpStatus.SC_INTERNAL_SERVER_ERROR);
             }
         }
 
-        return new JsonResult(new ConfirmationResponse(ConfirmationResult.SUCCESS, "Submission confirmed"));
-    }
-
-    /**
-     * The result of the confirmation.
-     */
-    enum ConfirmationResult {
-        SUCCESS,
-        SUCCESS_BUT_EMAIL_FAIL_TO_SEND
-    }
-
-    /**
-     * The output format of {@link ConfirmFeedbackSessionSubmissionAction}.
-     */
-    public static class ConfirmationResponse extends ApiOutput {
-        private final ConfirmationResult result;
-        private final String message;
-
-        public ConfirmationResponse(ConfirmationResult result, String message) {
-            this.result = result;
-            this.message = message;
-        }
-
-        public ConfirmationResult getResult() {
-            return result;
-        }
-
-        public String getMessage() {
-            return message;
-        }
+        return new JsonResult("Submission confirmed");
     }
 }

@@ -8,7 +8,6 @@ import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.DataBundle;
 import teammates.common.datatransfer.FeedbackParticipantType;
-import teammates.common.datatransfer.FeedbackSessionDetailsBundle;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
@@ -326,97 +325,6 @@ public class UpdateFeedbackQuestionActionTest extends BaseActionTest<UpdateFeedb
         // question is not updated
         assertEquals(typicalQuestion.getQuestionDescription(),
                 logic.getFeedbackQuestion(typicalQuestion.getId()).getQuestionDescription());
-    }
-
-    @Test
-    public void testExecute_differentScenarios_shouldUpdateResponseRateCorrectly() throws Exception {
-        InstructorAttributes instructor1ofCourse1 = typicalBundle.instructors.get("instructor1OfCourse1");
-        FeedbackSessionAttributes fs = typicalBundle.feedbackSessions.get("session1InCourse1");
-
-        int numStudentRespondents = 4;
-        int numInstructorRespondents = 1;
-
-        int totalStudents = 5;
-        int totalInstructors = 5;
-
-        loginAsInstructor(instructor1ofCourse1.googleId);
-
-        ______TS("Check response rate before editing question 1");
-
-        fs = logic.getFeedbackSession(fs.getFeedbackSessionName(), fs.getCourseId());
-        FeedbackSessionDetailsBundle details =
-                logic.getFeedbackSessionDetails(fs.getFeedbackSessionName(), fs.getCourseId());
-        assertEquals(numStudentRespondents + numInstructorRespondents, details.stats.submittedTotal);
-        assertEquals(totalStudents + totalInstructors, details.stats.expectedTotal);
-
-        ______TS("Change the feedback path of a question with no unique respondents, "
-                + "response rate should not be updated");
-
-        FeedbackQuestionAttributes fq =
-                logic.getFeedbackQuestion(fs.getFeedbackSessionName(), fs.getCourseId(), 1);
-        FeedbackQuestionUpdateRequest updateRequest = getTypicalTextQuestionUpdateRequest();
-        updateRequest.setQuestionNumber(fq.getQuestionNumber());
-        updateRequest.setGiverType(FeedbackParticipantType.STUDENTS);
-        updateRequest.setRecipientType(FeedbackParticipantType.STUDENTS);
-        updateRequest.setNumberOfEntitiesToGiveFeedbackToSetting(NumberOfEntitiesToGiveFeedbackToSetting.CUSTOM);
-        updateRequest.setCustomNumberOfEntitiesToGiveFeedbackTo(1);
-
-        String[] param = new String[] {
-                Const.ParamsNames.FEEDBACK_QUESTION_ID, fq.getFeedbackQuestionId(),
-        };
-        UpdateFeedbackQuestionAction a = getAction(updateRequest, param);
-        getJsonResult(a);
-
-        // TODO first comment was there before, but the second one seems to be the one happening?
-        // Response rate should not change because other questions have the same respondents
-        // Response rate should decrease by 1 as response from student1 in qn1 is changed
-        numStudentRespondents--;
-        fs = logic.getFeedbackSession(fs.getFeedbackSessionName(), fs.getCourseId());
-        details = logic.getFeedbackSessionDetails(fs.getFeedbackSessionName(), fs.getCourseId());
-        assertEquals(numStudentRespondents + numInstructorRespondents, details.stats.submittedTotal);
-        assertEquals(totalStudents + totalInstructors, details.stats.expectedTotal);
-
-        ______TS("Change the feedback path of a question with a unique instructor respondent, "
-                + "response rate changed");
-
-        fq = logic.getFeedbackQuestion(fs.getFeedbackSessionName(), fs.getCourseId(), 3);
-        updateRequest = getTypicalTextQuestionUpdateRequest();
-        updateRequest.setQuestionNumber(fq.getQuestionNumber());
-        updateRequest.setGiverType(fq.getGiverType());
-        updateRequest.setRecipientType(FeedbackParticipantType.STUDENTS);
-
-        param = new String[] {
-                Const.ParamsNames.FEEDBACK_QUESTION_ID, fq.getFeedbackQuestionId(),
-        };
-        a = getAction(updateRequest, param);
-        getJsonResult(a);
-
-        // Response rate should decrease by 1 because the response of the unique instructor respondent is deleted
-        fs = logic.getFeedbackSession(fs.getFeedbackSessionName(), fs.getCourseId());
-        details = logic.getFeedbackSessionDetails(fs.getFeedbackSessionName(), fs.getCourseId());
-        assertEquals(numStudentRespondents, details.stats.submittedTotal);
-        assertEquals(totalStudents + totalInstructors, details.stats.expectedTotal);
-
-        ______TS("Change the feedback path of a question so that some possible respondents are removed");
-
-        fq = logic.getFeedbackQuestion(fs.getFeedbackSessionName(), fs.getCourseId(), 4);
-        updateRequest = getTypicalTextQuestionUpdateRequest();
-        updateRequest.setQuestionNumber(fq.getQuestionNumber());
-        updateRequest.setGiverType(FeedbackParticipantType.STUDENTS);
-        updateRequest.setRecipientType(FeedbackParticipantType.NONE);
-
-        param = new String[] {
-                Const.ParamsNames.FEEDBACK_QUESTION_ID, fq.getFeedbackQuestionId(),
-        };
-        a = getAction(updateRequest, param);
-        getJsonResult(a);
-
-        // Total possible respondents should decrease because instructors
-        // (except session creator) are no longer possible respondents
-        fs = logic.getFeedbackSession(fs.getFeedbackSessionName(), fs.getCourseId());
-        details = logic.getFeedbackSessionDetails(fs.getFeedbackSessionName(), fs.getCourseId());
-        assertEquals(numStudentRespondents, details.stats.submittedTotal);
-        assertEquals(totalStudents + 1, details.stats.expectedTotal);
     }
 
     private FeedbackQuestionUpdateRequest getTypicalTextQuestionUpdateRequest() {

@@ -608,10 +608,6 @@ public final class Const {
 
         public static final String SEARCH_KEY = "searchkey";
 
-        public static final String RESPONDENT_EMAIL = "respondentemail";
-        public static final String RESPONDENT_IS_INSTRUCTOR = "respondentisinstructor";
-        public static final String RESPONDENT_IS_TO_BE_REMOVED = "respondentistoberemoved";
-
         public static final String SESSION_LINKS_RECOVERY_EMAIL = "sessionlinksrecoveryemail";
         public static final String USER_CAPTCHA_RESPONSE = "captcharesponse";
 
@@ -749,7 +745,7 @@ public final class Const {
         public static final String SESSION_REMIND_SUBMISSION = "/session/remind/submission";
         public static final String SESSION_REMIND_RESULT = "/session/remind/result";
         public static final String SESSION_STATS = "/session/stats";
-        public static final String SESSION_STUDENTS_RESPONSE = "/session/students/response";
+        public static final String SESSION_SUBMITTED_GIVER_SET = "/session/submitted/giverset";
         public static final String SESSIONS = "/sessions";
         public static final String BIN_SESSION = "/bin/session";
         public static final String QUESTIONS = "/questions";
@@ -842,11 +838,6 @@ public final class Const {
                 "feedback-session-unpublished-email-queue";
         public static final String FEEDBACK_SESSION_UNPUBLISHED_EMAIL_WORKER_URL =
                 "/worker/feedbackSessionUnpublishedEmail";
-
-        public static final String FEEDBACK_SESSION_UPDATE_RESPONDENT_QUEUE_NAME =
-                "feedback-session-update-respondent-queue";
-        public static final String FEEDBACK_SESSION_UPDATE_RESPONDENT_WORKER_URL =
-                "/worker/feedbackSessionUpdateRespondent";
 
         public static final String INSTRUCTOR_COURSE_JOIN_EMAIL_QUEUE_NAME = "instructor-course-join-email-queue";
         public static final String INSTRUCTOR_COURSE_JOIN_EMAIL_WORKER_URL = "/worker/instructorCourseJoinEmail";

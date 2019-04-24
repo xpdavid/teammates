@@ -1,18 +1,14 @@
 package teammates.ui.webapi.action;
 
-import org.apache.http.HttpStatus;
-
-import teammates.common.datatransfer.FeedbackSessionResponseStatus;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
-import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.util.Const;
-import teammates.ui.webapi.output.FeedbackSessionStudentsResponseData;
+import teammates.ui.webapi.output.FeedbackSessionSubmittedGiverSet;
 
 /**
- * Get students submission response status about the feedback session.
+ * Get a set of givers that has given at least one response in the feedback session.
  */
-public class GetFeedbackSessionStudentResponseAction extends Action {
+public class GetFeedbackSessionSubmittedGiverSetAction extends Action {
 
     @Override
     protected AuthType getMinAuthLevel() {
@@ -32,17 +28,15 @@ public class GetFeedbackSessionStudentResponseAction extends Action {
 
     @Override
     public ActionResult execute() {
+
         String courseId = getNonNullRequestParamValue(Const.ParamsNames.COURSE_ID);
         String feedbackSessionName = getNonNullRequestParamValue(Const.ParamsNames.FEEDBACK_SESSION_NAME);
 
-        FeedbackSessionResponseStatus fsResponseStatus;
-        try {
-            fsResponseStatus = logic.getFeedbackSessionResponseStatus(feedbackSessionName, courseId);
-        } catch (EntityDoesNotExistException e) {
-            return new JsonResult("No session with given feedback session name and course id.",
-                    HttpStatus.SC_NOT_FOUND);
-        }
+        FeedbackSessionSubmittedGiverSet output =
+                new FeedbackSessionSubmittedGiverSet(
+                        logic.getGiverSetThatAnswerFeedbackSession(courseId, feedbackSessionName));
 
-        return new JsonResult(new FeedbackSessionStudentsResponseData(fsResponseStatus));
+        return new JsonResult(output);
     }
+
 }

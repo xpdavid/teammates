@@ -6,7 +6,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,10 +16,8 @@ import org.testng.annotations.Test;
 import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.DataBundle;
 import teammates.common.datatransfer.FeedbackParticipantType;
-import teammates.common.datatransfer.FeedbackSessionDetailsBundle;
 import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
 import teammates.common.datatransfer.FeedbackSessionResultsBundle;
-import teammates.common.datatransfer.FeedbackSessionStats;
 import teammates.common.datatransfer.SectionDetail;
 import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
@@ -151,112 +148,6 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
     }
 
     @Test
-    public void testDeleteInstructorFromRespondentsList_typicalData_emailShouldBeRemoved() throws Exception {
-        FeedbackSessionAttributes session1InCourse1 = dataBundle.feedbackSessions.get("session1InCourse1");
-        fsLogic.addInstructorRespondent("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-        FeedbackSessionAttributes session2InCourse1 = dataBundle.feedbackSessions.get("session2InCourse1");
-        fsLogic.addInstructorRespondent("test@email.com",
-                session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId());
-        // they are in the same course
-        assertEquals(session1InCourse1.getCourseId(), session2InCourse1.getCourseId());
-        assertTrue(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-        assertTrue(
-                fsLogic.getFeedbackSession(session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-
-        // remove email from all respondents list
-        fsLogic.deleteInstructorFromRespondentsList(session1InCourse1.getCourseId(), "test@email.com");
-
-        // the email should not appear
-        assertFalse(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-        assertFalse(
-                fsLogic.getFeedbackSession(session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-    }
-
-    @Test
-    public void testDeleteStudentFromRespondentsList_typicalData_emailShouldBeRemoved() throws Exception {
-        FeedbackSessionAttributes session1InCourse1 = dataBundle.feedbackSessions.get("session1InCourse1");
-        fsLogic.addStudentRespondent("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-        FeedbackSessionAttributes session2InCourse1 = dataBundle.feedbackSessions.get("session2InCourse1");
-        fsLogic.addStudentRespondent("test@email.com",
-                session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId());
-        // they are in the same course
-        assertEquals(session1InCourse1.getCourseId(), session2InCourse1.getCourseId());
-        assertTrue(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-        assertTrue(
-                fsLogic.getFeedbackSession(session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-
-        // remove email from all respondents list
-        fsLogic.deleteStudentFromRespondentsList(session1InCourse1.getCourseId(), "test@email.com");
-
-        // the email should not appear
-        assertFalse(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-        assertFalse(
-                fsLogic.getFeedbackSession(session2InCourse1.getFeedbackSessionName(), session2InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-    }
-
-    @Test
-    public void testDeleteInstructorRespondent_typicalData_shouldRemoveFromRespondentList() throws Exception {
-        FeedbackSessionAttributes session1InCourse1 = dataBundle.feedbackSessions.get("session1InCourse1");
-        fsLogic.addInstructorRespondent("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-        assertTrue(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-
-        // delete the instructor from the list
-        fsLogic.deleteInstructorRespondent("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-
-        assertFalse(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingInstructorList()
-                        .contains("test@email.com"));
-    }
-
-    @Test
-    public void testDeleteStudentRespondent_typicalData_shouldRemoveFromRespondentList() throws Exception {
-        FeedbackSessionAttributes session1InCourse1 = dataBundle.feedbackSessions.get("session1InCourse1");
-        fsLogic.addStudentRespondent("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-        assertTrue(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-
-        // delete the student from the list
-        fsLogic.deleteStudentFromRespondentList("test@email.com",
-                session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId());
-
-        assertFalse(
-                fsLogic.getFeedbackSession(session1InCourse1.getFeedbackSessionName(), session1InCourse1.getCourseId())
-                        .getRespondingStudentList()
-                        .contains("test@email.com"));
-    }
-
-    @Test
     public void testFeedbackSessionNotification() throws Exception {
         testGetFeedbackSessionsClosingWithinTimeLimit();
         testGetFeedbackSessionsClosedWithinThePastHour();
@@ -271,7 +162,6 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         testGetFeedbackSessionsListForInstructor();
         testGetSoftDeletedFeedbackSessionsListForInstructor();
         testGetSoftDeletedFeedbackSessionsListForInstructors();
-        testGetFeedbackSessionDetailsForInstructor();
         testGetFeedbackSessionQuestionsForStudent();
         testGetFeedbackSessionQuestionsForInstructor();
         testGetFeedbackSessionResultsForUser();
@@ -284,8 +174,6 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         testPublishUnpublishFeedbackSession();
 
         testIsFeedbackSessionHasQuestionForStudents();
-        testIsFeedbackSessionCompletedByStudent();
-        testIsFeedbackSessionCompletedByInstructor();
         testIsFeedbackSessionFullyCompletedByStudent();
 
         testMoveFeedbackSessionToRecycleBin();
@@ -639,70 +527,6 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         fsLogic.deleteFeedbackSessionCascade(fs.getFeedbackSessionName(), fs.getCourseId());
         verifyAbsentInDatastore(fs);
         verifyAbsentInDatastore(fq);
-    }
-
-    private void testGetFeedbackSessionDetailsForInstructor() throws Exception {
-
-        // This file contains a session with a standard
-        // session + a special session with all questions without recipients.
-        DataBundle newDataBundle = loadDataBundle("/FeedbackSessionDetailsTest.json");
-        removeAndRestoreDataBundle(newDataBundle);
-
-        Map<String, FeedbackSessionDetailsBundle> detailsMap = new HashMap<>();
-
-        String instrGoogleId = newDataBundle.instructors.get("instructor1OfCourse1").googleId;
-        List<FeedbackSessionDetailsBundle> detailsList = fsLogic.getFeedbackSessionDetailsForInstructor(instrGoogleId);
-
-        List<String> expectedSessions = new ArrayList<>();
-        expectedSessions.add(newDataBundle.feedbackSessions.get("standard.session").toString());
-        expectedSessions.add(newDataBundle.feedbackSessions.get("no.responses.session").toString());
-        expectedSessions.add(newDataBundle.feedbackSessions.get("no.recipients.session").toString());
-
-        StringBuilder actualSessionsBuilder = new StringBuilder();
-        for (FeedbackSessionDetailsBundle details : detailsList) {
-            actualSessionsBuilder.append(details.feedbackSession.toString());
-            detailsMap.put(
-                    details.feedbackSession.getFeedbackSessionName() + "%" + details.feedbackSession.getCourseId(),
-                    details);
-        }
-
-        String actualSessions = actualSessionsBuilder.toString();
-        ______TS("standard session");
-
-        assertEquals(3, detailsList.size());
-        AssertHelper.assertContains(expectedSessions, actualSessions);
-
-        FeedbackSessionStats stats =
-                detailsMap.get(newDataBundle.feedbackSessions.get("standard.session").getFeedbackSessionName() + "%"
-                               + newDataBundle.feedbackSessions.get("standard.session").getCourseId()).stats;
-
-        // 2 instructors, 6 students = 8
-        assertEquals(8, stats.expectedTotal);
-        // 1 instructor, 1 student, did not respond => 8-2=6
-        assertEquals(6, stats.submittedTotal);
-
-        ______TS("No recipients session");
-        stats = detailsMap.get(newDataBundle.feedbackSessions.get("no.recipients.session").getFeedbackSessionName() + "%"
-                               + newDataBundle.feedbackSessions.get("no.recipients.session").getCourseId()).stats;
-
-        // 2 instructors, 6 students = 8
-        assertEquals(8, stats.expectedTotal);
-        // only 1 student responded
-        assertEquals(1, stats.submittedTotal);
-
-        ______TS("No responses session");
-        stats = detailsMap.get(newDataBundle.feedbackSessions.get("no.responses.session").getFeedbackSessionName() + "%"
-                               + newDataBundle.feedbackSessions.get("no.responses.session").getCourseId()).stats;
-
-        // 1 instructors, 1 students = 2
-        assertEquals(2, stats.expectedTotal);
-        // no responses
-        assertEquals(0, stats.submittedTotal);
-
-        ______TS("instructor does not exist");
-
-        assertTrue(fsLogic.getFeedbackSessionDetailsForInstructor("non-existent.google.id").isEmpty());
-
     }
 
     private void testGetFeedbackSessionsForCourse() throws Exception {
@@ -1651,26 +1475,6 @@ public class FeedbackSessionsLogicTest extends BaseLogicTest {
         ipe = assertThrows(InvalidParametersException.class, () -> fsLogic.unpublishFeedbackSession(sessionUnderTest));
         assertEquals("Error unpublishing feedback session: Session has already been unpublished.", ipe.getMessage());
 
-    }
-
-    private void testIsFeedbackSessionCompletedByInstructor() throws Exception {
-
-        ______TS("success: empty session");
-
-        FeedbackSessionAttributes fs = dataBundle.feedbackSessions.get("empty.session");
-        InstructorAttributes instructor = dataBundle.instructors.get("instructor2OfCourse1");
-
-        assertTrue(fsLogic.isFeedbackSessionCompletedByInstructor(fs, instructor.email));
-    }
-
-    private void testIsFeedbackSessionCompletedByStudent() {
-
-        ______TS("success: empty session");
-
-        FeedbackSessionAttributes fs = dataBundle.feedbackSessions.get("empty.session");
-        StudentAttributes student = dataBundle.students.get("student2InCourse1");
-
-        assertTrue(fsLogic.isFeedbackSessionCompletedByStudent(fs, student.email));
     }
 
     private void testIsFeedbackSessionFullyCompletedByStudent() throws Exception {

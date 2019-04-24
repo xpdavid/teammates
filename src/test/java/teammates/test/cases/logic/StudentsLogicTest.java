@@ -23,7 +23,6 @@ import teammates.common.util.StringHelper;
 import teammates.logic.core.AccountsLogic;
 import teammates.logic.core.FeedbackQuestionsLogic;
 import teammates.logic.core.FeedbackResponsesLogic;
-import teammates.logic.core.FeedbackSessionsLogic;
 import teammates.logic.core.StudentsLogic;
 import teammates.storage.api.StudentsDb;
 import teammates.test.driver.AssertHelper;
@@ -35,7 +34,6 @@ public class StudentsLogicTest extends BaseLogicTest {
 
     private static StudentsLogic studentsLogic = StudentsLogic.inst();
     private static FeedbackResponsesLogic frLogic = FeedbackResponsesLogic.inst();
-    private static FeedbackSessionsLogic fsLogic = FeedbackSessionsLogic.inst();
     private static FeedbackQuestionsLogic fqLogic = FeedbackQuestionsLogic.inst();
 
     @Override
@@ -559,16 +557,6 @@ public class StudentsLogicTest extends BaseLogicTest {
         assertNotNull(fra);
         // the team is the recipient of the response
         assertEquals(student2InCourse2.getTeam(), fra.recipient);
-        // this is the only response the instructor has given for the session
-        String feedbackSessionName = fra.feedbackSessionName;
-        assertEquals(1, frLogic.getFeedbackResponsesFromGiverForCourse(fra.courseId, fra.giver).stream()
-                .filter(response -> response.feedbackSessionName.equals(feedbackSessionName))
-                .count());
-        // suppose the instructor is in the respondent list
-        fsLogic.addInstructorRespondent(fra.giver, fra.feedbackSessionName, fra.courseId);
-        assertTrue(
-                fsLogic.getFeedbackSession(fra.feedbackSessionName, fra.courseId)
-                        .getRespondingInstructorList().contains(fra.giver));
 
         // after the student is moved from the course
         // team response will also be removed
@@ -576,10 +564,6 @@ public class StudentsLogicTest extends BaseLogicTest {
 
         // this will delete the response to the team
         assertNull(frLogic.getFeedbackResponse(fra.getId()));
-        // the instructor will be removed from the respondents list
-        assertFalse(
-                fsLogic.getFeedbackSession(fra.feedbackSessionName, fra.courseId)
-                        .getRespondingInstructorList().contains(fra.giver));
     }
 
     @Test
@@ -590,15 +574,15 @@ public class StudentsLogicTest extends BaseLogicTest {
         ______TS("delete non-existent student");
 
         // should fail silently.
-        studentsLogic.deleteStudentCascade(student2InCourse1.course, student2InCourse1.email);
+        studentsLogic.deleteStudentCascade("non_existent", "email@email.com");
 
         ______TS("typical delete");
 
-        // the student has response
-        assertTrue(
+        // the student has some responses
+        assertFalse(
                 frLogic.getFeedbackResponsesFromGiverForCourse(
                         student2InCourse1.getCourse(), student2InCourse1.getEmail()).isEmpty());
-        assertTrue(
+        assertFalse(
                 frLogic.getFeedbackResponsesForReceiverForCourse(
                         student2InCourse1.getCourse(), student2InCourse1.getEmail()).isEmpty());
 

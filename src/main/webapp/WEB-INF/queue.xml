@@ -14,6 +14,7 @@
 
     <queue>
         <name>feedback-session-update-respondent-queue</name>
+        <!-- Not used, keep in case of roll back to V6 -->
         <rate>20/s</rate>
         <bucket-size>5</bucket-size>
         <retry-parameters>

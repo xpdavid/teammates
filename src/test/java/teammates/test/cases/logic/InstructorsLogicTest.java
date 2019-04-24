@@ -13,7 +13,6 @@ import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.datatransfer.attributes.CourseAttributes;
 import teammates.common.datatransfer.attributes.FeedbackResponseCommentAttributes;
-import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.exception.EntityAlreadyExistsException;
 import teammates.common.exception.EntityDoesNotExistException;
@@ -23,7 +22,6 @@ import teammates.common.util.StringHelper;
 import teammates.logic.core.CoursesLogic;
 import teammates.logic.core.FeedbackResponseCommentsLogic;
 import teammates.logic.core.FeedbackResponsesLogic;
-import teammates.logic.core.FeedbackSessionsLogic;
 import teammates.logic.core.InstructorsLogic;
 import teammates.storage.api.InstructorsDb;
 import teammates.test.driver.AssertHelper;
@@ -462,7 +460,6 @@ public class InstructorsLogicTest extends BaseLogicTest {
 
     @Test
     public void testUpdateInstructorByGoogleIdCascade_shouldDoCascadeUpdateToCommentsAndResponses() throws Exception {
-        FeedbackSessionsLogic fsLogic = FeedbackSessionsLogic.inst();
         FeedbackResponsesLogic frLogic = FeedbackResponsesLogic.inst();
         FeedbackResponseCommentsLogic frcLogic = FeedbackResponseCommentsLogic.inst();
         InstructorAttributes instructorToBeUpdated = dataBundle.instructors.get("instructor1OfCourse1");
@@ -495,14 +492,6 @@ public class InstructorsLogicTest extends BaseLogicTest {
         assertTrue(commentsGivenByTheInstructor.stream().anyMatch(c -> "new@email.tmt".equals(c.lastEditorEmail)));
         assertFalse(commentsGivenByTheInstructor.stream()
                 .anyMatch(c -> instructorToBeUpdated.getEmail().equals(c.lastEditorEmail)));
-
-        // respondents in session is updated
-        List<FeedbackSessionAttributes> sessionsInCourse =
-                fsLogic.getFeedbackSessionsForCourse(instructorToBeUpdated.getCourseId());
-        assertTrue(sessionsInCourse.stream()
-                .anyMatch(s -> s.getRespondingInstructorList().contains("new@email.tmt")));
-        assertFalse(sessionsInCourse.stream()
-                .anyMatch(s -> s.getRespondingInstructorList().contains(instructorToBeUpdated.getEmail())));
     }
 
     private void testUpdateInstructorByGoogleIdCascade() throws Exception {

@@ -5,7 +5,6 @@ import org.testng.annotations.Test;
 
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
-import teammates.common.exception.EntityNotFoundException;
 import teammates.common.util.Const;
 import teammates.ui.webapi.action.GetSessionResponseStatsAction;
 import teammates.ui.webapi.action.JsonResult;
@@ -49,19 +48,6 @@ public class GetSessionResponseStatsActionTest extends BaseActionTest<GetSession
         assertEquals(10, output.getExpectedTotal());
         assertEquals(5, output.getSubmittedTotal());
 
-        ______TS("fail: instructor accesses stats of non-existent feedback session");
-
-        String nonexistentFeedbackSession = "nonexistentFeedbackSession";
-        submissionParams = new String[] {
-                Const.ParamsNames.FEEDBACK_SESSION_NAME, nonexistentFeedbackSession,
-                Const.ParamsNames.COURSE_ID, accessibleFeedbackSession.getCourseId(),
-        };
-
-        a = getAction(submissionParams);
-        GetSessionResponseStatsAction finalA = a;
-
-        assertThrows(EntityNotFoundException.class, () -> getJsonResult(finalA));
-
     }
 
     @Override
@@ -77,6 +63,16 @@ public class GetSessionResponseStatsActionTest extends BaseActionTest<GetSession
                 Const.ParamsNames.COURSE_ID, accessibleFeedbackSession.getCourseId(),
         };
         verifyOnlyInstructorsOfTheSameCourseCanAccess(submissionParams);
+
+        ______TS("fail: instructor accesses stats of non-existent feedback session");
+
+        submissionParams = new String[] {
+                Const.ParamsNames.FEEDBACK_SESSION_NAME, "nonexistentFeedbackSession",
+                Const.ParamsNames.COURSE_ID, accessibleFeedbackSession.getCourseId(),
+        };
+
+        loginAsInstructor("idOfInstructor1OfCourse1");
+        verifyCannotAccess(submissionParams);
     }
 
 }

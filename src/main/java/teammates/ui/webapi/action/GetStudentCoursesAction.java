@@ -10,7 +10,6 @@ import org.apache.http.HttpStatus;
 import teammates.common.datatransfer.CourseDetailsBundle;
 import teammates.common.datatransfer.FeedbackSessionDetailsBundle;
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
-import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.exception.EntityDoesNotExistException;
 import teammates.common.exception.UnauthorizedAccessException;
 import teammates.common.util.Const;
@@ -88,20 +87,12 @@ public class GetStudentCoursesAction extends Action {
                 boolean isOpened = f.isOpened();
                 boolean isWaitingToOpen = f.isWaitingToOpen();
                 boolean isPublished = f.isPublished();
-                boolean isSubmitted = getStudentStatusForSession(f);
+                boolean isSubmitted = false;
 
                 returnValue.put(fId, new SessionInfoMap(endTime, isOpened, isWaitingToOpen, isPublished, isSubmitted));
             }
         }
         return returnValue;
-    }
-
-    private boolean getStudentStatusForSession(FeedbackSessionAttributes fs) {
-        StudentAttributes student = logic.getStudentForGoogleId(fs.getCourseId(), userInfo.id);
-
-        String studentEmail = student.email;
-
-        return logic.hasStudentSubmittedFeedback(fs, studentEmail);
     }
 
     private boolean isCourseIncluded(String recentlyJoinedCourseId, List<CourseDetailsBundle> courses) {

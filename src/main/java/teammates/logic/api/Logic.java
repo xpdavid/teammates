@@ -3,14 +3,13 @@ package teammates.logic.api;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import teammates.common.datatransfer.CourseDetailsBundle;
 import teammates.common.datatransfer.CourseSummaryBundle;
 import teammates.common.datatransfer.DataBundle;
 import teammates.common.datatransfer.FeedbackResponseCommentSearchResultBundle;
-import teammates.common.datatransfer.FeedbackSessionDetailsBundle;
 import teammates.common.datatransfer.FeedbackSessionQuestionsBundle;
-import teammates.common.datatransfer.FeedbackSessionResponseStatus;
 import teammates.common.datatransfer.FeedbackSessionResultsBundle;
 import teammates.common.datatransfer.InstructorPrivileges;
 import teammates.common.datatransfer.InstructorSearchResultBundle;
@@ -898,19 +897,6 @@ public class Logic {
         return studentsLogic.getUnregisteredStudentsForCourse(courseId);
     }
 
-    public boolean isFeedbackSessionCompletedByInstructor(FeedbackSessionAttributes fsa, String userEmail)
-            throws EntityDoesNotExistException {
-        Assumption.assertNotNull(fsa);
-        Assumption.assertNotNull(userEmail);
-        return feedbackSessionsLogic.isFeedbackSessionCompletedByInstructor(fsa, userEmail);
-    }
-
-    public boolean isFeedbackSessionCompletedByStudent(FeedbackSessionAttributes fsa, String userEmail) {
-        Assumption.assertNotNull(fsa);
-        Assumption.assertNotNull(userEmail);
-        return feedbackSessionsLogic.isFeedbackSessionCompletedByStudent(fsa, userEmail);
-    }
-
     /**
      * Deletes a student cascade its associated feedback responses and comments.
      *
@@ -1065,19 +1051,6 @@ public class Logic {
     public List<FeedbackSessionAttributes> getFeedbackSessionsForCourse(String courseId) {
         Assumption.assertNotNull(courseId);
         return feedbackSessionsLogic.getFeedbackSessionsForCourse(courseId);
-    }
-
-    /**
-     * Preconditions: <br>
-     * * All parameters are non-null.
-     */
-    public FeedbackSessionDetailsBundle getFeedbackSessionDetails(String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException {
-
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        return feedbackSessionsLogic.getFeedbackSessionDetails(feedbackSessionName, courseId);
     }
 
     /**
@@ -1274,31 +1247,6 @@ public class Logic {
     }
 
     /**
-     * Preconditions: <br>
-     * * All parameters are non-null.
-     * @return a list of viewable feedback sessions for any user in the course.
-     */
-    public List<FeedbackSessionAttributes> getFeedbackSessionsForUserInCourse(String courseId, String userEmail)
-            throws EntityDoesNotExistException {
-        Assumption.assertNotNull(userEmail);
-        Assumption.assertNotNull(courseId);
-
-        return feedbackSessionsLogic.getFeedbackSessionsForUserInCourse(courseId, userEmail);
-    }
-
-    /**
-     * Preconditions: <br>
-     * * All parameters are non-null.
-     */
-    public boolean hasStudentSubmittedFeedback(FeedbackSessionAttributes fsa, String studentEmail) {
-
-        Assumption.assertNotNull(fsa);
-        Assumption.assertNotNull(studentEmail);
-
-        return feedbackSessionsLogic.isFeedbackSessionCompletedByStudent(fsa, studentEmail);
-    }
-
-    /**
      * Updates the details of a feedback session by {@link FeedbackSessionAttributes.UpdateOptions}.
      *
      * <p>Adjust email sending status if necessary.
@@ -1315,62 +1263,6 @@ public class Logic {
         Assumption.assertNotNull(updateOptions);
 
         return feedbackSessionsLogic.updateFeedbackSession(updateOptions);
-    }
-
-    /**
-     * Adds an instructor with {@code email} in the instructor respondent set
-     * in feedback session {@code feedbackSessionName} in {@code courseId}.
-     */
-    public void addInstructorRespondent(String email, String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException, InvalidParametersException {
-
-        Assumption.assertNotNull(email);
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        feedbackSessionsLogic.addInstructorRespondent(email, feedbackSessionName, courseId);
-    }
-
-    /**
-     * Adds a student with {@code email} in the student respondent set
-     * in feedback session {@code feedbackSessionName} in {@code courseId}.
-     */
-    public void addStudentRespondent(String email, String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException, InvalidParametersException {
-
-        Assumption.assertNotNull(email);
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        feedbackSessionsLogic.addStudentRespondent(email, feedbackSessionName, courseId);
-    }
-
-    /**
-     * Deletes an instructor with {@code email} in the instructor respondent set
-     * in session {@code feedbackSessionName} of course {@code courseId}.
-     */
-    public void deleteInstructorRespondent(String email, String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException, InvalidParametersException {
-
-        Assumption.assertNotNull(email);
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        feedbackSessionsLogic.deleteInstructorRespondent(email, feedbackSessionName, courseId);
-    }
-
-    /**
-     * Deletes a student with {@code email} in the student respondent set
-     * in session {@code feedbackSessionName} of course {@code courseId}.
-     */
-    public void deleteStudentRespondent(String email, String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException, InvalidParametersException {
-
-        Assumption.assertNotNull(email);
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        feedbackSessionsLogic.deleteStudentFromRespondentList(email, feedbackSessionName, courseId);
     }
 
     /**
@@ -1494,8 +1386,6 @@ public class Logic {
      *
      * <p>Silently fail if question does not exist.
      *
-     * <p>The respondent lists will also be updated due the deletion of question.
-     *
      * <br/>Preconditions: <br/>
      * * All parameters are non-null.
      */
@@ -1539,23 +1429,6 @@ public class Logic {
         Assumption.assertNotNull(courseId);
 
         return feedbackQuestionsLogic.getFeedbackQuestionsForSession(feedbackSessionName, courseId);
-    }
-
-    /**
-     * Gets the response rate status for a session.
-     *
-     * <p>Preconditions: <br>
-     * * All parameters are non-null.
-     *
-     * @see FeedbackSessionsLogic#getFeedbackSessionResponseStatus(String, String)
-     */
-    public FeedbackSessionResponseStatus getFeedbackSessionResponseStatus(String feedbackSessionName, String courseId)
-            throws EntityDoesNotExistException {
-
-        Assumption.assertNotNull(feedbackSessionName);
-        Assumption.assertNotNull(courseId);
-
-        return feedbackSessionsLogic.getFeedbackSessionResponseStatus(feedbackSessionName, courseId);
     }
 
     /**
@@ -1750,6 +1623,16 @@ public class Logic {
     }
 
     /**
+     * Gets a set of giver identifiers that has at least one response under a feedback session.
+     */
+    public Set<String> getGiverSetThatAnswerFeedbackSession(String courseId, String feedbackSessionName) {
+        Assumption.assertNotNull(courseId);
+        Assumption.assertNotNull(feedbackSessionName);
+
+        return feedbackResponsesLogic.getGiverSetThatAnswerFeedbackSession(courseId, feedbackSessionName);
+    }
+
+    /**
      * Creates a feedback response.
      *
      * <br/>Preconditions: <br/>
@@ -1810,8 +1693,6 @@ public class Logic {
 
     /**
      * Deletes a feedback response cascade its associated comments.
-     *
-     * <p>The respondent lists will NOT be updated.
      *
      * <br/>Preconditions: <br/>
      * * All parameters are non-null.

@@ -2,6 +2,7 @@ package teammates.ui.automated;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
@@ -28,12 +29,13 @@ public class FeedbackSessionRemindEmailWorkerAction extends AutomatedAction {
             FeedbackSessionAttributes session = logic.getFeedbackSession(feedbackSessionName, courseId);
             List<StudentAttributes> studentList = logic.getStudentsForCourse(courseId);
             List<InstructorAttributes> instructorList = logic.getInstructorsForCourse(courseId);
+            Set<String> giverSetSubmitted = logic.getGiverSetThatAnswerFeedbackSession(courseId, feedbackSessionName);
 
             InstructorAttributes instructorToNotify = logic.getInstructorForGoogleId(courseId, instructorId);
 
             List<StudentAttributes> studentsToRemindList = new ArrayList<>();
             for (StudentAttributes student : studentList) {
-                if (!logic.isFeedbackSessionCompletedByStudent(session, student.email)) {
+                if (!giverSetSubmitted.contains(student.getEmail())) {
                     studentsToRemindList.add(student);
                 }
             }
@@ -41,7 +43,7 @@ public class FeedbackSessionRemindEmailWorkerAction extends AutomatedAction {
             // Filter out instructors who have submitted the feedback session
             List<InstructorAttributes> instructorsToRemindList = new ArrayList<>();
             for (InstructorAttributes instructor : instructorList) {
-                if (!logic.isFeedbackSessionCompletedByInstructor(session, instructor.email)) {
+                if (!giverSetSubmitted.contains(instructor.getEmail())) {
                     instructorsToRemindList.add(instructor);
                 }
             }

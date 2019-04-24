@@ -49,8 +49,6 @@ public class InstructorFeedbackResultsPageData extends PageData {
     private static final String MODERATE_RESPONSES_FOR_GIVER = "Moderate Responses";
     private static final String MODERATE_SINGLE_RESPONSE = "Moderate Response";
 
-    private static final int RESPONDENTS_LIMIT_FOR_AUTOLOADING = 150;
-
     private static int sectionId;
     private static Pattern sectionIdPattern = Pattern.compile("^section-(\\d+)");
 
@@ -1754,10 +1752,11 @@ public class InstructorFeedbackResultsPageData extends PageData {
     }
 
     public boolean isLargeNumberOfRespondents() {
-        int numRespondents = bundle.feedbackSession.getRespondingInstructorList().size()
-                           + bundle.feedbackSession.getRespondingStudentList().size();
-        return isLargeNumberOfRespondents
-            || numRespondents > RESPONDENTS_LIMIT_FOR_AUTOLOADING;
+        //int numRespondents = bundle.feedbackSession.getRespondingInstructorList().size()
+        //                   + bundle.feedbackSession.getRespondingStudentList().size();
+        //return isLargeNumberOfRespondents
+        //    || numRespondents > RESPONDENTS_LIMIT_FOR_AUTOLOADING;
+        return isLargeNumberOfRespondents;
     }
 
     // Only used for testing the ui

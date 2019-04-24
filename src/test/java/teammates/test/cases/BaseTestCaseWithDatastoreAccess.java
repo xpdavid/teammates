@@ -138,7 +138,6 @@ public abstract class BaseTestCaseWithDatastoreAccess extends BaseTestCaseWithOb
         } else if (expected instanceof FeedbackSessionAttributes) {
             FeedbackSessionAttributes expectedFs = ((FeedbackSessionAttributes) expected).getCopy();
             FeedbackSessionAttributes actualFs = (FeedbackSessionAttributes) actual;
-            equalizeIrrelevantData(expectedFs, actualFs);
             assertEquals(JsonUtils.toJson(expectedFs), JsonUtils.toJson(actualFs));
 
         } else if (expected instanceof InstructorAttributes) {
@@ -180,11 +179,6 @@ public abstract class BaseTestCaseWithDatastoreAccess extends BaseTestCaseWithOb
 
     private void equalizeIrrelevantData(FeedbackResponseAttributes expected, FeedbackResponseAttributes actual) {
         expected.setId(actual.getId());
-    }
-
-    private void equalizeIrrelevantData(FeedbackSessionAttributes expected, FeedbackSessionAttributes actual) {
-        expected.setRespondingInstructorList(actual.getRespondingInstructorList());
-        expected.setRespondingStudentList(actual.getRespondingStudentList());
     }
 
     private void equalizeIrrelevantData(InstructorAttributes expected, InstructorAttributes actual) {
