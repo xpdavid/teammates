@@ -58,6 +58,7 @@ public class ActionFactory {
         map(ResourceURIs.INSTRUCTOR_PRIVILEGE, GET, GetInstructorPrivilegeAction.class);
         map(ResourceURIs.INSTRUCTOR_PRIVILEGE, PUT, UpdateInstructorPrivilegeAction.class);
         map(ResourceURIs.RESPONSE_COMMENT, POST, CreateFeedbackResponseCommentAction.class);
+        map(ResourceURIs.RESPONSE_COMMENT, GET, GetFeedbackResponseCommentAction.class);
         map(ResourceURIs.RESPONSE_COMMENT, PUT, UpdateFeedbackResponseCommentAction.class);
         map(ResourceURIs.RESPONSE_COMMENT, DELETE, DeleteFeedbackResponseCommentAction.class);
         map(ResourceURIs.RESULT, GET, GetSessionResultsAction.class);
