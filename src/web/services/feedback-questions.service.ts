@@ -509,6 +509,14 @@ export class FeedbackQuestionsService {
   }
 
   /**
+   * Checks whether the current question is allowed to have participant comment.
+   */
+  isAllowedToHaveParticipantComment(questionType: FeedbackQuestionType): boolean {
+    return questionType === FeedbackQuestionType.MCQ
+        || questionType === FeedbackQuestionType.MSQ;
+  }
+
+  /**
    * Gets template questions.
    */
   getTemplateQuestions(): TemplateQuestion[] {
