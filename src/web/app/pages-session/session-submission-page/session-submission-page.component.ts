@@ -13,6 +13,7 @@ import { HttpRequestService } from '../../../services/http-request.service';
 import { StatusMessageService } from '../../../services/status-message.service';
 import { TimezoneService } from '../../../services/timezone.service';
 import {
+  CommentVisibilityType,
   FeedbackParticipantType,
   FeedbackQuestion,
   FeedbackQuestionRecipient,
@@ -24,6 +25,7 @@ import {
   NumberOfEntitiesToGiveFeedbackToSetting,
   Student,
 } from '../../../types/api-output';
+import { CommentVisibilityControl } from '../../../types/visibility-control';
 import { CommentRowModel } from '../../components/comment-box/comment-row/comment-row.component';
 import {
   FeedbackResponseRecipient,
@@ -467,9 +469,13 @@ export class SessionSubmissionPageComponent implements OnInit, AfterViewInit {
    * Gets the comment model for a given comment.
    */
   getCommentModel(comment: FeedbackResponseComment): CommentRowModel {
+    const commentVisibility: Map<CommentVisibilityControl, Set<CommentVisibilityType>> = new Map();
+    commentVisibility.set(CommentVisibilityControl.SHOW_COMMENT, new Set(comment.showCommentTo));
+    commentVisibility.set(CommentVisibilityControl.SHOW_GIVER_NAME, new Set(comment.showGiverNameTo));
     return {
       originalComment: comment,
       commentEditFormModel: {
+        commentVisibility,
         commentText: comment.commentText,
       },
       timezone: this.feedbackSessionTimezone,
