@@ -2,6 +2,7 @@ package teammates.common.datatransfer;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,6 +19,8 @@ import teammates.common.datatransfer.attributes.FeedbackResponseCommentAttribute
 import teammates.common.datatransfer.attributes.FeedbackSessionAttributes;
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
+import teammates.common.datatransfer.questions.FeedbackTextQuestionDetails;
+import teammates.common.datatransfer.questions.FeedbackTextResponseDetails;
 import teammates.common.util.Assumption;
 import teammates.common.util.Const;
 import teammates.common.util.Logger;
@@ -44,7 +47,7 @@ public class FeedbackSessionResultsBundle {
     public Map<String, Set<String>> rosterTeamNameMembersTable;
     public Map<String, Set<String>> rosterSectionTeamNameTable;
     public Map<String, boolean[]> visibilityTable;
-    public FeedbackSessionResponseStatus responseStatus;
+    public List<FeedbackResponseAttributes> missingResponses;
     public CourseRoster roster;
     public Map<String, List<FeedbackResponseCommentAttributes>> responseComments;
     public boolean isComplete;
@@ -254,7 +257,7 @@ public class FeedbackSessionResultsBundle {
                                         Map<String, FeedbackQuestionAttributes> questions, CourseRoster roster) {
         this(feedbackSession, new ArrayList<>(), questions, new HashMap<>(),
                 new HashMap<>(), new HashMap<>(), new HashMap<>(),
-                new HashMap<>(), new FeedbackSessionResponseStatus(), roster,
+                new HashMap<>(), roster,
                 new HashMap<>());
     }
 
@@ -266,11 +269,10 @@ public class FeedbackSessionResultsBundle {
                                         Map<String, String> emailTeamNameTable,
                                         Map<String, Set<String>> sectionTeamNameTable,
                                         Map<String, boolean[]> visibilityTable,
-                                        FeedbackSessionResponseStatus responseStatus,
                                         CourseRoster roster,
                                         Map<String, List<FeedbackResponseCommentAttributes>> responseComments) {
         this(feedbackSession, responses, questions, emailNameTable, emailLastNameTable,
-                emailTeamNameTable, sectionTeamNameTable, visibilityTable, responseStatus, roster, responseComments, true);
+                emailTeamNameTable, sectionTeamNameTable, visibilityTable, new HashMap<>(), roster, responseComments, true);
     }
 
     public FeedbackSessionResultsBundle(FeedbackSessionAttributes feedbackSession,
@@ -281,24 +283,27 @@ public class FeedbackSessionResultsBundle {
                                         Map<String, String> emailTeamNameTable,
                                         Map<String, Set<String>> sectionTeamNameTable,
                                         Map<String, boolean[]> visibilityTable,
-                                        FeedbackSessionResponseStatus responseStatus,
+                                        Map<String, Map<String, Set<String>>> completeGiverRecipientMap,
                                         CourseRoster roster,
                                         Map<String, List<FeedbackResponseCommentAttributes>> responseComments,
                                         boolean isComplete) {
         this.feedbackSession = feedbackSession;
         this.questions = questions;
         this.responses = responses;
+
+        // TODO we can get rid of the table below and use CourseRoster only
         this.emailNameTable = emailNameTable;
         this.emailLastNameTable = emailLastNameTable;
         this.emailTeamNameTable = emailTeamNameTable;
         this.commentGiverEmailToNameTable = roster.getEmailToNameTableFromRoster();
         this.sectionTeamNameTable = sectionTeamNameTable;
+
         this.visibilityTable = visibilityTable;
-        this.responseStatus = responseStatus;
         this.roster = roster;
         this.responseComments = responseComments;
         this.actualResponses = new ArrayList<>();
 
+        // TODO we can merge responses and actualResponses later
         // We change user email to team name here for display purposes.
         for (FeedbackResponseAttributes response : responses) {
             if (questions.get(response.feedbackQuestionId).giverType == FeedbackParticipantType.TEAMS
@@ -314,11 +319,63 @@ public class FeedbackSessionResultsBundle {
         }
         this.isComplete = isComplete;
 
+        buildMissingResponses(completeGiverRecipientMap);
+        // TODO move the hiding process to action layer
         hideResponsesGiverRecipient();
         // unlike emailTeamNameTable, emailLastNameTable and emailTeamNameTable,
         // roster.*Table is populated using the CourseRoster data directly
         this.rosterTeamNameMembersTable = getTeamNameToEmailsTableFromRoster(roster);
         this.rosterSectionTeamNameTable = getSectionToTeamNamesFromRoster(roster);
+    }
+
+    /**
+     * Builds missing response based on the {@code completeGiverRecipientMap}.
+     *
+     * @param completeGiverRecipientMap the complete giver recipient map for questions
+     */
+    private void buildMissingResponses(Map<String, Map<String, Set<String>>> completeGiverRecipientMap) {
+        this.missingResponses = new ArrayList<>();
+
+        // remove entries that already have responses
+        for (FeedbackResponseAttributes response : this.actualResponses) {
+            Map<String, Set<String>> currQuestionGiverRecipientMap =
+                    completeGiverRecipientMap.get(response.getFeedbackQuestionId());
+            if (currQuestionGiverRecipientMap == null) {
+                continue;
+            }
+            Set<String> recipientSet = currQuestionGiverRecipientMap.get(response.getGiver());
+            if (recipientSet == null) {
+                continue;
+            }
+            recipientSet.remove(response.getRecipient());
+        }
+
+        FeedbackTextResponseDetails missingResponseDetail =
+                new FeedbackTextResponseDetails(Const.INSTRUCTOR_FEEDBACK_RESULTS_MISSING_RESPONSE);
+
+        // rebuilt pseud-response that is missing
+        for (Map.Entry<String, Map<String, Set<String>>> questionGiverRecipientMapEntry
+                : completeGiverRecipientMap.entrySet()) {
+            for (Map.Entry<String, Set<String>> giverRecipientMap : questionGiverRecipientMapEntry.getValue().entrySet()) {
+                String giver = giverRecipientMap.getKey();
+                String giverSection = roster.getInfoForIdentifier(giver)[CourseRoster.INFO_SECTION_NAME];
+
+                for (String recipient : giverRecipientMap.getValue()) {
+                    // get proper section
+                    String recipientSection = roster.getInfoForIdentifier(recipient)[CourseRoster.INFO_SECTION_NAME];
+
+                    this.missingResponses.add(
+                            FeedbackResponseAttributes
+                                    .builder(questionGiverRecipientMapEntry.getKey(), giver, recipient)
+                                    .withCourseId(this.feedbackSession.getCourseId())
+                                    .withFeedbackSessionName(this.feedbackSession.getFeedbackSessionName())
+                                    .withGiverSection(giverSection)
+                                    .withRecipientSection(recipientSection)
+                                    .withResponseDetails(missingResponseDetail)
+                                    .build());
+                }
+            }
+        }
     }
 
     /**
@@ -587,440 +644,6 @@ public class FeedbackSessionResultsBundle {
     public boolean isParticipantIdentifierInstructor(String participantIdentifier) {
         InstructorAttributes instructor = roster.getInstructorForEmail(participantIdentifier);
         return instructor != null;
-    }
-
-    /**
-     * Get the possible givers for a recipient specified by its participant identifier for
-     * a question.
-     *
-     * @return a list of participant identifiers that can give a response to the recipient specified
-     */
-    public List<String> getPossibleGivers(FeedbackQuestionAttributes fqa,
-                                          String recipientParticipantIdentifier) {
-        if (recipientParticipantIdentifier.contains("@@")) {
-            return new ArrayList<>();
-        }
-
-        if (isParticipantIdentifierStudent(recipientParticipantIdentifier)) {
-            StudentAttributes student = roster.getStudentForEmail(recipientParticipantIdentifier);
-            return getPossibleGivers(fqa, student);
-        } else if (isParticipantIdentifierInstructor(recipientParticipantIdentifier)) {
-            return getPossibleGivers(fqa);
-        } else if (recipientParticipantIdentifier.equals(Const.GENERAL_QUESTION)) {
-            switch (fqa.giverType) {
-            case STUDENTS:
-                return getSortedListOfStudentEmails();
-            case TEAMS:
-                return getSortedListOfTeams();
-            case INSTRUCTORS:
-                return getSortedListOfInstructorEmails();
-            case SELF:
-                return getCreatorEmail();
-            default:
-                log.severe("Invalid giver type specified");
-                return new ArrayList<>();
-            }
-        } else {
-            return getPossibleGiversForTeam(fqa, recipientParticipantIdentifier);
-        }
-    }
-
-    /**
-     * Get the possible givers for a STUDENT recipient for the question specified.
-     * @return a list of possible givers that can give a response to the student
-     *         specified as the recipient
-     */
-    private List<String> getPossibleGivers(FeedbackQuestionAttributes fqa,
-                                           StudentAttributes studentRecipient) {
-        FeedbackParticipantType giverType = fqa.giverType;
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleGivers = new ArrayList<>();
-
-        switch (giverType) {
-        case STUDENTS:
-            possibleGivers = getSortedListOfStudentEmails();
-            break;
-        case INSTRUCTORS:
-            possibleGivers = getSortedListOfInstructorEmails();
-            break;
-        case TEAMS:
-            possibleGivers = getSortedListOfTeams();
-            break;
-        case SELF:
-            possibleGivers = getCreatorEmail();
-            break;
-        default:
-            log.severe("Invalid giver type specified");
-            break;
-        }
-
-        switch (recipientType) {
-        case STUDENTS:
-        case TEAMS:
-            break;
-        case SELF:
-            possibleGivers = new ArrayList<>();
-            possibleGivers.add(studentRecipient.email);
-            break;
-        case OWN_TEAM_MEMBERS:
-            possibleGivers.retainAll(getSortedListOfTeamMembersEmailsExcludingSelf(studentRecipient));
-            break;
-        case OWN_TEAM_MEMBERS_INCLUDING_SELF:
-            possibleGivers.retainAll(getSortedListOfTeamMembersEmails(studentRecipient));
-            break;
-        default:
-            break;
-        }
-
-        return possibleGivers;
-    }
-
-    public List<String> getPossibleGivers(FeedbackQuestionAttributes fqa) {
-        FeedbackParticipantType giverType = fqa.giverType;
-        List<String> possibleGivers = new ArrayList<>();
-
-        switch (giverType) {
-        case STUDENTS:
-            possibleGivers = getSortedListOfStudentEmails();
-            break;
-        case INSTRUCTORS:
-            possibleGivers = getSortedListOfInstructorEmails();
-            break;
-        case TEAMS:
-            possibleGivers = getSortedListOfTeams();
-            break;
-        case SELF:
-            possibleGivers = getCreatorEmail();
-            break;
-        default:
-            log.severe("Invalid giver type specified");
-            break;
-        }
-
-        return possibleGivers;
-    }
-
-    /**
-     * Get the possible givers for a TEAM recipient for the question specified.
-     * @return a list of possible givers that can give a response to the team
-     *         specified as the recipient
-     */
-    private List<String> getPossibleGiversForTeam(FeedbackQuestionAttributes fqa,
-                                                  String recipientTeam) {
-        FeedbackParticipantType giverType = fqa.giverType;
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleGivers = new ArrayList<>();
-
-        if (recipientType == FeedbackParticipantType.TEAMS) {
-            switch (giverType) {
-            case TEAMS:
-                possibleGivers = getSortedListOfTeams();
-                break;
-            case STUDENTS:
-                possibleGivers = getSortedListOfStudentEmails();
-                break;
-            case INSTRUCTORS:
-                possibleGivers = getSortedListOfInstructorEmails();
-                break;
-            case SELF:
-                possibleGivers = getCreatorEmail();
-                break;
-            default:
-                log.severe("Invalid giver type specified");
-                break;
-            }
-        } else if (recipientType == FeedbackParticipantType.OWN_TEAM) {
-            if (giverType == FeedbackParticipantType.TEAMS) {
-                possibleGivers.add(recipientTeam);
-            } else {
-                possibleGivers = new ArrayList<>(getTeamMembersFromRoster(recipientTeam));
-            }
-        }
-
-        return possibleGivers;
-    }
-
-    /**
-     * Get the possible givers for the question specified within specified section.
-     * @return a list of possible givers within given section
-     */
-    public List<String> getPossibleGiversInSection(FeedbackQuestionAttributes fqa, String section) {
-        List<String> allPossibleGivers = getPossibleGivers(fqa);
-
-        if (section == null || "All".equals(section)) {
-            return allPossibleGivers;
-        }
-
-        List<String> giversInSection = new ArrayList<>();
-
-        for (String giverIdentifier : allPossibleGivers) {
-            if (getSectionFromRoster(giverIdentifier).equals(section)) {
-                giversInSection.add(giverIdentifier);
-            }
-        }
-
-        return giversInSection;
-    }
-
-    public List<String> getPossibleRecipients(FeedbackQuestionAttributes fqa) {
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleRecipients = null;
-
-        // use giver type to determine recipients if recipient is "self"
-        if (fqa.recipientType == FeedbackParticipantType.SELF) {
-            recipientType = fqa.giverType;
-        }
-
-        switch (recipientType) {
-        case STUDENTS:
-        case OWN_TEAM_MEMBERS:
-        case OWN_TEAM_MEMBERS_INCLUDING_SELF:
-            possibleRecipients = getSortedListOfStudentEmails();
-            break;
-        case INSTRUCTORS:
-            possibleRecipients = getSortedListOfInstructorEmails();
-            break;
-        case TEAMS:
-        case OWN_TEAM:
-            possibleRecipients = getSortedListOfTeams();
-            break;
-        case NONE:
-            possibleRecipients = new ArrayList<>();
-            possibleRecipients.add(Const.USER_NOBODY_TEXT);
-            break;
-        default:
-            log.severe("Invalid recipient type specified");
-            break;
-        }
-
-        return possibleRecipients;
-    }
-
-    // TODO code duplication between this function and in FeedbackQuestionsLogic getRecipientsForQuestion
-    /**
-     * Get the possible recipients for a giver for the question specified.
-     * @return a list of possible recipients that can receive a response from giver specified by
-     *         the participantIdentifier
-     */
-    public List<String> getPossibleRecipients(FeedbackQuestionAttributes fqa,
-                                              String giverParticipantIdentifier) {
-        if (giverParticipantIdentifier.contains("@@")) {
-            return new ArrayList<>();
-        }
-
-        if (isParticipantIdentifierStudent(giverParticipantIdentifier)) {
-            StudentAttributes student = roster.getStudentForEmail(giverParticipantIdentifier);
-            return getPossibleRecipients(fqa, student);
-        } else if (isParticipantIdentifierInstructor(giverParticipantIdentifier)) {
-            InstructorAttributes instructor = roster.getInstructorForEmail(giverParticipantIdentifier);
-            return getPossibleRecipients(fqa, instructor);
-        } else {
-            return getPossibleRecipientsForTeam(fqa, giverParticipantIdentifier);
-        }
-    }
-
-    /**
-     * Get the possible recipients for a INSTRUCTOR giver for the question specified.
-     * @return a list of possible recipients that can receive a response from giver specified by
-     *         the instructorGiver
-     */
-    private List<String> getPossibleRecipients(FeedbackQuestionAttributes fqa,
-                                               InstructorAttributes instructorGiver) {
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleRecipients = new ArrayList<>();
-
-        switch (recipientType) {
-        case STUDENTS:
-            possibleRecipients = getSortedListOfStudentEmails();
-            break;
-        case INSTRUCTORS:
-            possibleRecipients = getSortedListOfInstructorEmails();
-            possibleRecipients.remove(instructorGiver.email);
-            break;
-        case TEAMS:
-            possibleRecipients = getSortedListOfTeams();
-            break;
-        case SELF:
-            possibleRecipients.add(instructorGiver.email);
-            break;
-        case OWN_TEAM:
-            possibleRecipients.add(Const.USER_TEAM_FOR_INSTRUCTOR);
-            break;
-        case NONE:
-            possibleRecipients.add(Const.GENERAL_QUESTION);
-            break;
-        default:
-            log.severe("Invalid recipient type specified");
-            break;
-        }
-
-        return possibleRecipients;
-    }
-
-    /**
-     * Get the possible recipients for a STUDENT giver for the question specified.
-     * @return a list of possible recipients that can receive a response from giver specified by
-     *         the studentGiver
-     */
-    private List<String> getPossibleRecipients(FeedbackQuestionAttributes fqa,
-                                               StudentAttributes studentGiver) {
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleRecipients = new ArrayList<>();
-
-        switch (recipientType) {
-        case STUDENTS:
-            possibleRecipients = getSortedListOfStudentEmails();
-            possibleRecipients.remove(studentGiver.email);
-            break;
-        case OWN_TEAM_MEMBERS:
-            possibleRecipients = getSortedListOfTeamMembersEmailsExcludingSelf(studentGiver);
-            break;
-        case OWN_TEAM_MEMBERS_INCLUDING_SELF:
-            possibleRecipients = getSortedListOfTeamMembersEmails(studentGiver);
-            break;
-        case INSTRUCTORS:
-            possibleRecipients = getSortedListOfInstructorEmails();
-            break;
-        case TEAMS:
-            possibleRecipients = getSortedListOfTeamsExcludingOwnTeam(studentGiver);
-            break;
-        case OWN_TEAM:
-            possibleRecipients.add(studentGiver.team);
-            break;
-        case SELF:
-            possibleRecipients.add(studentGiver.email);
-            break;
-        case NONE:
-            possibleRecipients.add(Const.GENERAL_QUESTION);
-            break;
-        default:
-            log.severe("Invalid recipient type specified");
-            break;
-        }
-
-        return possibleRecipients;
-    }
-
-    /**
-     * Get the possible recipients for a TEAM giver for the question specified.
-     * @return a list of possible recipients that can receive a response from giver specified by
-     *         the givingTeam
-     */
-    private List<String> getPossibleRecipientsForTeam(FeedbackQuestionAttributes fqa,
-                                                      String givingTeam) {
-        FeedbackParticipantType recipientType = fqa.recipientType;
-        List<String> possibleRecipients = new ArrayList<>();
-
-        switch (recipientType) {
-        case TEAMS:
-            possibleRecipients = getSortedListOfTeams();
-            possibleRecipients.remove(givingTeam);
-            break;
-        case SELF:
-        case OWN_TEAM:
-            possibleRecipients.add(givingTeam);
-            break;
-        case INSTRUCTORS:
-            possibleRecipients = getSortedListOfInstructorEmails();
-            break;
-        case STUDENTS:
-            possibleRecipients = getSortedListOfStudentEmails();
-            break;
-        case OWN_TEAM_MEMBERS_INCLUDING_SELF:
-            if (rosterTeamNameMembersTable.containsKey(givingTeam)) {
-                Set<String> studentEmailsToNames = rosterTeamNameMembersTable.get(givingTeam);
-                possibleRecipients = new ArrayList<>(studentEmailsToNames);
-                possibleRecipients.sort(null);
-            }
-            break;
-        case NONE:
-            possibleRecipients.add(Const.GENERAL_QUESTION);
-            break;
-        default:
-            log.severe("Invalid recipient type specified");
-            break;
-        }
-
-        return possibleRecipients;
-    }
-
-    private List<String> getSortedListOfTeamsExcludingOwnTeam(StudentAttributes student) {
-        String studentTeam = student.team;
-        List<String> listOfTeams = getSortedListOfTeams();
-        listOfTeams.remove(studentTeam);
-        return listOfTeams;
-    }
-
-    /**
-     * Get a sorted list of teams for the feedback session.<br>
-     * Instructors are not present as a team.
-     */
-    private List<String> getSortedListOfTeams() {
-        List<String> teams = new ArrayList<>(rosterTeamNameMembersTable.keySet());
-        teams.remove(Const.USER_TEAM_FOR_INSTRUCTOR);
-        teams.sort(null);
-        return teams;
-    }
-
-    private List<String> getCreatorEmail() {
-        List<String> creatorEmail = new ArrayList<>();
-        creatorEmail.add(feedbackSession.getCreatorEmail());
-        return creatorEmail;
-    }
-
-    /**
-     * Get a sorted list of team members, who are in the same team as the student.<br>
-     * This list includes the student.
-     *
-     * @return a list of team members, including the original student
-     * @see #getSortedListOfTeamMembersEmailsExcludingSelf
-     */
-    public List<String> getSortedListOfTeamMembersEmails(StudentAttributes student) {
-        String teamName = student.team;
-        Set<String> teamMembersEmailsToNames = rosterTeamNameMembersTable.get(teamName);
-        List<String> teamMembers = new ArrayList<>(teamMembersEmailsToNames);
-        teamMembers.sort(null);
-        return teamMembers;
-    }
-
-    /**
-     * Get a sorted list of team members, who are in the same team as the student,
-     * EXCLUDING the student.
-     *
-     * @return a list of team members, excluding the original student
-     * @see #getSortedListOfTeamMembersEmails
-     */
-    private List<String> getSortedListOfTeamMembersEmailsExcludingSelf(StudentAttributes student) {
-        List<String> teamMembers = getSortedListOfTeamMembersEmails(student);
-        String currentStudentEmail = student.email;
-        teamMembers.remove(currentStudentEmail);
-        return teamMembers;
-    }
-
-    /**
-     * Returns a list of student emails, sorted by section name.
-     */
-    private List<String> getSortedListOfStudentEmails() {
-        List<String> emailList = new ArrayList<>();
-        List<StudentAttributes> students = roster.getStudents();
-        StudentAttributes.sortBySectionName(students);
-        for (StudentAttributes student : students) {
-            emailList.add(student.email);
-        }
-        return emailList;
-    }
-
-    /**
-     * Returns a list of instructor emails, sorted alphabetically.
-     */
-    private List<String> getSortedListOfInstructorEmails() {
-        List<String> emailList = new ArrayList<>();
-        List<InstructorAttributes> instructors = roster.getInstructors();
-        for (InstructorAttributes instructor : instructors) {
-            emailList.add(instructor.email);
-        }
-        emailList.sort(null);
-        return emailList;
     }
 
     /**
@@ -1649,13 +1272,13 @@ public class FeedbackSessionResultsBundle {
         return visibilityTable;
     }
 
-    public FeedbackSessionResponseStatus getResponseStatus() {
-        return responseStatus;
-    }
-
     public CourseRoster getRoster() {
         Assumption.assertNotNull(roster);
         return roster;
+    }
+
+    public List<FeedbackResponseAttributes> getMissingResponses() {
+        return missingResponses;
     }
 
     public Map<String, List<FeedbackResponseCommentAttributes>> getResponseComments() {

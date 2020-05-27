@@ -4,6 +4,9 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import teammates.common.datatransfer.CourseDetailsBundle;
 import teammates.common.datatransfer.CourseSummaryBundle;
@@ -1193,7 +1196,7 @@ public class Logic {
     /**
      * Gets the recipients of a feedback question for student.
      *
-     * @see FeedbackQuestionsLogic#getRecipientsOfQuestionForStudent(FeedbackQuestionAttributes, String, String)
+     * @see FeedbackQuestionsLogic#getRecipientsOfQuestionForStudent(FeedbackQuestionAttributes, String, String, Function, Function, Function, BiFunction)
      */
     public Map<String, String> getRecipientsOfQuestionForStudent(
             FeedbackQuestionAttributes question, String giverEmail, String giverTeam) {
@@ -1201,19 +1204,43 @@ public class Logic {
         Assumption.assertNotNull(giverEmail);
         Assumption.assertNotNull(giverTeam);
 
-        return feedbackQuestionsLogic.getRecipientsOfQuestionForStudent(question, giverEmail, giverTeam);
+        return feedbackQuestionsLogic.getRecipientsOfQuestionForStudent(
+                question, giverEmail, giverTeam,
+                studentsLogic::getStudentsForCourse,
+                instructorsLogic::getInstructorsForCourse,
+                (courseId) -> {
+                    try {
+                        return coursesLogic.getTeamsForCourse(courseId).stream().map(team -> team.name).collect(Collectors.toList());
+                    } catch (EntityDoesNotExistException e) {
+                        Assumption.fail(e.getMessage());
+                        return null;
+                    }
+                },
+                studentsLogic::getStudentsForTeam);
     }
 
     /**
      * Gets the recipients of a feedback question for instructor.
      *
-     * @see FeedbackQuestionsLogic#getRecipientsOfQuestionForInstructor(FeedbackQuestionAttributes, String)
+     * @see FeedbackQuestionsLogic#getRecipientsOfQuestionForInstructor(FeedbackQuestionAttributes, String, Function, Function, Function, BiFunction)
      */
     public Map<String, String> getRecipientsOfQuestionForInstructor(FeedbackQuestionAttributes question, String giverEmail) {
         Assumption.assertNotNull(question);
         Assumption.assertNotNull(giverEmail);
 
-        return feedbackQuestionsLogic.getRecipientsOfQuestionForInstructor(question, giverEmail);
+        return feedbackQuestionsLogic.getRecipientsOfQuestionForInstructor(
+                question, giverEmail,
+                studentsLogic::getStudentsForCourse,
+                instructorsLogic::getInstructorsForCourse,
+                (courseId) -> {
+                    try {
+                        return coursesLogic.getTeamsForCourse(courseId).stream().map(team -> team.name).collect(Collectors.toList());
+                    } catch (EntityDoesNotExistException e) {
+                        Assumption.fail(e.getMessage());
+                        return null;
+                    }
+                },
+                studentsLogic::getStudentsForTeam);
     }
 
     public FeedbackQuestionAttributes getFeedbackQuestion(String feedbackSessionName,

@@ -860,7 +860,7 @@ public final class FeedbackSessionsLogic {
             exportBuilder.append(statistics).append(System.lineSeparator());
         }
 
-        List<String> possibleGiversWithoutResponses = fsrBundle.getPossibleGiversInSection(question, section);
+        List<String> possibleGiversWithoutResponses = new ArrayList<>(); // TODO will fill this later
         List<String> possibleRecipientsForGiver = new ArrayList<>();
         String prevGiver = "";
 
@@ -888,7 +888,7 @@ public final class FeedbackSessionsLogic {
                                              ? fsrBundle.getFullNameFromRoster(response.giver)
                                              : response.giver;
 
-                possibleRecipientsForGiver = fsrBundle.getPossibleRecipients(question, giverIdentifier);
+                possibleRecipientsForGiver = new ArrayList<>(); // TODO will fill this later
             }
 
             removeParticipantIdentifierFromList(question.recipientType, possibleRecipientsForGiver,
@@ -976,8 +976,7 @@ public final class FeedbackSessionsLogic {
         removeParticipantIdentifierFromList(question.giverType, remainingPossibleGivers, prevGiver, results);
 
         for (String possibleGiverWithNoResponses : remainingPossibleGivers) {
-            List<String> possibleRecipientsForRemainingGiver =
-                    results.getPossibleRecipients(entry.getKey(), possibleGiverWithNoResponses);
+            List<String> possibleRecipientsForRemainingGiver = new ArrayList<>(); // TODO will fill this later
 
             exportBuilder.append(getRowsOfPossibleRecipientsInCsvFormat(results,
                     question, questionDetails, possibleRecipientsForRemainingGiver,
@@ -1592,7 +1591,7 @@ public final class FeedbackSessionsLogic {
         return new FeedbackSessionResultsBundle(
                         session, responses, relevantQuestions, emailNameTable,
                         emailLastNameTable, emailTeamNameTable, sectionTeamNameTable,
-                        visibilityTable, responseStatus, roster, responseComments);
+                        visibilityTable, roster, responseComments);
     }
 
     private Map<String, String> initializeParamsWithSelectedSectionDetail(SectionDetail sectionDetail) {
@@ -1649,15 +1648,9 @@ public final class FeedbackSessionsLogic {
         //Show all questions even if no responses, unless is an ajax request for a specific question.
         Map<String, FeedbackQuestionAttributes> relevantQuestions = getAllQuestions(role, params, allQuestions);
 
-        boolean isIncludeResponseStatus = Boolean.parseBoolean(params.get(PARAM_IS_INCLUDE_RESPONSE_STATUS));
-
         String section = params.get(PARAM_SECTION);
         String questionId = params.get(PARAM_QUESTION_ID);
 
-        if (questionId != null) {
-            return getFeedbackSessionResultsForQuestionId(feedbackSessionName, courseId, userEmail, role, roster, session,
-                    allQuestions, relevantQuestions, isIncludeResponseStatus, section, sectionDetail, questionId);
-        }
 
         Map<String, FeedbackQuestionAttributes> allQuestionsMap = new HashMap<>();
         putQuestionsIntoMap(allQuestions, allQuestionsMap);
@@ -1678,9 +1671,6 @@ public final class FeedbackSessionsLogic {
         Map<String, String> emailTeamNameTable = new HashMap<>();
         Map<String, Set<String>> sectionTeamNameTable = new HashMap<>();
         Map<String, boolean[]> visibilityTable = new HashMap<>();
-        FeedbackSessionResponseStatus responseStatus = section == null && isIncludeResponseStatus
-                                                     ? getFeedbackSessionResponseStatus(session, roster, allQuestions)
-                                                     : null;
 
         StudentAttributes student = getStudent(courseId, userEmail, role);
         Set<String> studentsEmailInTeam = getTeammateEmails(courseId, student);
@@ -1710,10 +1700,12 @@ public final class FeedbackSessionsLogic {
 
         addSectionTeamNamesToTable(sectionTeamNameTable, roster, courseId, userEmail, role, feedbackSessionName, section);
 
+        Map<String, Map<String, Set<String>>> completeGiverRecipientMap =
+                buildCompleteGiverRecipientMap(relevantQuestions, session, roster);
         return new FeedbackSessionResultsBundle(
                 session, responses, relevantQuestions, emailNameTable,
                 emailLastNameTable, emailTeamNameTable, sectionTeamNameTable,
-                visibilityTable, responseStatus, roster, responseComments, isComplete);
+                visibilityTable, completeGiverRecipientMap, roster, responseComments, isComplete);
     }
 
     private Map<String, List<FeedbackResponseCommentAttributes>> getResponseComments(
@@ -1785,66 +1777,69 @@ public final class FeedbackSessionsLogic {
         return null;
     }
 
-    private FeedbackSessionResultsBundle getFeedbackSessionResultsForQuestionId(String feedbackSessionName,
-                String courseId, String userEmail, UserRole role, CourseRoster roster, FeedbackSessionAttributes session,
-                List<FeedbackQuestionAttributes> allQuestions, Map<String, FeedbackQuestionAttributes> relevantQuestions,
-                boolean isIncludeResponseStatus, String section, SectionDetail sectionDetail, String questionId) {
+    /**
+     * Builds a complete giver to recipient map for all {@code relevantQuestions}.
+     *
+     * @param relevantQuestions The questions to be considered
+     * @param feedbackSession The feedback session that contains the questions
+     * @param roster the roster in the course
+     * @return a map from the question Id to the complete giver to recipient map.
+     */
+    private Map<String, Map<String, Set<String>>> buildCompleteGiverRecipientMap(
+            Map<String, FeedbackQuestionAttributes> relevantQuestions,
+            FeedbackSessionAttributes feedbackSession, CourseRoster roster) {
 
-        List<FeedbackResponseAttributes> responses = new ArrayList<>();
-        Map<String, String> emailNameTable = new HashMap<>();
-        Map<String, String> emailLastNameTable = new HashMap<>();
-        Map<String, String> emailTeamNameTable = new HashMap<>();
-        Map<String, Set<String>> sectionTeamNameTable = new HashMap<>();
-        Map<String, boolean[]> visibilityTable = new HashMap<>();
-        Map<String, List<FeedbackResponseCommentAttributes>> responseComments = new HashMap<>();
-        FeedbackSessionResponseStatus responseStatus = new FeedbackSessionResponseStatus();
-        boolean isQueryingResponseRateStatus = questionId.equals(QUESTION_ID_FOR_RESPONSE_RATE);
+        Map<String, Map<String, Set<String>>> completeGiverRecipientMap = new HashMap<>();
+        for (FeedbackQuestionAttributes feedbackQuestion : relevantQuestions.values()) {
 
-        if (isQueryingResponseRateStatus) {
-            responseStatus = section == null && isIncludeResponseStatus
-                           ? getFeedbackSessionResponseStatus(session, roster, allQuestions)
-                           : null;
-        } else {
-            FeedbackQuestionAttributes question = fqLogic.getFeedbackQuestion(questionId);
-            if (question != null) {
-                relevantQuestions.put(question.getId(), question);
+            Map<String, Set<String>> currGiverRecipientMap = new HashMap<>();
 
-                List<FeedbackResponseAttributes> responsesForThisQn;
-
-                responsesForThisQn = frLogic.getViewableFeedbackResponsesForQuestionInSection(
-                                                question, userEmail, UserRole.INSTRUCTOR, section, sectionDetail);
-                StudentAttributes student = getStudent(courseId, userEmail, role);
-                Set<String> studentsEmailInTeam = getTeammateEmails(courseId, student);
-                boolean hasResponses = !responsesForThisQn.isEmpty();
-                if (hasResponses) {
-                    Map<String, FeedbackResponseAttributes> relevantResponse = new HashMap<>();
-                    for (FeedbackResponseAttributes response : responsesForThisQn) {
-                        InstructorAttributes instructor = getInstructor(courseId, userEmail, role);
-                        boolean isVisibleResponse = isResponseVisibleForUser(userEmail, role, null, null, response,
-                                                                             question, instructor);
-                        if (isVisibleResponse) {
-                            relevantResponse.put(response.getId(), response);
-                            relevantQuestions.put(question.getId(), question);
-                            responses.add(response);
-                            addEmailNamePairsToTable(emailNameTable, response, question, roster);
-                            addEmailLastNamePairsToTable(emailLastNameTable, response, question, roster);
-                            addEmailTeamNamePairsToTable(emailTeamNameTable, response, question, roster);
-                            addVisibilityToTable(visibilityTable, question, response, userEmail, role, roster);
-                        }
+            List<String> possibleGivers = fqLogic.getPossibleGivers(
+                    feedbackQuestion,
+                    (courseId) -> roster.getStudents(),
+                    (courseId) -> roster.getInstructors(),
+                    (courseId) -> new ArrayList<>(roster.getTeamToMembersTable().keySet()),
+                    (courseId, feedbackSessionName) -> feedbackSession.getCreatorEmail());
+            for (String giverIdentifier : possibleGivers) {
+                Map<String, String> recipients = null;
+                if (feedbackQuestion.giverType == FeedbackParticipantType.INSTRUCTORS
+                        || feedbackQuestion.giverType == FeedbackParticipantType.SELF) {
+                    InstructorAttributes currInstructor= roster.getInstructorForEmail(giverIdentifier);
+                    if (currInstructor == null) {
+                        continue;
                     }
-                    responseComments = getResponseComments(
-                            feedbackSessionName, courseId, userEmail, role, roster, relevantQuestions, section, student,
-                            studentsEmailInTeam, relevantResponse);
+
+                    recipients = fqLogic.getRecipientsOfQuestionForInstructor(feedbackQuestion,
+                            currInstructor.getEmail(),
+                            (courseId) -> roster.getStudents(),
+                            (courseId) -> roster.getInstructors(),
+                            (courseId) -> new ArrayList<>(roster.getTeamToMembersTable().keySet()),
+                            (teamName, courseId) -> new ArrayList<>(roster.getTeamToMembersTable().get(teamName)));
+                }
+
+                if (feedbackQuestion.giverType == FeedbackParticipantType.STUDENTS
+                        || feedbackQuestion.giverType == FeedbackParticipantType.TEAMS) {
+                    StudentAttributes currStudent = roster.getStudentForEmail(giverIdentifier);
+                    if (currStudent == null) {
+                        continue;
+                    }
+                    recipients = fqLogic.getRecipientsOfQuestionForStudent(feedbackQuestion,
+                            currStudent.getEmail(), currStudent.getTeam(),
+                            (courseId) -> roster.getStudents(),
+                            (courseId) -> roster.getInstructors(),
+                            (courseId) -> new ArrayList<>(roster.getTeamToMembersTable().keySet()),
+                            (teamName, courseId) -> new ArrayList<>(roster.getTeamToMembersTable().get(teamName)));
+                }
+
+                if (recipients != null) {
+                    currGiverRecipientMap.put(giverIdentifier, recipients.keySet());
                 }
             }
-        }
-        addSectionTeamNamesToTable(
-                sectionTeamNameTable, roster, courseId, userEmail, role, feedbackSessionName, section);
 
-        return new FeedbackSessionResultsBundle(
-                session, responses, relevantQuestions, emailNameTable,
-                emailLastNameTable, emailTeamNameTable, sectionTeamNameTable,
-                visibilityTable, responseStatus, roster, responseComments, true);
+            completeGiverRecipientMap.put(feedbackQuestion.getId(), currGiverRecipientMap);
+        }
+
+        return completeGiverRecipientMap;
     }
 
     private Map<String, FeedbackQuestionAttributes> getAllQuestions(

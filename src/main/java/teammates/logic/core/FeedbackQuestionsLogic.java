@@ -1,12 +1,17 @@
 package teammates.logic.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import teammates.common.datatransfer.AttributesDeletionQuery;
 import teammates.common.datatransfer.FeedbackParticipantType;
@@ -366,12 +371,18 @@ public final class FeedbackQuestionsLogic {
      * <p>Filter out some recipients based on the setting of the course.
      */
     public Map<String, String> getRecipientsOfQuestionForStudent(
-            FeedbackQuestionAttributes question, String giverEmail, String giverTeam) {
-        Map<String, String> recipients = getRecipientsOfQuestion(question, giverEmail, giverTeam);
+            FeedbackQuestionAttributes question, String giverEmail, String giverTeam,
+            Function<String, List<StudentAttributes>> studentsFunc,
+            Function<String, List<InstructorAttributes>> instructorsFunc,
+            Function<String, List<String>> teamsFunc, BiFunction<String,
+            String, List<StudentAttributes>> teamMembersFunc) {
+        Map<String, String> recipients = getRecipientsOfQuestion(
+                question, giverEmail, giverTeam, studentsFunc,
+                instructorsFunc, teamsFunc, teamMembersFunc);
 
         // remove hidden instructors
         if (question.getRecipientType() == FeedbackParticipantType.INSTRUCTORS) {
-            List<InstructorAttributes> instructors = instructorsLogic.getInstructorsForCourse(question.getCourseId());
+            List<InstructorAttributes> instructors = instructorsFunc.apply(question.getCourseId());
             Set<String> hiddenInstructorEmails = new HashSet<>();
             for (InstructorAttributes instructorAttributes : instructors) {
                 if (!instructorAttributes.isDisplayedToStudents()) {
@@ -392,8 +403,15 @@ public final class FeedbackQuestionsLogic {
      *
      * <p>Filter out some recipients based on the privileges of the instructor.
      */
-    public Map<String, String> getRecipientsOfQuestionForInstructor(FeedbackQuestionAttributes question, String giverEmail) {
-        Map<String, String> recipients = getRecipientsOfQuestion(question, giverEmail, Const.USER_TEAM_FOR_INSTRUCTOR);
+    public Map<String, String> getRecipientsOfQuestionForInstructor(
+            FeedbackQuestionAttributes question, String giverEmail,
+            Function<String, List<StudentAttributes>> studentsFunc,
+            Function<String, List<InstructorAttributes>> instructorsFunc,
+            Function<String, List<String>> teamsFunc,
+            BiFunction<String, String, List<StudentAttributes>> teamMembersFunc) {
+        Map<String, String> recipients = getRecipientsOfQuestion(
+                question, giverEmail, Const.USER_TEAM_FOR_INSTRUCTOR,
+                studentsFunc, instructorsFunc, teamsFunc, teamMembersFunc);
         InstructorAttributes instructor = instructorsLogic.getInstructorForEmail(question.getCourseId(), giverEmail);
 
         // TODO the below will cause slow queries when recipients are large, find a better way
@@ -425,10 +443,18 @@ public final class FeedbackQuestionsLogic {
      * @param giverEmail the email of the giver of the feedback question; In the case where the giver is a team,
      *                   this parameter can be anything as long as {@code giverTeam} is the name of the team.
      * @param giverTeam the team name of the giver of the feedback question
+     * @param studentsFunc function to supply the students in a course
+     * @param instructorsFunc function to supply the instructors in a course
+     * @param teamsFunc function to supply the team name in a course
+     * @param teamMembersFunc function to supply the team member in a team
      * @return a map which keys are the identifiers of the recipients and values are the names of the recipients
      */
     private Map<String, String> getRecipientsOfQuestion(
-            FeedbackQuestionAttributes question, String giverEmail, String giverTeam) {
+            FeedbackQuestionAttributes question, String giverEmail, String giverTeam,
+            Function<String, List<StudentAttributes>> studentsFunc,
+            Function<String, List<InstructorAttributes>> instructorsFunc,
+            Function<String, List<String>> teamsFunc,
+            BiFunction<String, String, List<StudentAttributes>> teamMembersFunc) {
         Map<String, String> recipients = new HashMap<>();
 
         FeedbackParticipantType recipientType = question.recipientType;
@@ -442,7 +468,7 @@ public final class FeedbackQuestionsLogic {
             }
             break;
         case STUDENTS:
-            List<StudentAttributes> studentsInCourse = studentsLogic.getStudentsForCourse(question.courseId);
+            List<StudentAttributes> studentsInCourse = studentsFunc.apply(question.courseId);
             for (StudentAttributes student : studentsInCourse) {
                 // Ensure student does not evaluate himself
                 if (!giverEmail.equals(student.email)) {
@@ -451,7 +477,7 @@ public final class FeedbackQuestionsLogic {
             }
             break;
         case INSTRUCTORS:
-            List<InstructorAttributes> instructorsInCourse = instructorsLogic.getInstructorsForCourse(question.courseId);
+            List<InstructorAttributes> instructorsInCourse = instructorsFunc.apply(question.courseId);
             for (InstructorAttributes instr : instructorsInCourse) {
                 // Ensure instructor does not evaluate himself
                 if (!giverEmail.equals(instr.email)) {
@@ -460,17 +486,12 @@ public final class FeedbackQuestionsLogic {
             }
             break;
         case TEAMS:
-            List<TeamDetailsBundle> teams = null;
-            try {
-                teams = coursesLogic.getTeamsForCourse(question.courseId);
-            } catch (EntityDoesNotExistException e) {
-                Assumption.fail(e.getMessage());
-            }
-            for (TeamDetailsBundle team : teams) {
+            List<String> teams = teamsFunc.apply(question.courseId);
+            for (String team : teams) {
                 // Ensure student('s team) does not evaluate own team.
-                if (!giverTeam.equals(team.name)) {
+                if (!giverTeam.equals(team)) {
                     // recipientEmail doubles as team name in this case.
-                    recipients.put(team.name, team.name);
+                    recipients.put(team, team);
                 }
             }
             break;
@@ -478,7 +499,7 @@ public final class FeedbackQuestionsLogic {
             recipients.put(giverTeam, giverTeam);
             break;
         case OWN_TEAM_MEMBERS:
-            List<StudentAttributes> students = studentsLogic.getStudentsForTeam(giverTeam, question.courseId);
+            List<StudentAttributes> students = teamMembersFunc.apply(giverTeam, question.courseId);
             for (StudentAttributes student : students) {
                 if (!student.email.equals(giverEmail)) {
                     recipients.put(student.email, student.name);
@@ -486,7 +507,7 @@ public final class FeedbackQuestionsLogic {
             }
             break;
         case OWN_TEAM_MEMBERS_INCLUDING_SELF:
-            List<StudentAttributes> teamMembers = studentsLogic.getStudentsForTeam(giverTeam, question.courseId);
+            List<StudentAttributes> teamMembers = teamMembersFunc.apply(giverTeam, question.courseId);
             for (StudentAttributes student : teamMembers) {
                 // accepts self feedback too
                 recipients.put(student.email, student.name);
@@ -596,6 +617,48 @@ public final class FeedbackQuestionsLogic {
             feedbackMsqQuestionDetails.setMsqChoices(optionList);
             feedbackQuestionAttributes.setQuestionDetails(feedbackMsqQuestionDetails);
         }
+    }
+
+    /**
+     * Gets possible giver identifiers for a feedback question.
+     *
+     * @param fqa the feedback question
+     * @param studentsFunc function to supply the students in a course
+     * @param instructorsFunc function to supply the instructors in a course
+     * @param teamsFunc function to supply the team name in a course
+     * @param creatorFunc function to supply the creator of a feedback session
+     * @return a list of giver identifier
+     */
+    public List<String> getPossibleGivers(
+            FeedbackQuestionAttributes fqa, Function<String, List<StudentAttributes>> studentsFunc,
+            Function<String, List<InstructorAttributes>> instructorsFunc,
+            Function<String, List<String>> teamsFunc,
+            BiFunction<String, String, String> creatorFunc) {
+        FeedbackParticipantType giverType = fqa.giverType;
+        List<String> possibleGivers = new ArrayList<>();
+
+        switch (giverType) {
+        case STUDENTS:
+            possibleGivers = studentsFunc.apply(fqa.getCourseId())
+                    .stream().map(StudentAttributes::getEmail).collect(Collectors.toList());
+            break;
+        case INSTRUCTORS:
+            possibleGivers = instructorsFunc.apply(fqa.getCourseId())
+                    .stream().map(InstructorAttributes::getEmail).collect(Collectors.toList());
+            break;
+        case TEAMS:
+            possibleGivers = teamsFunc.apply(fqa.getCourseId());
+            break;
+        case SELF:
+            possibleGivers = Collections.singletonList(
+                    creatorFunc.apply(fqa.getCourseId(), fqa.getFeedbackSessionName()));
+            break;
+        default:
+            log.severe("Invalid giver type specified");
+            break;
+        }
+
+        return possibleGivers;
     }
 
     private String getGiverTeam(String defaultTeam, InstructorAttributes instructorGiver,

@@ -10,7 +10,9 @@ import java.util.Queue;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.xml.ws.Response;
 
+import teammates.common.datatransfer.CourseRoster;
 import teammates.common.datatransfer.FeedbackParticipantType;
 import teammates.common.datatransfer.FeedbackSessionResultsBundle;
 import teammates.common.datatransfer.attributes.FeedbackQuestionAttributes;
@@ -21,6 +23,7 @@ import teammates.common.datatransfer.attributes.StudentAttributes;
 import teammates.common.datatransfer.questions.FeedbackQuestionDetails;
 import teammates.common.datatransfer.questions.FeedbackResponseDetails;
 import teammates.common.util.Const;
+import teammates.storage.entity.FeedbackResponse;
 
 /**
  * API output format for session results, including statistics.
@@ -44,6 +47,9 @@ public class SessionResultsData extends ApiOutput {
             for (ResponseOutput respOutput : allResponses) {
                 qnOutput.allResponses.add(respOutput);
             }
+
+            // missing responses
+            qnOutput.missingResponses = buildMissingResponse(bundle.getMissingResponses(), bundle);
 
             questions.add(qnOutput);
         });
@@ -162,6 +168,7 @@ public class SessionResultsData extends ApiOutput {
             String recipientName = bundle.getNameForEmail(recipient);
             String recipientTeam = bundle.getTeamNameForEmail(recipient);
 
+            // TODO use the same process as buildMissingResponse
             for (FeedbackResponseAttributes response : responsesForRecipient) {
                 String giverName = bundle.getGiverNameForResponse(response);
                 String giverEmail = bundle.isGiverVisible(response)
@@ -212,6 +219,87 @@ public class SessionResultsData extends ApiOutput {
     }
 
     /**
+     * Builds missing response output.
+     */
+    private List<ResponseOutput> buildMissingResponse(
+            List<FeedbackResponseAttributes> responses, FeedbackSessionResultsBundle bundle) {
+        List<ResponseOutput> output = new ArrayList<>();
+
+        for (FeedbackResponseAttributes response : responses) {
+            String giverEmail = response.getGiver();
+            String relatedGiverEmail = response.getGiver();
+            if (bundle.getRoster().isTeamInCourse(giverEmail)) {
+                // team name is not an email
+                giverEmail = null;
+                relatedGiverEmail =
+                        bundle.getRoster().getTeamToMembersTable().get(giverEmail).iterator().next().getEmail();
+            }
+            if (!bundle.isGiverVisible(response)) {
+                giverEmail = null;
+                relatedGiverEmail = null;
+            }
+            String giverName = this.getGiverNameOfResponse(response, bundle);
+            String giverTeam = bundle.getRoster().getInfoForIdentifier(response.getGiver())[CourseRoster.INFO_TEAM_NAME];
+
+            String recipientEmail = response.getRecipient();
+            String recipientName = this.getRecipientNameOfResponse(response, bundle);
+            String recipientTeam =
+                    bundle.getRoster().getInfoForIdentifier(response.getRecipient())[CourseRoster.INFO_TEAM_NAME];
+            if (bundle.getRoster().isTeamInCourse(recipientEmail)) {
+                // team name is not an email
+                recipientEmail = null;
+            }
+            if (!bundle.isGiverVisible(response)) {
+                recipientEmail = null;
+            }
+
+            output.add(new ResponseOutput(response.getId(), giverName, giverTeam, giverEmail, relatedGiverEmail,
+                    response.getGiverSection(), recipientName, recipientTeam, recipientEmail, response.getRecipientSection(),
+                    response.getResponseDetails(), null, Collections.emptyList()));
+        }
+
+        return output;
+    }
+
+    /**
+     * Gets giver name of a response from the bundle.
+     *
+     * <p>Anonymized the name if necessary.
+     */
+    private String getGiverNameOfResponse(FeedbackResponseAttributes response, FeedbackSessionResultsBundle bundle) {
+        FeedbackQuestionAttributes question = bundle.getQuestions().get(response.getFeedbackQuestionId());
+        FeedbackParticipantType participantType = question.giverType;
+
+        String name = bundle.getRoster().getInfoForIdentifier(response.getGiver())[CourseRoster.INFO_NAME];
+        if (!bundle.isGiverVisible(response)) {
+            name = FeedbackSessionResultsBundle.getAnonName(participantType, name);
+        }
+
+        return name;
+    }
+
+    /**
+     * Gets recipient name of a response from the bundle.
+     *
+     * <p>Anonymized the name if necessary.
+     */
+    private String getRecipientNameOfResponse(FeedbackResponseAttributes response, FeedbackSessionResultsBundle bundle) {
+        FeedbackQuestionAttributes question = bundle.getQuestions().get(response.getFeedbackQuestionId());
+        FeedbackParticipantType participantType = question.getRecipientType();
+        if (participantType == FeedbackParticipantType.SELF) {
+            // recipient type for self-feedback is the same as the giver type
+            participantType = question.getGiverType();
+        }
+
+        String name = bundle.getRoster().getInfoForIdentifier(response.getRecipient())[CourseRoster.INFO_NAME];
+        if (!bundle.isRecipientVisible(response)) {
+            name = FeedbackSessionResultsBundle.getAnonName(participantType, name);
+        }
+
+        return name;
+    }
+
+    /**
      * API output format for questions in session results.
      */
     public static class QuestionOutput {
@@ -221,6 +309,7 @@ public class SessionResultsData extends ApiOutput {
 
         // For instructor view
         private List<ResponseOutput> allResponses = new ArrayList<>();
+        private List<ResponseOutput> missingResponses = new ArrayList<>();
 
         // For student view
         private List<ResponseOutput> responsesToSelf = new ArrayList<>();
@@ -242,6 +331,10 @@ public class SessionResultsData extends ApiOutput {
 
         public List<ResponseOutput> getAllResponses() {
             return allResponses;
+        }
+
+        public List<ResponseOutput> getMissingResponses() {
+            return missingResponses;
         }
 
         public List<ResponseOutput> getResponsesFromSelf() {
@@ -360,6 +453,7 @@ public class SessionResultsData extends ApiOutput {
             return instructorComments;
         }
     }
+
 
     /**
      * API output format for response comments.

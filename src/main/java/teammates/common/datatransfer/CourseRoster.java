@@ -7,6 +7,7 @@ import java.util.Map;
 
 import teammates.common.datatransfer.attributes.InstructorAttributes;
 import teammates.common.datatransfer.attributes.StudentAttributes;
+import teammates.common.util.Const;
 
 /**
  * Contains a list of students and instructors in a course. Useful for caching
@@ -15,12 +16,23 @@ import teammates.common.datatransfer.attributes.StudentAttributes;
  */
 public class CourseRoster {
 
-    Map<String, StudentAttributes> studentListByEmail = new HashMap<>();
-    Map<String, InstructorAttributes> instructorListByEmail = new HashMap<>();
+    public static int INFO_NAME = 1;
+    public static int INFO_TEAM_NAME = 1;
+    public static int INFO_SECTION_NAME = 1;
+
+    private final Map<String, StudentAttributes> studentListByEmail = new HashMap<>();
+    private final Map<String, InstructorAttributes> instructorListByEmail = new HashMap<>();
+    private final Map<String, List<StudentAttributes>> teamToMembersTable = new HashMap<>();
 
     public CourseRoster(List<StudentAttributes> students, List<InstructorAttributes> instructors) {
         populateStudentListByEmail(students);
         populateInstructorListByEmail(instructors);
+
+        // group students by team
+        for (StudentAttributes studentAttributes : this.getStudents()) {
+            teamToMembersTable.computeIfAbsent(studentAttributes.getTeam(), key -> new ArrayList<>())
+                    .add(studentAttributes);
+        }
     }
 
     public List<StudentAttributes> getStudents() {
@@ -29,6 +41,10 @@ public class CourseRoster {
 
     public List<InstructorAttributes> getInstructors() {
         return new ArrayList<>(instructorListByEmail.values());
+    }
+
+    public Map<String, List<StudentAttributes>> getTeamToMembersTable() {
+        return teamToMembersTable;
     }
 
     /**
@@ -42,6 +58,13 @@ public class CourseRoster {
 
     public boolean isStudentInCourse(String studentEmail) {
         return studentListByEmail.containsKey(studentEmail);
+    }
+
+    /**
+     * Checks whether a team is in course.
+     */
+    public boolean isTeamInCourse(String teamName) {
+        return teamToMembersTable.containsKey(teamName);
     }
 
     public boolean isStudentInTeam(String studentEmail, String targetTeamName) {
@@ -103,5 +126,36 @@ public class CourseRoster {
         for (InstructorAttributes i : instructors) {
             instructorListByEmail.put(i.email, i);
         }
+    }
+
+    public String[] getInfoForIdentifier(String identifier) {
+        String name = Const.USER_IS_MISSING;
+        String teamName = "";
+        String sectionName = "";
+
+        boolean isStudent = this.getStudentForEmail(identifier) != null;
+        boolean isInstructor = this.getInstructorForEmail(identifier) != null;
+        boolean isTeam = this.getTeamToMembersTable().containsKey(identifier);
+        if (isStudent) {
+            StudentAttributes student = this.getStudentForEmail(identifier);
+
+            name = student.getName();
+            teamName = student.getTeam();
+            sectionName = student.getSection();
+        } else if (isInstructor) {
+            InstructorAttributes instructor = this.getInstructorForEmail(identifier);
+
+            name = instructor.getName();
+            teamName = Const.USER_TEAM_FOR_INSTRUCTOR;
+            sectionName = Const.NO_SPECIFIC_SECTION;
+        } else if (isTeam) {
+            StudentAttributes teamMember = this.getTeamToMembersTable().get(identifier).iterator().next();
+
+            name = identifier;
+            teamName = identifier;
+            sectionName = teamMember.getSection();
+        }
+
+        return new String[] { name, teamName, sectionName };
     }
 }
